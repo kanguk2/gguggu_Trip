@@ -62,7 +62,29 @@ main {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.weather-detail {
+  margin: 0 0 1.25rem;
+  text-align: right;
+}
+
+.weather-detail-link {
+  font-size: 0.82rem;
+  color: #2c6fbb;
+  text-decoration: none;
+}
+
+.weather-detail-link:hover {
+  text-decoration: underline;
+}
+
+.plan-sub {
+  display: block;
+  color: #888;
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
 }
 
 .weather-card {
