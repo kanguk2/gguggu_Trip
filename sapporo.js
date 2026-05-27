@@ -261,8 +261,102 @@ function renderChecklist() {
   updateSummary();
 }
 
+function formatKrw(n) {
+  return "KRW " + Number(n).toLocaleString("ko-KR");
+}
+
+function renderFlight(root, data) {
+  const segmentsHtml = data.segments
+    .map((seg) => `
+      <section class="flight-segment">
+        <div class="flight-segment-head">
+          <span class="flight-direction">${seg.label}</span>
+          <span class="flight-airline">${seg.airline}</span>
+          <span class="flight-code">${seg.code}</span>
+          <span class="flight-cabin">${seg.cabin}</span>
+        </div>
+        <div class="flight-segment-body">
+          <div class="flight-endpoint">
+            <div class="flight-time">${seg.depart.time}</div>
+            <div class="flight-airport">${seg.depart.airport}</div>
+            <div class="flight-date">${seg.depart.date}</div>
+          </div>
+          <div class="flight-arrow">→</div>
+          <div class="flight-endpoint">
+            <div class="flight-time">${seg.arrive.time}</div>
+            <div class="flight-airport">${seg.arrive.airport}</div>
+            <div class="flight-date">${seg.arrive.date}</div>
+          </div>
+        </div>
+      </section>
+    `)
+    .join("");
+
+  const passengersHtml = data.passengers
+    .map((p) => `
+      <li>
+        <div class="flight-passenger-name">${p.name}</div>
+        <div class="flight-tickets">${p.tickets.join(" · ")}</div>
+      </li>
+    `)
+    .join("");
+
+  root.innerHTML = `
+    <section class="flight-meta">
+      <div class="flight-label">예약번호</div>
+      <div class="flight-pnr">${data.pnr}</div>
+    </section>
+    ${segmentsHtml}
+    <section class="flight-passengers">
+      <h3>탑승객</h3>
+      <ul>${passengersHtml}</ul>
+    </section>
+    <section class="flight-total">
+      <span class="flight-label">총 금액</span>
+      <span class="flight-value">${formatKrw(data.totalKrw)}</span>
+    </section>
+  `;
+}
+
+async function loadFlight() {
+  const root = document.getElementById("flight-root");
+  if (!root || !window.TRIP_GATE) return;
+  try {
+    const data = await window.TRIP_GATE.decryptPayload("flight");
+    renderFlight(root, data);
+  } catch (err) {
+    root.innerHTML = `<p class="flight-error">비행 정보를 불러오지 못했습니다 (${err.message})</p>`;
+  }
+}
+
+function setupMapEmbeds() {
+  document.querySelectorAll(".plan-link[data-map-query]").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      const item = link.closest(".plan-item");
+      if (!item) return;
+      const open = item.classList.toggle("is-map-open");
+      if (open && !item.querySelector(".plan-map")) {
+        const q = encodeURIComponent(link.dataset.mapQuery);
+        const wrap = document.createElement("div");
+        wrap.className = "plan-map";
+        wrap.innerHTML = `<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${q}&hl=ko&z=15&output=embed"></iframe>`;
+        item.appendChild(wrap);
+      }
+    });
+  });
+}
+
+function whenUnlocked(cb) {
+  if (window.TRIP_GATE) cb();
+  else document.addEventListener("trip-gate:unlocked", cb, { once: true });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   loadWeather();
   renderChecklist();
+  setupMapEmbeds();
+  whenUnlocked(loadFlight);
 });

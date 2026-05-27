@@ -7,8 +7,10 @@
   <meta name="googlebot" content="noindex, nofollow">
   <title>삿포로 여행</title>
   <link rel="stylesheet" href="./styles.css">
+  <script src="./secret.js"></script>
+  <script src="./gate.js"></script>
 </head>
-<body>
+<body class="gated">
   <main>
     <h1>삿포로 여행</h1>
     <p class="trip-period">2026-06-05 ~ 2026-06-08 · 일본 홋카이도</p>
@@ -17,9 +19,12 @@
       <div class="weather-loading">날씨 정보를 불러오는 중…</div>
     </section>
 
-    <nav class="tabs tabs-5" role="tablist" aria-label="섹션 선택">
+    <nav class="tabs tabs-6" role="tablist" aria-label="섹션 선택">
       <button class="tab is-active" role="tab" aria-selected="true" data-panel="checklist">
         <span class="tab-date">준비물</span><span class="tab-dow">체크리스트</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="flight">
+        <span class="tab-date">항공권</span><span class="tab-dow">예약</span>
       </button>
       <button class="tab" role="tab" aria-selected="false" data-panel="2026-06-05">
         <span class="tab-date">6/5</span><span class="tab-dow">금</span>
@@ -41,42 +46,58 @@
       <div id="checklist-root" class="checklist"></div>
     </section>
 
+    <section class="tab-panel" role="tabpanel" data-panel="flight" hidden>
+      <h2>항공권 정보</h2>
+      <div id="flight-root" class="flight-info">
+        <p class="flight-loading">불러오는 중…</p>
+      </div>
+    </section>
+
     <section class="tab-panel" role="tabpanel" data-panel="2026-06-05" hidden>
       <h2>Day 1 · 도착</h2>
       <ol class="plan-list">
         <li class="plan-item">
-          <span class="plan-time">11:30</span>
-          <span class="plan-name">신치토세 공항 도착</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=New+Chitose+Airport" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <span class="plan-time">06:30</span>
+          <span class="plan-name">인천공항 T1 도착 · 체크인</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Incheon+Airport+Terminal+1" target="_blank" rel="noopener noreferrer" data-map-query="Incheon Airport Terminal 1" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
-          <span class="plan-time">12:30</span>
+          <span class="plan-time">09:20</span>
+          <span class="plan-name">인천공항 T1 출발</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">11:50</span>
+          <span class="plan-name">신치토세 공항 도착 · 입국 수속</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=New+Chitose+Airport" target="_blank" rel="noopener noreferrer" data-map-query="New Chitose Airport" title="지도">🗺️</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">13:00</span>
           <span class="plan-name">JR 쾌속 에어포트 → 삿포로역 (37분)</span>
           <a class="plan-link" href="https://www.jrhokkaido.co.jp/global/english/" target="_blank" rel="noopener noreferrer" title="JR Hokkaido">🔗</a>
         </li>
         <li class="plan-item">
-          <span class="plan-time">13:30</span>
+          <span class="plan-time">14:00</span>
           <span class="plan-name">호텔 체크인 (스스키노 일대)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Susukino+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Susukino+Sapporo" target="_blank" rel="noopener noreferrer" data-map-query="Susukino Sapporo" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
-          <span class="plan-time">14:30</span>
+          <span class="plan-time">15:00</span>
           <span class="plan-name">점심: 호텔 근처 식당</span>
         </li>
         <li class="plan-item">
-          <span class="plan-time">16:00</span>
+          <span class="plan-time">16:30</span>
           <span class="plan-name">오도리 공원 산책 (가벼운 적응)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Odori+Park+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Odori+Park+Sapporo" target="_blank" rel="noopener noreferrer" data-map-query="Odori Park Sapporo" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">17:30</span>
           <span class="plan-name">삿포로 TV 타워 (전망)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+TV+Tower" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+TV+Tower" target="_blank" rel="noopener noreferrer" data-map-query="Sapporo TV Tower" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">19:00</span>
           <span class="plan-name">저녁: 스미레 라멘 (스스키노, 미소 라멘)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sumire+Susukino+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sumire+Susukino+Sapporo" target="_blank" rel="noopener noreferrer" data-map-query="Sumire Susukino Sapporo" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">21:00</span>
@@ -91,12 +112,12 @@
       <ol class="plan-list">
         <li class="plan-item">
           <span class="plan-time">06:00</span>
-          <span class="plan-name">기상·간단한 아침</span>
+          <span class="plan-name">기상 · 간단한 아침</span>
         </li>
         <li class="plan-item">
           <span class="plan-time">07:00</span>
           <span class="plan-name">JR 삿포로역 북쪽출구 단체버스 정류장 집합</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=JR+Sapporo+Station+North+Exit+Bus+Terminal" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=JR+Sapporo+Station+North+Exit+Bus+Terminal" target="_blank" rel="noopener noreferrer" data-map-query="JR Sapporo Station North Exit Bus Terminal" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">07:30</span>
@@ -105,12 +126,12 @@
         <li class="plan-item">
           <span class="plan-time">10:30</span>
           <span class="plan-name">패치워크 로드 · 켄과 메리의 나무</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Patchwork+Road+Biei" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Patchwork+Road+Biei" target="_blank" rel="noopener noreferrer" data-map-query="Patchwork Road Biei" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">11:30</span>
           <span class="plan-name">시키사이노오카 (꽃밭)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Shikisai+no+Oka+Biei" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Shikisai+no+Oka+Biei" target="_blank" rel="noopener noreferrer" data-map-query="Shikisai no Oka Biei" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">12:30</span>
@@ -119,12 +140,12 @@
         <li class="plan-item">
           <span class="plan-time">14:00</span>
           <span class="plan-name">청의 호수 (Blue Pond)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Blue+Pond+Biei" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Blue+Pond+Biei" target="_blank" rel="noopener noreferrer" data-map-query="Blue Pond Biei" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">15:00</span>
           <span class="plan-name">시라히게 폭포</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Shirahige+Falls+Biei" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Shirahige+Falls+Biei" target="_blank" rel="noopener noreferrer" data-map-query="Shirahige Falls Biei" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">16:00</span>
@@ -133,7 +154,7 @@
         <li class="plan-item">
           <span class="plan-time">18:30</span>
           <span class="plan-name">JR 삿포로역 도착</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Station" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Station" target="_blank" rel="noopener noreferrer" data-map-query="Sapporo Station" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">19:30</span>
@@ -161,27 +182,27 @@
         <li class="plan-item">
           <span class="plan-time">10:00</span>
           <span class="plan-name">오타루 운하 산책</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Canal" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Canal" target="_blank" rel="noopener noreferrer" data-map-query="Otaru Canal" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">11:30</span>
           <span class="plan-name">르타오 본점 (디저트)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=LeTAO+Otaru" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=LeTAO+Otaru" target="_blank" rel="noopener noreferrer" data-map-query="LeTAO Otaru" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">12:30</span>
           <span class="plan-name">점심: 마사스시 (스시야도리)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Masazushi+Otaru" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Masazushi+Otaru" target="_blank" rel="noopener noreferrer" data-map-query="Masazushi Otaru" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">14:30</span>
           <span class="plan-name">오타루 유리공방 (체험 가능)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Glass+Studio" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Glass+Studio" target="_blank" rel="noopener noreferrer" data-map-query="Otaru Glass Studio" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">16:00</span>
           <span class="plan-name">오르골당</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Music+Box+Museum" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Music+Box+Museum" target="_blank" rel="noopener noreferrer" data-map-query="Otaru Music Box Museum" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">17:30</span>
@@ -190,7 +211,7 @@
         <li class="plan-item">
           <span class="plan-time">19:00</span>
           <span class="plan-name">저녁: 다루마 본점 (징기스칸)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Daruma+Honten+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Daruma+Honten+Sapporo" target="_blank" rel="noopener noreferrer" data-map-query="Daruma Honten Sapporo" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
           <span class="plan-time">21:30</span>
@@ -208,38 +229,39 @@
         </li>
         <li class="plan-item">
           <span class="plan-time">08:30</span>
-          <span class="plan-name">체크아웃, 짐 보관</span>
+          <span class="plan-name">체크아웃 · 짐 보관</span>
         </li>
         <li class="plan-item">
           <span class="plan-time">09:00</span>
           <span class="plan-name">다누키코지 쇼핑가</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Tanukikoji+Shopping+Street" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Tanukikoji+Shopping+Street" target="_blank" rel="noopener noreferrer" data-map-query="Tanukikoji Shopping Street" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
-          <span class="plan-time">11:00</span>
+          <span class="plan-time">10:30</span>
           <span class="plan-name">삿포로역 기념품 (도쿄야 등)</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Station" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Station" target="_blank" rel="noopener noreferrer" data-map-query="Sapporo Station" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
-          <span class="plan-time">12:30</span>
+          <span class="plan-time">11:30</span>
           <span class="plan-name">점심: 마지막 라멘</span>
         </li>
         <li class="plan-item">
-          <span class="plan-time">14:00</span>
+          <span class="plan-time">12:30</span>
           <span class="plan-name">JR 쾌속 → 신치토세 공항</span>
         </li>
         <li class="plan-item">
-          <span class="plan-time">15:00</span>
-          <span class="plan-name">공항 도착, 면세점 쇼핑</span>
-          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=New+Chitose+Airport" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+          <span class="plan-time">13:20</span>
+          <span class="plan-name">신치토세 공항 도착 · 체크인 · 면세점</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=New+Chitose+Airport" target="_blank" rel="noopener noreferrer" data-map-query="New Chitose Airport" title="지도">🗺️</a>
         </li>
         <li class="plan-item">
-          <span class="plan-time">17:30</span>
-          <span class="plan-name">출국 게이트 도착</span>
+          <span class="plan-time">14:30</span>
+          <span class="plan-name">신치토세 공항 출발</span>
         </li>
         <li class="plan-item">
-          <span class="plan-time">18:30</span>
-          <span class="plan-name">출국</span>
+          <span class="plan-time">17:40</span>
+          <span class="plan-name">인천국제공항 T1 도착</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Incheon+Airport+Terminal+1" target="_blank" rel="noopener noreferrer" data-map-query="Incheon Airport Terminal 1" title="지도">🗺️</a>
         </li>
       </ol>
     </section>

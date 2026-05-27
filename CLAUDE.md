@@ -9,13 +9,59 @@ index.html          홈 (여행 버튼 + 하단 footer에 개발요청 버튼)
 about.html          "클로드 코드에 개발 요청하기" 폼 (GitHub Issues 프리필)
 request.js          about.html의 폼 → GitHub Issues URL 변환
 travel.html         여행지 목록 (도시별 버튼이 추가되는 페이지)
-<city>.html         각 도시 페이지 (날씨 + 준비물 체크리스트 + 일자별 일정)
-<city>.js           해당 도시의 좌표·날짜·체크리스트 데이터 및 렌더링
+<city>.html         각 도시 페이지 (날씨 + 준비물 + 항공권 + 일자별 일정)
+<city>.js           해당 도시의 좌표·날짜·체크리스트·항공권 렌더링
+notfound.html       게이트 통과 실패 시 도달하는 페이지 (게이트 없음)
+gate.js             모든 보호 페이지가 로드하는 키 게이트
+secret.js           암호화된 시크릿 묶음 (PNR·탑승객 등)
 styles.css          모든 페이지가 공유하는 단일 스타일시트
 script.js           index.html의 공용 스크립트 (현재 비어있음)
 robots.txt          모든 크롤러 차단
-files/              여행 관련 첨부 파일을 두는 디렉토리 (PDF·이미지 등)
+files/              여행 관련 첨부 파일 (PDF·이미지 등)
 ```
+
+## 키 게이트 (gate.js + secret.js)
+
+저장소가 공개이므로 비행기 PNR·이름·e-티켓 같은 민감 정보는 평문으로 두지 않는다. 다음 구조로 보호한다:
+
+- `secret.js` — PBKDF2(SHA-256, 200k iter) + AES-GCM 으로 암호화된 ciphertext + salt + IV 만 포함. 키가 없으면 의미 없음.
+- `gate.js` — 보호 대상 페이지의 `<head>`에 secret.js와 함께 로드. 최초 진입 시 키 입력 모달을 띄우고, 검증 성공 → localStorage(`trip-gate-key-v1`)에 키 저장 → `body.gated` 제거 → `trip-gate:unlocked` 이벤트 발사. 검증 실패 → `notfound.html` 로 리다이렉트.
+- 보호 페이지의 `<body>`는 항상 `class="gated"` 로 시작. 게이트 통과 전엔 `body.gated > main { visibility: hidden }` 로 가려짐. 모달은 가려진 main 위에 표시.
+- 페이지별 JS는 `whenUnlocked(callback)` 패턴으로 `window.TRIP_GATE.decryptPayload(name)` 호출해서 페이지에 필요한 시크릿만 복호화한다.
+
+### 게이트가 보호하는 페이지 (head에 secret.js + gate.js 로드, body.gated 시작)
+- index.html · travel.html · about.html · `<city>.html`
+
+### 게이트가 없는 페이지 (혹시라도 보호 안에 두면 무한 루프)
+- notfound.html
+
+### 시크릿 갱신 (키 변경 / 데이터 변경)
+
+`secret.js`를 재생성하려면 임시 Node 스크립트로 다음 형태의 데이터를 PBKDF2+AES-GCM 암호화한다:
+
+```js
+// _encrypt_once.mjs — 실행 후 반드시 삭제. 절대 커밋 금지.
+import { webcrypto as crypto } from "node:crypto";
+import { writeFileSync } from "node:fs";
+
+const PASSWORD = "<새 키>";
+const ITERATIONS = 200000;
+const SECRETS = {
+  flight: { /* ... 평문 객체 ... */ },
+};
+const SENTINEL = "trip-gate-ok";
+// ... PBKDF2 + AES-GCM 으로 sentinel·payloads 암호화
+// 결과를 window.TRIP_SECRET = {...} 형태로 secret.js 에 쓰기
+```
+
+작성 후 `node _encrypt_once.mjs` → secret.js 생성됨 → 스크립트 파일 즉시 삭제 → secret.js 커밋. 키와 평문은 어디에도 git 에 남기지 않는다.
+
+## 일정 항목의 지도 임베드
+
+`.plan-link[data-map-query="..."]` 형태로 작성하면 클릭 시 같은 페이지에 Google Maps iframe 이 열린다 (`https://www.google.com/maps?q=<query>&output=embed`). API 키 불필요. 마커는 검색어 기반으로 자동 표시.
+- 일반 클릭: 인라인 지도 토글
+- Ctrl/Cmd/middle 클릭: 새 탭에서 검색 URL 열기 (브라우저 기본 동작)
+- `data-map-query` 없는 링크 (JR 시각표 등): 평범한 외부 링크
 
 ## 도시 페이지의 표준 구조
 
