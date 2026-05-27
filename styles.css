@@ -87,6 +87,131 @@ main {
   margin-top: 0.15rem;
 }
 
+.plan-item-expandable {
+  display: block;
+  padding: 0;
+  border-bottom: 1px solid #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.plan-item-expandable > details > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.5rem 0.6rem;
+  user-select: none;
+}
+
+.plan-item-expandable > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.plan-item-expandable > details > summary:hover {
+  background: #f4f4f4;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+.plan-toggle-icon {
+  color: #888;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+.plan-item-expandable > details[open] .plan-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.plan-detail {
+  padding: 0.85rem 1rem 1rem;
+  background: #f8f9fb;
+  border-top: 1px dashed #e0e0e0;
+}
+
+.plan-detail h4 {
+  font-size: 0.9rem;
+  margin: 0.75rem 0 0.5rem;
+  color: #333;
+}
+
+.plan-detail h4:first-child {
+  margin-top: 0;
+}
+
+.transit-options {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.transit-options li {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.transit-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.transit-meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.transit-meta .badge {
+  background: #eef3ff;
+  color: #2c4f8a;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.transit-note {
+  font-size: 0.82rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.transit-times {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.transit-times li {
+  background: #fff;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.transit-disclaimer {
+  font-size: 0.78rem;
+  color: #888;
+  margin: 0.5rem 0 0;
+}
+
 .weather-card {
   background: #fff;
   border: 1px solid #e5e5e5;
