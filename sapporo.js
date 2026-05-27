@@ -364,49 +364,63 @@ const DAY_MAPS = {
   ],
 };
 
-const dayMapInstances = {};
+const GOOGLE_MAPS_KEY = "AIzaSyDCpsu8RPxm4pme2o01htptD1VM9fXVzss";
+const dayMapBuilt = {};
+
+function buildDayMapUrl(stops) {
+  if (stops.length === 0) return null;
+  const toLatLng = (s) => `${s.coords[0]},${s.coords[1]}`;
+  if (stops.length === 1) {
+    const params = new URLSearchParams({
+      key: GOOGLE_MAPS_KEY,
+      q: toLatLng(stops[0]),
+      language: "ko",
+    });
+    return `https://www.google.com/maps/embed/v1/place?${params.toString()}`;
+  }
+  const params = new URLSearchParams({
+    key: GOOGLE_MAPS_KEY,
+    origin: toLatLng(stops[0]),
+    destination: toLatLng(stops[stops.length - 1]),
+    mode: "driving",
+    language: "ko",
+    region: "JP",
+  });
+  if (stops.length > 2) {
+    params.set("waypoints", stops.slice(1, -1).map(toLatLng).join("|"));
+  }
+  return `https://www.google.com/maps/embed/v1/directions?${params.toString()}`;
+}
 
 function initDayMap(date) {
-  if (!window.L) return;
-  if (dayMapInstances[date]) {
-    requestAnimationFrame(() => dayMapInstances[date].invalidateSize());
-    return;
-  }
+  if (dayMapBuilt[date]) return;
   const container = document.getElementById(`day-map-${date}`);
   const stops = DAY_MAPS[date];
   if (!container || !stops || stops.length === 0) return;
 
-  requestAnimationFrame(() => {
-    if (dayMapInstances[date]) return;
-    const map = L.map(container, { scrollWheelZoom: false });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map);
+  const url = buildDayMapUrl(stops);
+  if (!url) return;
 
-    const latlngs = [];
-    stops.forEach((stop, i) => {
-      const num = i + 1;
-      const icon = L.divIcon({
-        className: "day-marker",
-        html: `<div class="day-marker-pin">${num}</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      });
-      L.marker(stop.coords, { icon })
-        .addTo(map)
-        .bindPopup(`<strong>${num}. ${stop.name}</strong><br>${stop.time}`);
-      latlngs.push(stop.coords);
-    });
+  const iframe = document.createElement("iframe");
+  iframe.src = url;
+  iframe.loading = "lazy";
+  iframe.referrerPolicy = "strict-origin-when-cross-origin";
+  iframe.allowFullscreen = true;
+  iframe.title = `${date} 경로 지도`;
+  container.innerHTML = "";
+  container.appendChild(iframe);
 
-    if (latlngs.length > 1) {
-      L.polyline(latlngs, { color: "#2c6fbb", weight: 2, opacity: 0.5, dashArray: "4,6" }).addTo(map);
-    }
-
-    map.fitBounds(latlngs, { padding: [30, 30], maxZoom: 14 });
-    dayMapInstances[date] = map;
-    setTimeout(() => map.invalidateSize(), 200);
+  const legend = document.createElement("ol");
+  legend.className = "day-map-legend";
+  const letters = "ABCDEFGHIJKLMN".split("");
+  stops.forEach((s, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="legend-letter">${letters[i]}</span><span class="legend-time">${s.time}</span><span class="legend-name">${s.name}</span>`;
+    legend.appendChild(li);
   });
+  container.parentElement.insertBefore(legend, container.nextSibling);
+
+  dayMapBuilt[date] = true;
 }
 
 function whenUnlocked(cb) {
