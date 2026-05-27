@@ -522,23 +522,41 @@ body.gated > main {
   font-variant-numeric: tabular-nums;
 }
 
-.plan-map {
-  grid-column: 1 / -1;
-  margin-top: 0.5rem;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #e5e5e5;
-}
-
-.plan-map iframe {
-  display: block;
+.day-map {
   width: 100%;
-  height: 280px;
-  border: 0;
+  height: 320px;
+  margin-bottom: 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  background: #f0f0f0;
 }
 
-.plan-item.is-map-open .plan-link {
-  background: #e8f4ff;
+.day-marker {
+  background: transparent;
+  border: none;
+}
+
+.day-marker-pin {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2c6fbb;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-popup-content {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.85rem;
+  margin: 0.5rem 0.75rem;
+  line-height: 1.4;
 }
 
 .page-nav {
@@ -575,8 +593,8 @@ body.gated > main {
   .plan-time {
     font-size: 0.85rem;
   }
-  .plan-map iframe {
-    height: 220px;
+  .day-map {
+    height: 260px;
   }
   .flight-segment-body {
     grid-template-columns: 1fr;

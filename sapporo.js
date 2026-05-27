@@ -329,23 +329,80 @@ async function loadFlight() {
   }
 }
 
-function setupMapEmbeds() {
-  document.querySelectorAll(".plan-link[data-map-query]").forEach((link) => {
-    link.addEventListener("click", (e) => {
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      e.preventDefault();
-      const item = link.closest(".plan-item");
-      if (!item) return;
-      const open = item.classList.toggle("is-map-open");
-      if (open && !item.querySelector(".plan-map")) {
-        const q = encodeURIComponent(link.dataset.mapQuery);
-        const wrap = document.createElement("div");
-        wrap.className = "plan-map";
-        wrap.innerHTML = `<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${q}&hl=ko&z=15&output=embed"></iframe>`;
-        item.appendChild(wrap);
-      }
+const DAY_MAPS = {
+  "2026-06-05": [
+    { time: "11:50", name: "신치토세 공항", coords: [42.7752, 141.6920] },
+    { time: "14:00", name: "더 게이트 호텔 삿포로", coords: [43.0635, 141.3520] },
+    { time: "16:30", name: "오도리 공원", coords: [43.0606, 141.3537] },
+    { time: "17:30", name: "삿포로 TV 타워", coords: [43.0608, 141.3569] },
+    { time: "19:00", name: "스미레 라멘 (스스키노)", coords: [43.0537, 141.3573] },
+    { time: "21:00", name: "호텔 복귀", coords: [43.0635, 141.3520] },
+  ],
+  "2026-06-06": [
+    { time: "07:00", name: "JR 삿포로역 북쪽출구 단체버스", coords: [43.0692, 141.3508] },
+    { time: "10:30", name: "패치워크 로드 · 켄과 메리의 나무", coords: [43.6107, 142.4329] },
+    { time: "11:30", name: "시키사이노오카", coords: [43.5566, 142.4838] },
+    { time: "14:00", name: "청의 호수 (Blue Pond)", coords: [43.4963, 142.6395] },
+    { time: "15:00", name: "시라히게 폭포", coords: [43.5114, 142.6481] },
+    { time: "18:30", name: "JR 삿포로역 도착", coords: [43.0686, 141.3508] },
+    { time: "22:00", name: "호텔 복귀", coords: [43.0635, 141.3520] },
+  ],
+  "2026-06-07": [
+    { time: "10:00", name: "오타루 운하", coords: [43.1985, 141.0029] },
+    { time: "11:30", name: "르타오 본점", coords: [43.1935, 141.0019] },
+    { time: "12:30", name: "마사스시 본점", coords: [43.1957, 141.0094] },
+    { time: "14:30", name: "오타루 유리공방 (北一硝子)", coords: [43.1944, 141.0051] },
+    { time: "16:00", name: "오타루 오르골당", coords: [43.1923, 141.0070] },
+    { time: "19:00", name: "다루마 본점 (스스키노)", coords: [43.0546, 141.3535] },
+    { time: "21:30", name: "호텔 복귀", coords: [43.0635, 141.3520] },
+  ],
+  "2026-06-08": [
+    { time: "08:30", name: "더 게이트 호텔 (체크아웃)", coords: [43.0635, 141.3520] },
+    { time: "09:00", name: "다누키코지 쇼핑가", coords: [43.0577, 141.3540] },
+    { time: "10:30", name: "JR 삿포로역", coords: [43.0686, 141.3508] },
+    { time: "13:20", name: "신치토세 공항", coords: [42.7752, 141.6920] },
+  ],
+};
+
+const dayMapInstances = {};
+
+function initDayMap(date) {
+  if (!window.L) return;
+  if (dayMapInstances[date]) {
+    dayMapInstances[date].invalidateSize();
+    return;
+  }
+  const container = document.getElementById(`day-map-${date}`);
+  const stops = DAY_MAPS[date];
+  if (!container || !stops || stops.length === 0) return;
+
+  const map = L.map(container, { scrollWheelZoom: false });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(map);
+
+  const latlngs = [];
+  stops.forEach((stop, i) => {
+    const num = i + 1;
+    const icon = L.divIcon({
+      className: "day-marker",
+      html: `<div class="day-marker-pin">${num}</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
     });
+    L.marker(stop.coords, { icon })
+      .addTo(map)
+      .bindPopup(`<strong>${num}. ${stop.name}</strong><br>${stop.time}`);
+    latlngs.push(stop.coords);
   });
+
+  if (latlngs.length > 1) {
+    L.polyline(latlngs, { color: "#2c6fbb", weight: 2, opacity: 0.5, dashArray: "4,6" }).addTo(map);
+  }
+
+  map.fitBounds(latlngs, { padding: [30, 30], maxZoom: 14 });
+  dayMapInstances[date] = map;
 }
 
 function whenUnlocked(cb) {
@@ -353,10 +410,21 @@ function whenUnlocked(cb) {
   else document.addEventListener("trip-gate:unlocked", cb, { once: true });
 }
 
+function ensureLeafletThen(cb) {
+  if (window.L) cb();
+  else window.addEventListener("load", cb, { once: true });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   loadWeather();
   renderChecklist();
-  setupMapEmbeds();
   whenUnlocked(loadFlight);
+
+  document.querySelectorAll(".tab[data-panel]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const key = tab.dataset.panel;
+      if (DAY_MAPS[key]) ensureLeafletThen(() => initDayMap(key));
+    });
+  });
 });
