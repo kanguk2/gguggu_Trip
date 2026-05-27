@@ -171,10 +171,117 @@ main {
   margin: 0.5rem 0 0.75rem;
 }
 
+.tabs-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
 .plan-list {
+  list-style: none;
   margin: 0;
-  padding-left: 1.25rem;
-  line-height: 1.8;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.plan-item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.plan-item:hover {
+  background: #f4f4f4;
+}
+
+.plan-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #444;
+  font-size: 0.9rem;
+}
+
+.plan-name {
+  color: #222;
+  line-height: 1.45;
+}
+
+.plan-link {
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  color: #2c6fbb;
+  transition: background 0.15s;
+}
+
+.plan-link:hover {
+  background: #e8f4ff;
+}
+
+.panel-desc {
+  color: #777;
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.checklist-summary {
+  align-self: flex-start;
+  padding: 0.3rem 0.7rem;
+  background: #eef3ff;
+  color: #2c4f8a;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.checklist-category h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+  color: #333;
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 0.35rem;
+}
+
+.checklist-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.checklist-item label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.35rem 0;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.checklist-item input[type="checkbox"] {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.checklist-item.is-checked .checklist-label {
+  color: #999;
+  text-decoration: line-through;
 }
 
 .page-nav {
@@ -184,8 +291,10 @@ main {
 }
 
 @media (max-width: 480px) {
-  .weather-strip,
-  .tabs {
+  body {
+    padding: 1rem;
+  }
+  .weather-strip {
     grid-template-columns: repeat(4, 1fr);
   }
   .weather-icon {
@@ -193,6 +302,21 @@ main {
   }
   .weather-label {
     font-size: 0.7rem;
+  }
+  .tab {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  .tab-dow {
+    font-size: 0.65rem;
+  }
+  .plan-item {
+    grid-template-columns: 3rem 1fr auto;
+    gap: 0.4rem;
+    padding: 0.45rem 0.4rem;
+  }
+  .plan-time {
+    font-size: 0.85rem;
   }
 }
 

@@ -1,5 +1,6 @@
 const TRIP_DATES = ["2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08"];
 const SAPPORO = { lat: 43.0618, lon: 141.3545 };
+const CHECKLIST_STORAGE_KEY = "sapporo-checklist-checks-v1";
 
 const WMO = {
   0:  { icon: "☀️", label: "맑음" },
@@ -24,6 +25,96 @@ const WMO = {
   96: { icon: "⛈️", label: "천둥·우박" },
   99: { icon: "⛈️", label: "강한 천둥·우박" },
 };
+
+const CHECKLIST = [
+  {
+    category: "필수 서류·결제",
+    items: [
+      "여권 (유효기간 6개월 이상)",
+      "항공권 (e-티켓 사본·모바일)",
+      "호텔 예약 확인서",
+      "여행자 보험 증서 (긴급 연락처 포함)",
+      "비상 연락처 메모 (가족·대사관)",
+      "신용카드·직불카드 (해외결제 가능 확인)",
+      "엔화 현금 (소액 환전)",
+      "교통용 IC카드 또는 Welcome Suica 앱",
+      "국제 운전면허증 (렌터카 시)",
+    ],
+  },
+  {
+    category: "전자기기",
+    items: [
+      "휴대폰 + 충전기 + 케이블",
+      "보조배터리 (기내 휴대만, 100Wh 이하)",
+      "돼지코 어댑터 (일본 A타입 / 100V)",
+      "포켓 와이파이 또는 eSIM (사전 활성화)",
+      "이어폰·헤드폰",
+      "카메라 + 메모리카드 + 여분 배터리 (선택)",
+      "노트북·태블릿 (선택)",
+    ],
+  },
+  {
+    category: "의류 (6월 삿포로 평균 10~20°C, 일교차 큼)",
+    items: [
+      "긴팔 셔츠·티셔츠 4~5장",
+      "가벼운 자켓 또는 바람막이",
+      "긴바지 2~3벌",
+      "편한 운동화 (도보 많음)",
+      "양말·속옷 (일수 +1)",
+      "잠옷",
+      "휴대용 우산 또는 우비 (장마 직전)",
+      "모자",
+      "얇은 스카프·머플러 (저녁 쌀쌀할 때)",
+    ],
+  },
+  {
+    category: "세면도구·위생",
+    items: [
+      "칫솔·치약 (호텔 품질 낮은 경우 많음)",
+      "샴푸·린스·바디워시 (대부분 호텔 제공)",
+      "스킨케어·기초화장품",
+      "선크림",
+      "면도기",
+      "여성용품",
+      "손세정제·휴대용 티슈",
+      "예비 마스크",
+    ],
+  },
+  {
+    category: "의약품 (개인 처방약 별도)",
+    items: [
+      "감기약·해열제",
+      "두통약",
+      "소화제·지사제",
+      "멀미약",
+      "1회용 밴드·소독제",
+      "안약 (선택)",
+      "처방약 (영문 소견서 동봉 권장)",
+    ],
+  },
+  {
+    category: "기타 짐",
+    items: [
+      "휴대용 우산",
+      "에코백·보조 가방 (일본은 비닐봉투 유료)",
+      "지퍼백·비닐백 (정리·세탁물)",
+      "여행용 슬리퍼",
+      "비상식량 (라면·김·즉석밥 등)",
+      "노트와 펜",
+    ],
+  },
+  {
+    category: "출발 전 체크",
+    items: [
+      "Visit Japan Web 사전 등록 (입국·세관 QR)",
+      "온라인 체크인 (출발 24시간 전)",
+      "구글맵·파파고·NAVITIME·환율 앱 설치",
+      "데이터 로밍 또는 eSIM 동작 확인",
+      "자동출입국심사 등록 확인",
+      "집 가스·전기 차단",
+    ],
+  },
+];
 
 function weatherInfo(code) {
   return WMO[code] || { icon: "❓", label: "정보 없음" };
@@ -76,14 +167,14 @@ function setupTabs() {
 
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
-      const date = tab.dataset.date;
+      const key = tab.dataset.panel;
       tabs.forEach((t) => {
-        const active = t.dataset.date === date;
+        const active = t.dataset.panel === key;
         t.classList.toggle("is-active", active);
         t.setAttribute("aria-selected", active ? "true" : "false");
       });
       panels.forEach((p) => {
-        const active = p.dataset.date === date;
+        const active = p.dataset.panel === key;
         p.classList.toggle("is-active", active);
         p.hidden = !active;
       });
@@ -91,7 +182,87 @@ function setupTabs() {
   });
 }
 
+function loadChecks() {
+  try {
+    return JSON.parse(localStorage.getItem(CHECKLIST_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveChecks(checks) {
+  localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(checks));
+}
+
+function renderChecklist() {
+  const root = document.getElementById("checklist-root");
+  if (!root) return;
+
+  const checks = loadChecks();
+  const totalItems = CHECKLIST.reduce((sum, c) => sum + c.items.length, 0);
+
+  const summary = document.createElement("div");
+  summary.className = "checklist-summary";
+  root.appendChild(summary);
+
+  const updateSummary = () => {
+    const done = Object.values(loadChecks()).filter(Boolean).length;
+    summary.textContent = `${done} / ${totalItems} 완료`;
+  };
+
+  CHECKLIST.forEach((cat, ci) => {
+    const section = document.createElement("section");
+    section.className = "checklist-category";
+
+    const heading = document.createElement("h3");
+    heading.textContent = cat.category;
+    section.appendChild(heading);
+
+    const list = document.createElement("ul");
+    list.className = "checklist-items";
+
+    cat.items.forEach((label, ii) => {
+      const id = `chk-${ci}-${ii}`;
+      const li = document.createElement("li");
+      li.className = "checklist-item";
+
+      const wrap = document.createElement("label");
+      wrap.htmlFor = id;
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = id;
+      cb.checked = !!checks[id];
+      if (cb.checked) li.classList.add("is-checked");
+
+      cb.addEventListener("change", () => {
+        const current = loadChecks();
+        if (cb.checked) current[id] = true;
+        else delete current[id];
+        saveChecks(current);
+        li.classList.toggle("is-checked", cb.checked);
+        updateSummary();
+      });
+
+      const span = document.createElement("span");
+      span.className = "checklist-label";
+      span.textContent = label;
+
+      wrap.appendChild(cb);
+      wrap.appendChild(span);
+      li.appendChild(wrap);
+      list.appendChild(li);
+    });
+
+    section.appendChild(list);
+    root.appendChild(section);
+  });
+
+  updateSummary();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   loadWeather();
+  renderChecklist();
 });

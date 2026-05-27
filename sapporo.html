@@ -11,65 +11,230 @@
 <body>
   <main>
     <h1>삿포로 여행</h1>
-    <p class="trip-period">2026-06-05 ~ 2026-06-08</p>
+    <p class="trip-period">2026-06-05 ~ 2026-06-08 · 일본 홋카이도</p>
 
     <section class="weather-strip" id="weather-strip" aria-label="날짜별 날씨">
       <div class="weather-loading">날씨 정보를 불러오는 중…</div>
     </section>
 
-    <nav class="tabs" role="tablist" aria-label="날짜 선택">
-      <button class="tab is-active" role="tab" aria-selected="true" data-date="2026-06-05">
+    <nav class="tabs tabs-5" role="tablist" aria-label="섹션 선택">
+      <button class="tab is-active" role="tab" aria-selected="true" data-panel="checklist">
+        <span class="tab-date">준비물</span><span class="tab-dow">체크리스트</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="2026-06-05">
         <span class="tab-date">6/5</span><span class="tab-dow">금</span>
       </button>
-      <button class="tab" role="tab" aria-selected="false" data-date="2026-06-06">
+      <button class="tab" role="tab" aria-selected="false" data-panel="2026-06-06">
         <span class="tab-date">6/6</span><span class="tab-dow">토</span>
       </button>
-      <button class="tab" role="tab" aria-selected="false" data-date="2026-06-07">
+      <button class="tab" role="tab" aria-selected="false" data-panel="2026-06-07">
         <span class="tab-date">6/7</span><span class="tab-dow">일</span>
       </button>
-      <button class="tab" role="tab" aria-selected="false" data-date="2026-06-08">
+      <button class="tab" role="tab" aria-selected="false" data-panel="2026-06-08">
         <span class="tab-date">6/8</span><span class="tab-dow">월</span>
       </button>
     </nav>
 
-    <section class="tab-panel is-active" role="tabpanel" data-date="2026-06-05">
+    <section class="tab-panel is-active" role="tabpanel" data-panel="checklist">
+      <h2>준비물 체크리스트</h2>
+      <p class="panel-desc">체크 상태는 이 브라우저에 자동 저장됩니다.</p>
+      <div id="checklist-root" class="checklist"></div>
+    </section>
+
+    <section class="tab-panel" role="tabpanel" data-panel="2026-06-05" hidden>
       <h2>Day 1 · 도착</h2>
-      <ul class="plan-list">
-        <li>신치토세 공항 도착</li>
-        <li>JR로 삿포로역 이동</li>
-        <li>호텔 체크인</li>
-        <li>저녁: 스스키노에서 삿포로 라멘</li>
-      </ul>
+      <ol class="plan-list">
+        <li class="plan-item">
+          <span class="plan-time">11:30</span>
+          <span class="plan-name">신치토세 공항 도착</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=New+Chitose+Airport" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">12:30</span>
+          <span class="plan-name">JR 쾌속 에어포트 → 삿포로역 (37분)</span>
+          <a class="plan-link" href="https://www.jrhokkaido.co.jp/global/english/" target="_blank" rel="noopener noreferrer" title="JR Hokkaido">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">13:30</span>
+          <span class="plan-name">호텔 체크인 (스스키노 일대)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Susukino+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">14:30</span>
+          <span class="plan-name">점심: 호텔 근처 식당</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">16:00</span>
+          <span class="plan-name">오도리 공원 산책 (가벼운 적응)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Odori+Park+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">17:30</span>
+          <span class="plan-name">삿포로 TV 타워 (전망)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+TV+Tower" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">19:00</span>
+          <span class="plan-name">저녁: 스미레 라멘 (스스키노, 미소 라멘)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sumire+Susukino+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">21:00</span>
+          <span class="plan-name">호텔 복귀 · 휴식</span>
+        </li>
+      </ol>
     </section>
 
-    <section class="tab-panel" role="tabpanel" data-date="2026-06-06" hidden>
-      <h2>Day 2 · 시내 관광</h2>
-      <ul class="plan-list">
-        <li>오도리 공원 산책</li>
-        <li>삿포로 시계탑</li>
-        <li>점심: 수프 카레</li>
-        <li>모이와산 전망대 (야경)</li>
-      </ul>
+    <section class="tab-panel" role="tabpanel" data-panel="2026-06-06" hidden>
+      <h2>Day 2 · 삿포로 시내</h2>
+      <ol class="plan-list">
+        <li class="plan-item">
+          <span class="plan-time">08:00</span>
+          <span class="plan-name">호텔 조식</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">09:30</span>
+          <span class="plan-name">니조 시장 (해산물 아침)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Nijo+Market+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">11:00</span>
+          <span class="plan-name">삿포로 시계탑</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Clock+Tower" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">11:30</span>
+          <span class="plan-name">홋카이도청 구 본청사 (붉은 벽돌)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Former+Hokkaido+Government+Office" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">12:30</span>
+          <span class="plan-name">점심: 수프 카레 GARAKU</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Garaku+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">14:00</span>
+          <span class="plan-name">시로이코이비토 파크 (서양과자공장)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Shiroi+Koibito+Park" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">17:00</span>
+          <span class="plan-name">모이와산 케이블카 탑승</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Mount+Moiwa+Ropeway" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">18:30</span>
+          <span class="plan-name">모이와산 전망대 (일몰·야경)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Mount+Moiwa+Observatory" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">20:00</span>
+          <span class="plan-name">저녁: 삿포로 비루엔 (징기스칸)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Beer+Garden" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">22:00</span>
+          <span class="plan-name">호텔 복귀</span>
+        </li>
+      </ol>
     </section>
 
-    <section class="tab-panel" role="tabpanel" data-date="2026-06-07" hidden>
-      <h2>Day 3 · 근교</h2>
-      <ul class="plan-list">
-        <li>오타루 당일치기 (JR 쾌속)</li>
-        <li>오타루 운하·유리공방</li>
-        <li>점심: 오타루 스시</li>
-        <li>저녁: 삿포로 돌아와 징기스칸</li>
-      </ul>
+    <section class="tab-panel" role="tabpanel" data-panel="2026-06-07" hidden>
+      <h2>Day 3 · 오타루 당일치기</h2>
+      <ol class="plan-list">
+        <li class="plan-item">
+          <span class="plan-time">08:00</span>
+          <span class="plan-name">호텔 조식</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">09:00</span>
+          <span class="plan-name">삿포로역 → 오타루역 (JR 쾌속, 32분)</span>
+          <a class="plan-link" href="https://www.jrhokkaido.co.jp/global/english/" target="_blank" rel="noopener noreferrer" title="JR Hokkaido">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">10:00</span>
+          <span class="plan-name">오타루 운하 산책</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Canal" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">11:30</span>
+          <span class="plan-name">르타오 본점 (디저트)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=LeTAO+Otaru" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">12:30</span>
+          <span class="plan-name">점심: 마사스시 (스시야도리)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Masazushi+Otaru" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">14:30</span>
+          <span class="plan-name">오타루 유리공방 (체험 가능)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Glass+Studio" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">16:00</span>
+          <span class="plan-name">오르골당</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Otaru+Music+Box+Museum" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">17:30</span>
+          <span class="plan-name">오타루역 → 삿포로역</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">19:00</span>
+          <span class="plan-name">저녁: 다루마 본점 (징기스칸)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Daruma+Honten+Sapporo" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">21:30</span>
+          <span class="plan-name">호텔 복귀</span>
+        </li>
+      </ol>
     </section>
 
-    <section class="tab-panel" role="tabpanel" data-date="2026-06-08" hidden>
+    <section class="tab-panel" role="tabpanel" data-panel="2026-06-08" hidden>
       <h2>Day 4 · 출국</h2>
-      <ul class="plan-list">
-        <li>호텔 체크아웃</li>
-        <li>니조 시장 (해산물 아침)</li>
-        <li>기념품 쇼핑</li>
-        <li>신치토세 공항 출국</li>
-      </ul>
+      <ol class="plan-list">
+        <li class="plan-item">
+          <span class="plan-time">07:00</span>
+          <span class="plan-name">호텔 조식</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">08:30</span>
+          <span class="plan-name">체크아웃, 짐 보관</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">09:00</span>
+          <span class="plan-name">다누키코지 쇼핑가</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Tanukikoji+Shopping+Street" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">11:00</span>
+          <span class="plan-name">삿포로역 기념품 (도쿄야 등)</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Station" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">12:30</span>
+          <span class="plan-name">점심: 마지막 라멘</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">14:00</span>
+          <span class="plan-name">JR 쾌속 → 신치토세 공항</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">15:00</span>
+          <span class="plan-name">공항 도착, 면세점 쇼핑</span>
+          <a class="plan-link" href="https://www.google.com/maps/search/?api=1&query=New+Chitose+Airport" target="_blank" rel="noopener noreferrer" title="지도">🔗</a>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">17:30</span>
+          <span class="plan-name">출국 게이트 도착</span>
+        </li>
+        <li class="plan-item">
+          <span class="plan-time">18:30</span>
+          <span class="plan-name">출국</span>
+        </li>
+      </ol>
     </section>
 
     <p class="page-nav">
