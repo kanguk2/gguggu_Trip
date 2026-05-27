@@ -261,10 +261,6 @@ function renderChecklist() {
   updateSummary();
 }
 
-function formatKrw(n) {
-  return "KRW " + Number(n).toLocaleString("ko-KR");
-}
-
 function renderFlight(root, data) {
   const segmentsHtml = data.segments
     .map((seg) => `
@@ -292,30 +288,7 @@ function renderFlight(root, data) {
     `)
     .join("");
 
-  const passengersHtml = data.passengers
-    .map((p) => `
-      <li>
-        <div class="flight-passenger-name">${p.name}</div>
-        <div class="flight-tickets">${p.tickets.join(" · ")}</div>
-      </li>
-    `)
-    .join("");
-
-  root.innerHTML = `
-    <section class="flight-meta">
-      <div class="flight-label">예약번호</div>
-      <div class="flight-pnr">${data.pnr}</div>
-    </section>
-    ${segmentsHtml}
-    <section class="flight-passengers">
-      <h3>탑승객</h3>
-      <ul>${passengersHtml}</ul>
-    </section>
-    <section class="flight-total">
-      <span class="flight-label">총 금액</span>
-      <span class="flight-value">${formatKrw(data.totalKrw)}</span>
-    </section>
-  `;
+  root.innerHTML = segmentsHtml;
 }
 
 async function loadFlight() {
