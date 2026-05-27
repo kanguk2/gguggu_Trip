@@ -369,40 +369,44 @@ const dayMapInstances = {};
 function initDayMap(date) {
   if (!window.L) return;
   if (dayMapInstances[date]) {
-    dayMapInstances[date].invalidateSize();
+    requestAnimationFrame(() => dayMapInstances[date].invalidateSize());
     return;
   }
   const container = document.getElementById(`day-map-${date}`);
   const stops = DAY_MAPS[date];
   if (!container || !stops || stops.length === 0) return;
 
-  const map = L.map(container, { scrollWheelZoom: false });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19,
-  }).addTo(map);
+  requestAnimationFrame(() => {
+    if (dayMapInstances[date]) return;
+    const map = L.map(container, { scrollWheelZoom: false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
 
-  const latlngs = [];
-  stops.forEach((stop, i) => {
-    const num = i + 1;
-    const icon = L.divIcon({
-      className: "day-marker",
-      html: `<div class="day-marker-pin">${num}</div>`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
+    const latlngs = [];
+    stops.forEach((stop, i) => {
+      const num = i + 1;
+      const icon = L.divIcon({
+        className: "day-marker",
+        html: `<div class="day-marker-pin">${num}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      L.marker(stop.coords, { icon })
+        .addTo(map)
+        .bindPopup(`<strong>${num}. ${stop.name}</strong><br>${stop.time}`);
+      latlngs.push(stop.coords);
     });
-    L.marker(stop.coords, { icon })
-      .addTo(map)
-      .bindPopup(`<strong>${num}. ${stop.name}</strong><br>${stop.time}`);
-    latlngs.push(stop.coords);
+
+    if (latlngs.length > 1) {
+      L.polyline(latlngs, { color: "#2c6fbb", weight: 2, opacity: 0.5, dashArray: "4,6" }).addTo(map);
+    }
+
+    map.fitBounds(latlngs, { padding: [30, 30], maxZoom: 14 });
+    dayMapInstances[date] = map;
+    setTimeout(() => map.invalidateSize(), 200);
   });
-
-  if (latlngs.length > 1) {
-    L.polyline(latlngs, { color: "#2c6fbb", weight: 2, opacity: 0.5, dashArray: "4,6" }).addTo(map);
-  }
-
-  map.fitBounds(latlngs, { padding: [30, 30], maxZoom: 14 });
-  dayMapInstances[date] = map;
 }
 
 function whenUnlocked(cb) {
