@@ -366,61 +366,92 @@ const DAY_MAPS = {
 
 const GOOGLE_MAPS_KEY = "AIzaSyDCpsu8RPxm4pme2o01htptD1VM9fXVzss";
 const dayMapBuilt = {};
+let mapsApiLoadPromise = null;
 
-function buildDayMapUrl(stops) {
-  if (stops.length === 0) return null;
-  const toLatLng = (s) => `${s.coords[0]},${s.coords[1]}`;
-  if (stops.length === 1) {
-    const params = new URLSearchParams({
-      key: GOOGLE_MAPS_KEY,
-      q: toLatLng(stops[0]),
-      language: "ko",
-    });
-    return `https://www.google.com/maps/embed/v1/place?${params.toString()}`;
-  }
-  const params = new URLSearchParams({
-    key: GOOGLE_MAPS_KEY,
-    origin: toLatLng(stops[0]),
-    destination: toLatLng(stops[stops.length - 1]),
-    mode: "driving",
-    language: "ko",
-    region: "JP",
+function loadMapsApi() {
+  if (mapsApiLoadPromise) return mapsApiLoadPromise;
+  mapsApiLoadPromise = new Promise((resolve, reject) => {
+    window.__onMapsLoaded = () => resolve();
+    const script = document.createElement("script");
+    script.async = true;
+    script.defer = true;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&language=ko&region=JP&callback=__onMapsLoaded&loading=async`;
+    script.onerror = reject;
+    document.head.appendChild(script);
   });
-  if (stops.length > 2) {
-    params.set("waypoints", stops.slice(1, -1).map(toLatLng).join("|"));
-  }
-  return `https://www.google.com/maps/embed/v1/directions?${params.toString()}`;
+  return mapsApiLoadPromise;
 }
 
-function initDayMap(date) {
+async function initDayMap(date) {
   if (dayMapBuilt[date]) return;
   const container = document.getElementById(`day-map-${date}`);
   const stops = DAY_MAPS[date];
   if (!container || !stops || stops.length === 0) return;
+  dayMapBuilt[date] = true;
 
-  const url = buildDayMapUrl(stops);
-  if (!url) return;
+  try {
+    await loadMapsApi();
+  } catch (e) {
+    container.innerHTML = `<div class="map-error">지도를 불러오지 못했습니다.</div>`;
+    return;
+  }
 
-  const iframe = document.createElement("iframe");
-  iframe.src = url;
-  iframe.loading = "lazy";
-  iframe.referrerPolicy = "strict-origin-when-cross-origin";
-  iframe.allowFullscreen = true;
-  iframe.title = `${date} 경로 지도`;
-  container.innerHTML = "";
-  container.appendChild(iframe);
+  const map = new google.maps.Map(container, {
+    zoom: 12,
+    center: { lat: stops[0].coords[0], lng: stops[0].coords[1] },
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true,
+  });
+
+  const bounds = new google.maps.LatLngBounds();
+  const markers = [];
+  const letters = "ABCDEFGHIJKLMN".split("");
+
+  stops.forEach((stop, i) => {
+    const position = { lat: stop.coords[0], lng: stop.coords[1] };
+    const marker = new google.maps.Marker({
+      position,
+      map,
+      label: { text: letters[i], color: "#fff", fontWeight: "bold", fontSize: "13px" },
+      title: `${letters[i]}. ${stop.name}`,
+    });
+    const info = new google.maps.InfoWindow({
+      content: `<div style="font-size:13px;line-height:1.4"><strong>${letters[i]}. ${stop.name}</strong><br>${stop.time}</div>`,
+    });
+    marker.addListener("click", () => {
+      markers.forEach((m) => m.info.close());
+      info.open(map, marker);
+    });
+    markers.push({ marker, info, position });
+    bounds.extend(position);
+  });
+
+  map.fitBounds(bounds, 50);
 
   const legend = document.createElement("ol");
   legend.className = "day-map-legend";
-  const letters = "ABCDEFGHIJKLMN".split("");
-  stops.forEach((s, i) => {
+  stops.forEach((stop, i) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span class="legend-letter">${letters[i]}</span><span class="legend-time">${s.time}</span><span class="legend-name">${s.name}</span>`;
+    li.className = "day-map-legend-item";
+    li.tabIndex = 0;
+    li.innerHTML = `<span class="legend-letter">${letters[i]}</span><span class="legend-time">${stop.time}</span><span class="legend-name">${stop.name}</span>`;
+    const focusMarker = () => {
+      markers.forEach((m) => m.info.close());
+      map.panTo(markers[i].position);
+      if (map.getZoom() < 14) map.setZoom(15);
+      markers[i].info.open(map, markers[i].marker);
+    };
+    li.addEventListener("click", focusMarker);
+    li.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        focusMarker();
+      }
+    });
     legend.appendChild(li);
   });
   container.parentElement.insertBefore(legend, container.nextSibling);
-
-  dayMapBuilt[date] = true;
 }
 
 function whenUnlocked(cb) {

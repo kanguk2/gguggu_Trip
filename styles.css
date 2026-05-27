@@ -94,7 +94,7 @@ main {
   margin-top: 0.15rem;
 }
 
-.plan-item-expandable {
+.plan-item.plan-item-expandable {
   display: block;
   padding: 0;
   border-bottom: 1px solid #eee;
@@ -102,18 +102,25 @@ main {
   overflow: hidden;
 }
 
-.plan-item-expandable > details > summary {
+.plan-item.plan-item-expandable > details {
+  display: block;
+}
+
+.plan-item.plan-item-expandable > details > summary {
+  display: block;
   list-style: none;
   cursor: pointer;
   padding: 0.5rem 0.6rem;
   user-select: none;
 }
 
-.plan-item-expandable > details > summary::-webkit-details-marker {
+.plan-item.plan-item-expandable > details > summary::marker,
+.plan-item.plan-item-expandable > details > summary::-webkit-details-marker {
   display: none;
+  content: "";
 }
 
-.plan-item-expandable > details > summary:hover {
+.plan-item.plan-item-expandable > details > summary:hover {
   background: #f4f4f4;
 }
 
@@ -130,7 +137,7 @@ main {
   display: inline-block;
 }
 
-.plan-item-expandable > details[open] .plan-toggle-icon {
+.plan-item.plan-item-expandable > details[open] .plan-toggle-icon {
   transform: rotate(180deg);
 }
 
@@ -689,6 +696,23 @@ body.gated > main {
   grid-template-columns: 1.4rem 3rem 1fr;
   gap: 0.5rem;
   align-items: baseline;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.day-map-legend li:hover,
+.day-map-legend li:focus-visible {
+  background: #eef3ff;
+  outline: none;
+}
+
+.map-error {
+  padding: 1rem;
+  text-align: center;
+  color: #c0392b;
+  font-size: 0.9rem;
 }
 
 .legend-letter {
