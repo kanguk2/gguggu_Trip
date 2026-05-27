@@ -5,15 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <meta name="googlebot" content="noindex, nofollow">
-  <title>About</title>
+  <title>클로드 코드에 개발 요청하기</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <main>
-    <h1>About</h1>
-    <p>두 번째 페이지입니다.</p>
-    <a class="btn" href="./index.html">← 홈으로 돌아가기</a>
+    <h1>클로드 코드에 개발 요청하기</h1>
+    <p class="desc">아래 양식에 요청 사항을 작성하면 GitHub Issues에 새 이슈로 등록됩니다.</p>
+
+    <form id="request-form" class="form">
+      <label class="field">
+        <span class="label">제목</span>
+        <input type="text" name="title" required placeholder="예: 로그인 페이지에 비밀번호 찾기 버튼 추가">
+      </label>
+
+      <label class="field">
+        <span class="label">요청 내용</span>
+        <textarea name="body" rows="10" required placeholder="원하는 작업을 자세히 적어주세요.&#10;- 어떤 화면/기능인지&#10;- 어떻게 동작해야 하는지&#10;- 참고할 만한 자료"></textarea>
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn">GitHub Issue로 제출</button>
+        <a class="btn btn-secondary" href="./index.html">← 홈으로</a>
+      </div>
+
+      <p id="status" class="status" hidden></p>
+    </form>
   </main>
-  <script src="./script.js"></script>
+  <script src="./request.js"></script>
 </body>
 </html>
