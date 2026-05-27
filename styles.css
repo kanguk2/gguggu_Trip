@@ -4,6 +4,8 @@ body {
   padding: 2rem;
   background: #fafafa;
   color: #222;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 main {
@@ -882,6 +884,19 @@ body.edit-overlay-open {
   .day-map-legend li {
     grid-template-columns: 1.4rem 2.5rem 1fr;
     gap: 0.4rem;
+  }
+  .summary-row {
+    grid-template-columns: 2.8rem 1fr auto;
+    gap: 0.4rem;
+  }
+  .plan-detail {
+    padding: 0.7rem 0.6rem;
+  }
+  .transit-options li {
+    padding: 0.5rem 0.6rem;
+  }
+  .transit-times {
+    grid-template-columns: 1fr;
   }
   .flight-segment-body {
     grid-template-columns: 1fr;
