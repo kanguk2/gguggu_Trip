@@ -559,6 +559,140 @@ body.gated > main {
   line-height: 1.4;
 }
 
+.edit-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.edit-fab:hover {
+  background: #444;
+}
+
+.edit-fab:focus-visible {
+  outline: 2px solid #4d8bd8;
+  outline-offset: 2px;
+}
+
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.edit-overlay[hidden] {
+  display: none;
+}
+
+.edit-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.25);
+}
+
+.edit-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.edit-page-info {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.edit-page-info code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  background: #f0f0f0;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.edit-field > span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.edit-field input,
+.edit-field textarea {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edit-field input:focus,
+.edit-field textarea:focus {
+  outline: none;
+  border-color: #222;
+}
+
+.edit-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.edit-actions .btn {
+  margin-top: 0;
+}
+
+body.edit-overlay-open {
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .edit-fab-label {
+    display: none;
+  }
+  .edit-fab {
+    padding: 0.7rem 0.85rem;
+    font-size: 1rem;
+  }
+}
+
 .page-nav {
   display: flex;
   gap: 0.5rem;
