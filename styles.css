@@ -11,6 +11,47 @@ main {
   margin: 0 auto;
 }
 
+.page {
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.page-main {
+  flex: 1;
+}
+
+.page-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: center;
+}
+
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin: 1rem 0;
+}
+
+.info {
+  margin-top: 1.5rem;
+}
+
+.info h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.info ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.7;
+}
+
 h1 {
   font-size: 1.75rem;
   margin-bottom: 0.5rem;
