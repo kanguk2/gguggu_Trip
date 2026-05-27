@@ -11,32 +11,72 @@
 <body>
   <main>
     <h1>삿포로 여행</h1>
-    <p>일본 홋카이도의 중심 도시, 삿포로에 오신 것을 환영합니다.</p>
+    <p class="trip-period">2026-06-05 ~ 2026-06-08</p>
 
-    <section class="info">
-      <h2>추천 명소</h2>
-      <ul>
-        <li>오도리 공원 (大通公園)</li>
+    <section class="weather-strip" id="weather-strip" aria-label="날짜별 날씨">
+      <div class="weather-loading">날씨 정보를 불러오는 중…</div>
+    </section>
+
+    <nav class="tabs" role="tablist" aria-label="날짜 선택">
+      <button class="tab is-active" role="tab" aria-selected="true" data-date="2026-06-05">
+        <span class="tab-date">6/5</span><span class="tab-dow">금</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-date="2026-06-06">
+        <span class="tab-date">6/6</span><span class="tab-dow">토</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-date="2026-06-07">
+        <span class="tab-date">6/7</span><span class="tab-dow">일</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-date="2026-06-08">
+        <span class="tab-date">6/8</span><span class="tab-dow">월</span>
+      </button>
+    </nav>
+
+    <section class="tab-panel is-active" role="tabpanel" data-date="2026-06-05">
+      <h2>Day 1 · 도착</h2>
+      <ul class="plan-list">
+        <li>신치토세 공항 도착</li>
+        <li>JR로 삿포로역 이동</li>
+        <li>호텔 체크인</li>
+        <li>저녁: 스스키노에서 삿포로 라멘</li>
+      </ul>
+    </section>
+
+    <section class="tab-panel" role="tabpanel" data-date="2026-06-06" hidden>
+      <h2>Day 2 · 시내 관광</h2>
+      <ul class="plan-list">
+        <li>오도리 공원 산책</li>
         <li>삿포로 시계탑</li>
-        <li>모이와산 전망대</li>
-        <li>스스키노 거리</li>
+        <li>점심: 수프 카레</li>
+        <li>모이와산 전망대 (야경)</li>
       </ul>
     </section>
 
-    <section class="info">
-      <h2>현지 음식</h2>
-      <ul>
-        <li>삿포로 라멘 (미소 라멘)</li>
-        <li>징기스칸</li>
-        <li>해산물 (게, 성게, 연어)</li>
-        <li>수프 카레</li>
+    <section class="tab-panel" role="tabpanel" data-date="2026-06-07" hidden>
+      <h2>Day 3 · 근교</h2>
+      <ul class="plan-list">
+        <li>오타루 당일치기 (JR 쾌속)</li>
+        <li>오타루 운하·유리공방</li>
+        <li>점심: 오타루 스시</li>
+        <li>저녁: 삿포로 돌아와 징기스칸</li>
       </ul>
     </section>
 
-    <p>
+    <section class="tab-panel" role="tabpanel" data-date="2026-06-08" hidden>
+      <h2>Day 4 · 출국</h2>
+      <ul class="plan-list">
+        <li>호텔 체크아웃</li>
+        <li>니조 시장 (해산물 아침)</li>
+        <li>기념품 쇼핑</li>
+        <li>신치토세 공항 출국</li>
+      </ul>
+    </section>
+
+    <p class="page-nav">
       <a class="btn btn-secondary" href="./travel.html">← 여행 페이지로</a>
       <a class="btn btn-secondary" href="./index.html">홈으로</a>
     </p>
   </main>
+  <script src="./sapporo.js"></script>
 </body>
 </html>
