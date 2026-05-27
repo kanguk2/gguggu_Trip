@@ -428,11 +428,6 @@ function whenUnlocked(cb) {
   else document.addEventListener("trip-gate:unlocked", cb, { once: true });
 }
 
-function ensureLeafletThen(cb) {
-  if (window.L) cb();
-  else window.addEventListener("load", cb, { once: true });
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   loadWeather();
@@ -442,7 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".tab[data-panel]").forEach((tab) => {
     tab.addEventListener("click", () => {
       const key = tab.dataset.panel;
-      if (DAY_MAPS[key]) ensureLeafletThen(() => initDayMap(key));
+      if (DAY_MAPS[key]) initDayMap(key);
     });
   });
 });
