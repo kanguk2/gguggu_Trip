@@ -226,6 +226,117 @@ main {
   margin: 0.5rem 0 0;
 }
 
+.restaurant-tabs {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e5e5e5;
+  -webkit-overflow-scrolling: touch;
+}
+
+.restaurant-tab {
+  background: transparent;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: #555;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.restaurant-tab:hover {
+  background: #f4f4f4;
+}
+
+.restaurant-tab.is-active {
+  background: #222;
+  border-color: #222;
+  color: #fff;
+}
+
+.restaurant-category[hidden] {
+  display: none;
+}
+
+.restaurant-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.restaurant-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.65rem 0.8rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.12s, background 0.12s, transform 0.12s;
+}
+
+.restaurant-card:hover {
+  border-color: #2c6fbb;
+  background: #f8fbff;
+}
+
+.restaurant-card:active {
+  transform: scale(0.99);
+}
+
+.restaurant-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.restaurant-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #222;
+}
+
+.restaurant-rating {
+  color: #d68910;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.restaurant-meta {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.restaurant-meta .badge {
+  background: #eef3ff;
+  color: #2c4f8a;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.restaurant-note {
+  font-size: 0.82rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.45;
+}
+
 .weather-card {
   background: #fff;
   border: 1px solid #e5e5e5;

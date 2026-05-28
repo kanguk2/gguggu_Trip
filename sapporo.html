@@ -147,9 +147,178 @@
           <span class="plan-time">14:00</span>
           <span class="plan-name">호텔 체크인 · 더 게이트 호텔 삿포로 바이 훌릭<small class="plan-sub">3-1-44 Kitasanjo Nishi, 주오구, 060-0003 삿포로시</small></span>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">15:00</span>
-          <span class="plan-name">점심: 호텔 근처 식당</span>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">15:00</span>
+                <span class="plan-name">점심식사</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <p class="transit-note">호텔(북3조서) ↔ 오도리 공원 사이 도보 10분 내 추천 식당. 클릭 시 구글맵 리뷰로 이동. 별점은 Google·Tabelog 기준 근사치 — 15:00 은 일본 식당 휴식시간(14:30~17:00)이 많아 방문 전 영업시간 확인 권장.</p>
+
+              <nav class="restaurant-tabs" role="tablist">
+                <button class="restaurant-tab is-active" role="tab" data-category="ramen">🍜 라멘</button>
+                <button class="restaurant-tab" role="tab" data-category="curry">🍛 수프 카레</button>
+                <button class="restaurant-tab" role="tab" data-category="washoku">🍱 정식·일식</button>
+                <button class="restaurant-tab" role="tab" data-category="seafood">🍣 해산물·스시</button>
+                <button class="restaurant-tab" role="tab" data-category="cafe">☕ 카페·디저트</button>
+              </nav>
+
+              <div class="restaurant-category is-active" role="tabpanel" data-category="ramen">
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Keisuke+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">케이스케 라멘</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">시오 라멘</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">맑은 닭육수 시오 라멘 · 깔끔한 맛</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sumire+Sapporo+Ramen" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">스미레 라멘</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">정통 삿포로 미소 라멘 — 진한 국물의 정석</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Tomita+Sapporo+Station" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">라멘 토미타</span><span class="restaurant-rating">★ 4.2</span></div>
+                      <div class="restaurant-meta"><span class="badge">츠케멘</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">진한 어개 츠케멘 · 굵은 면발</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Santouka+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">산토카 (山頭火)</span><span class="restaurant-rating">★ 4.1</span></div>
+                      <div class="restaurant-meta"><span class="badge">시오 라멘</span><span class="badge">도보 9분</span></div>
+                      <p class="restaurant-note">매실 토핑 시오 라멘으로 유명 · 부담 없는 맛</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Sanpachi+Odori+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">라멘 산파치 大通本店</span><span class="restaurant-rating">★ 4.0</span></div>
+                      <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">홋카이도 라멘 체인의 본점 · 24시간 영업</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="restaurant-category" role="tabpanel" data-category="curry" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Garaku+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">GARAKU 大通本店</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">삿포로 수프카레 대표 · 시계탑 근처 · 줄 길 수 있음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Tado+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">다드 (Tado)</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 6분</span></div>
+                      <p class="restaurant-note">매콤한 토마토 베이스 · 채소 가득</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Magic+Spice+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">매직 스파이스</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 10분</span></div>
+                      <p class="restaurant-note">수프카레 원조 격 · 스스키노 방향</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Savoy+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">SAVOY</span><span class="restaurant-rating">★ 4.2</span></div>
+                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">깊은 맛의 카레 · 양고기 카레 추천</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="restaurant-category" role="tabpanel" data-category="washoku" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Washoku+Kitakaido" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">키타카이도 (北海道)</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">정식</span><span class="badge">도보 6분</span></div>
+                      <p class="restaurant-note">홋카이도 식재료 정식 세트 · 점심 메뉴 알찬 편</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Tempura+Akasaka+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">텐푸라 아카사카</span><span class="restaurant-rating">★ 4.2</span></div>
+                      <div class="restaurant-meta"><span class="badge">텐푸라 정식</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">바삭한 텐푸라 정식 · 합리적인 점심 가격</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Donburi+Sapporo+Odori" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">덮밥집 (大通)</span><span class="restaurant-rating">★ 4.1</span></div>
+                      <div class="restaurant-meta"><span class="badge">덮밥</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">계절 식재료 덮밥 · 빠른 점심에 적합</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="restaurant-category" role="tabpanel" data-category="seafood" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Washio+Sapporo+Nijo+Market" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">와시오 (니조 시장)</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">해산물 덮밥</span><span class="badge">도보 12분</span></div>
+                      <p class="restaurant-note">니조 시장 내 · 카이센동(해산물 덮밥) 정평</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kaiten+Sushi+Toriton+Sapporo+Daimaru" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">회전스시 토리톤 (다이마루)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">회전스시</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">JR 다이마루 백화점 · 가성비 좋은 회전스시</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sushidan+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">스시단 본점</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">스시</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">중급 가격 정통 스시야 · 점심 코스 추천</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="restaurant-category" role="tabpanel" data-category="cafe" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Morihiko+Coffee+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">모리히코 (森彦) 본점</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">스페셜티 커피</span><span class="badge">도보 9분</span></div>
+                      <p class="restaurant-note">삿포로 대표 자가배전 커피 · 분위기 좋음 · 줄 길 수 있음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sakurai+Coffee+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">사쿠라이 커피</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">커피·디저트</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">홋카이도산 우유 라떼 · 디저트 곁들이기 좋음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kinotoya+Cafe+Odori+Park" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-head"><span class="restaurant-name">키노토야 카페 (大通)</span><span class="restaurant-rating">★ 4.2</span></div>
+                      <div class="restaurant-meta"><span class="badge">디저트</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">홋카이도 명물 디저트 · 슈크림 · 치즈케이크</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </details>
         </li>
         <li class="plan-item">
           <span class="plan-time">16:30</span>

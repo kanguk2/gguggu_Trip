@@ -441,10 +441,30 @@ function whenUnlocked(cb) {
   else document.addEventListener("trip-gate:unlocked", cb, { once: true });
 }
 
+function setupRestaurantTabs() {
+  document.querySelectorAll(".restaurant-tabs").forEach((nav) => {
+    const scope = nav.parentElement;
+    const tabs = nav.querySelectorAll(".restaurant-tab");
+    const panels = scope.querySelectorAll(":scope > .restaurant-category");
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const cat = tab.dataset.category;
+        tabs.forEach((t) => t.classList.toggle("is-active", t.dataset.category === cat));
+        panels.forEach((p) => {
+          const active = p.dataset.category === cat;
+          p.classList.toggle("is-active", active);
+          p.hidden = !active;
+        });
+      });
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   loadWeather();
   renderChecklist();
+  setupRestaurantTabs();
   whenUnlocked(loadFlight);
 
   document.querySelectorAll(".tab[data-panel]").forEach((tab) => {
