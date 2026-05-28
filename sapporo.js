@@ -348,7 +348,7 @@ function loadMapsApi() {
     const script = document.createElement("script");
     script.async = true;
     script.defer = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&language=ko&region=JP&callback=__onMapsLoaded&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&language=ko&region=JP&libraries=marker&callback=__onMapsLoaded&loading=async`;
     script.onerror = reject;
     document.head.appendChild(script);
   });
@@ -369,12 +369,15 @@ async function initDayMap(date) {
     return;
   }
 
+  const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+
   const map = new google.maps.Map(container, {
     zoom: 12,
     center: { lat: stops[0].coords[0], lng: stops[0].coords[1] },
     mapTypeControl: false,
     streetViewControl: false,
     fullscreenControl: true,
+    mapId: "DEMO_MAP_ID",
   });
 
   const bounds = new google.maps.LatLngBounds();
@@ -383,18 +386,24 @@ async function initDayMap(date) {
 
   stops.forEach((stop, i) => {
     const position = { lat: stop.coords[0], lng: stop.coords[1] };
-    const marker = new google.maps.Marker({
+    const pin = new PinElement({
+      background: "#c0392b",
+      borderColor: "#fff",
+      glyphColor: "#fff",
+      glyph: letters[i],
+    });
+    const marker = new AdvancedMarkerElement({
       position,
       map,
-      label: { text: letters[i], color: "#fff", fontWeight: "bold", fontSize: "13px" },
+      content: pin.element,
       title: `${letters[i]}. ${stop.name}`,
     });
     const info = new google.maps.InfoWindow({
       content: `<div style="font-size:13px;line-height:1.4"><strong>${letters[i]}. ${stop.name}</strong><br>${stop.time}</div>`,
     });
-    marker.addListener("click", () => {
+    marker.addListener("gmp-click", () => {
       markers.forEach((m) => m.info.close());
-      info.open(map, marker);
+      info.open({ anchor: marker, map });
     });
     markers.push({ marker, info, position });
     bounds.extend(position);
@@ -413,7 +422,7 @@ async function initDayMap(date) {
       markers.forEach((m) => m.info.close());
       map.panTo(markers[i].position);
       if (map.getZoom() < 14) map.setZoom(15);
-      markers[i].info.open(map, markers[i].marker);
+      markers[i].info.open({ anchor: markers[i].marker, map });
     };
     li.addEventListener("click", focusMarker);
     li.addEventListener("keydown", (e) => {

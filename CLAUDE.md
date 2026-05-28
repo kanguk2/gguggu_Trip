@@ -167,10 +167,13 @@ const DAY_MAPS = {
 
 마커 전용 (경로선 없음), 한국어 라벨.
 
-- **API 키 요구사항**: GCP 프로젝트에서 **두 API 모두** 활성화 필요
-  - Maps JavaScript API (지도 렌더링용)
-  - Maps Embed API (과거 잔재, 현재는 사용 안 하지만 키 제한 풀어두면 미래 안전)
+- **API 키 요구사항**: GCP 프로젝트에서 **두 단계 모두 필요**
+  - **1단계 — 프로젝트 활성화**: `API 및 서비스 → 라이브러리` 에서 다음 두 API 사용 설정
+    - Maps JavaScript API (지도 렌더링용)
+    - Maps Embed API (과거 잔재, 현재는 사용 안 하지만 키 제한 풀어두면 미래 안전)
+  - **2단계 — API 키 자체의 API 제한사항에도 두 API 추가** (자주 빠뜨림 — 이거 빠지면 `ApiTargetBlockedMapError`)
   - 키 HTTP 리퍼러 제한: `https://kanguk2.github.io/*`
+- **AdvancedMarkerElement 사용**: `google.maps.Marker` 는 deprecated → `libraries=marker` 로드 + `mapId: "DEMO_MAP_ID"` 지정 + `AdvancedMarkerElement` + `PinElement` 로 마커 렌더링. 클릭 이벤트는 `gmp-click`, InfoWindow 열 때는 `{ anchor: marker, map }` 형태.
 - **렌더**: 각 날짜 패널의 `<div class="day-map" id="day-map-<date>">` 에 `google.maps.Map` 생성. `DAY_MAPS[date]` 의 각 stop 을 `google.maps.Marker` 로 추가 (label `A, B, C…`). `fitBounds` 로 모든 마커 화면에 들어오게 자동 줌.
 - **범례** (`.day-map-legend`): 지도 아래 `<ol>` 자동 생성. `[알파벳] [시간] [장소명]` 한 줄씩. 클릭 시 `map.panTo(position) + zoom 15` + InfoWindow 자동 오픈. Enter/Space 키도 동작.
 - **지연 로드**: 탭 클릭 시점에 처음 한 번만 Maps JS API 스크립트 주입 (`loadMapsApi()` 가 Promise 캐시). 이후 다른 날짜 탭은 같은 API 인스턴스 재사용.
