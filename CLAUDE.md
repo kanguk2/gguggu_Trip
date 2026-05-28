@@ -235,6 +235,37 @@ const DAY_MAPS = {
 
 **중요**: 반드시 `class="plan-item plan-item-expandable"` 두 개 다 — `.plan-item` 의 `display: grid` 가 뒤늦게 정의된 `.plan-item-expandable` 의 `display: block` 을 덮어쓰는 specificity 문제 때문에 `.plan-item.plan-item-expandable` 결합 셀렉터로 specificity 올려둠.
 
+### 식당·카페 추천 (펼침 안의 서브탭)
+
+식사 시간 항목을 펼치면 요리 카테고리별 탭과 식당 카드를 보여주는 패턴 (Day 1 15:00 점심식사 예시):
+
+```html
+<div class="plan-detail">
+  <nav class="restaurant-tabs" role="tablist">
+    <button class="restaurant-tab is-active" data-category="ramen">🍜 라멘</button>
+    <button class="restaurant-tab" data-category="curry">🍛 수프 카레</button>
+    ...
+  </nav>
+  <div class="restaurant-category is-active" data-category="ramen">
+    <ul class="restaurant-list">
+      <li>
+        <a class="restaurant-card" href="<google-maps-search-URL>" target="_blank" rel="noopener noreferrer">
+          <div class="restaurant-head"><span class="restaurant-name">스미레 라멘</span><span class="restaurant-rating">★ 4.3</span></div>
+          <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 8분</span></div>
+          <p class="restaurant-note">한줄 설명</p>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="restaurant-category" data-category="curry" hidden>...</div>
+</div>
+```
+
+- 탭 전환은 `sapporo.js` 의 `setupRestaurantTabs()` 가 자동 처리. 새 도시 페이지는 그대로 사용.
+- 카드 링크는 기본 Google Maps 검색 URL (`https://www.google.com/maps/search/?api=1&query=<영문+이름>`) — 클릭 시 별점/리뷰/위치 정보 한번에 보임. 특정 블로그 링크가 있으면 그쪽으로 교체.
+- 별점은 Google·Tabelog 기준 근사치라는 disclaimer 를 `transit-note` 형태로 본문 상단에 넣어둘 것.
+- 도보 시간은 호텔 기준 — 도시별 호텔 위치에 따라 재계산 필요.
+
 ## 새 여행지 추가 절차
 
 사용자가 "X 여행 추가해줘" 요청하면:
