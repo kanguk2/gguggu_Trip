@@ -168,10 +168,11 @@ const DAY_MAPS = {
 마커 전용 (경로선 없음), 한국어 라벨.
 
 - **API 키 요구사항**: GCP 프로젝트에서 **두 단계 모두 필요**
-  - **1단계 — 프로젝트 활성화**: `API 및 서비스 → 라이브러리` 에서 다음 두 API 사용 설정
+  - **1단계 — 프로젝트 활성화**: `API 및 서비스 → 라이브러리` 에서 다음 세 API 사용 설정
     - Maps JavaScript API (지도 렌더링용)
     - Maps Embed API (과거 잔재, 현재는 사용 안 하지만 키 제한 풀어두면 미래 안전)
-  - **2단계 — API 키 자체의 API 제한사항에도 두 API 추가** (자주 빠뜨림 — 이거 빠지면 `ApiTargetBlockedMapError`)
+    - **Places API (Legacy)** — 식당 카드의 실제 사진 가져오기용 (아래 "식당 사진" 섹션 참고)
+  - **2단계 — API 키 자체의 API 제한사항에도 세 API 모두 추가** (자주 빠뜨림 — 이거 빠지면 `ApiTargetBlockedMapError`)
   - 키 HTTP 리퍼러 제한: `https://kanguk2.github.io/*`
 - **AdvancedMarkerElement 사용**: `google.maps.Marker` 는 deprecated → `libraries=marker` 로드 + `mapId: "DEMO_MAP_ID"` 지정 + `AdvancedMarkerElement` + `PinElement` 로 마커 렌더링. 클릭 이벤트는 `gmp-click`, InfoWindow 열 때는 `{ anchor: marker, map }` 형태.
 - **렌더**: 각 날짜 패널의 `<div class="day-map" id="day-map-<date>">` 에 `google.maps.Map` 생성. `DAY_MAPS[date]` 의 각 stop 을 `google.maps.Marker` 로 추가 (label `A, B, C…`). `fitBounds` 로 모든 마커 화면에 들어오게 자동 줌.
@@ -266,12 +267,26 @@ const DAY_MAPS = {
 - 별점은 Google·Tabelog 기준 근사치라는 disclaimer 를 `transit-note` 형태로 본문 상단에 넣어둘 것.
 - 도보 시간은 호텔 기준 — 도시별 호텔 위치에 따라 재계산 필요.
 
-**카드 이미지** — 각 카드 최상단에 `<div class="restaurant-image" data-cuisine="X" aria-hidden="true">이모지</div>` 를 둔다. CSS 에서 `data-cuisine` 별로 그라데이션 배경 + 큰 이모지로 시각적 구분 (외부 이미지 의존성 없음). 지원 cuisine 키: `ramen / curry / washoku / seafood / sushi / cafe / jingisukan / izakaya`. 새 카테고리 추가하면 styles.css 의 `.restaurant-image[data-cuisine="..."]` 규칙도 함께 추가. 실제 사진을 쓰고 싶으면 `./files/` 에 이미지 두고 `<img src="./files/...">` 로 교체.
+**카드 이미지** — 각 카드 최상단에 `<div class="restaurant-image" data-cuisine="X" aria-hidden="true">이모지</div>` 를 둔다. CSS 에서 `data-cuisine` 별로 그라데이션 배경 + 큰 이모지가 기본 fallback. 지원 cuisine 키: `ramen / curry / washoku / seafood / sushi / cafe / jingisukan / izakaya`. 새 카테고리 추가하면 styles.css 의 `.restaurant-image[data-cuisine="..."]` 규칙도 함께 추가. 카드 비율은 `aspect-ratio: 16/10` 으로 자동 (Places 사진 비율에 맞춤).
 
-**점심 vs 저녁** — 같은 카드 구조를 점심·저녁 모두에 사용. 카테고리만 시간대에 맞게 조정:
-- 점심: 라멘 / 수프 카레 / 정식·일식 / 해산물·스시 / 카페·디저트
-- 저녁: 징기스칸(삿포로 특산) / 라멘 / 스시·해산물 / 이자카야 / 수프 카레
-- 도시별로 그 지역 특산 요리를 첫 탭에 두면 자연스러움 (오사카면 타코야키·오코노미야키 등).
+**식당 사진 (Places API 자동 로드)** — 카테고리 탭이 열리면 `sapporo.js` 의 `loadPhotosForCategory()` 가 그 패널의 모든 카드에 대해:
+1. `<a class="restaurant-card">` 의 `href` 의 `query=` 값 추출 (영문 검색어)
+2. `google.maps.places.PlacesService.findPlaceFromQuery({ query, fields: ["photos"] })` 호출
+3. `place.photos[0].getUrl({ maxWidth: 400, maxHeight: 250 })` 로 사진 URL 받기
+4. URL 을 `restaurant-image` 의 `background-image` 로 설정 + `.has-photo` 클래스 추가 (이모지 숨김)
+5. 결과는 `localStorage["place-photos-v1"]` 에 영구 캐시 — 같은 사용자는 다음 방문부터 추가 API 호출 없음
+
+Places API 활성화 안 되어 있거나 식당 이름이 매칭 안 되면 자동으로 이모지 fallback. 비용: `findPlaceFromQuery` $0.017 + `Photo` $0.007 = 카드당 약 $0.025. GCP 무료 크레딧 월 $200 으로 사실상 무료. 새 도시 추가 시 카드 `query=` 값을 정확한 영문명으로 설정하면 매칭률 ↑.
+
+**점심 vs 저녁 카테고리** — 같은 카드 구조를 점심·저녁 모두에 사용. 카테고리는 식사 시간대·장소 맥락에 맞게 조정:
+
+- **일반 점심** (시내 자유): 🍜 라멘 / 🍛 수프 카레 / 🍱 정식·일식 / 🍣 해산물·스시 / ☕ 카페·디저트
+- **일반 저녁** (시내 자유): 🐑 징기스칸(삿포로 특산) / 🍜 라멘 / 🍣 스시·해산물 / 🍶 이자카야 / 🍛 수프 카레
+- **시장 위주 저녁** (예: 니조 시장): 🍣 시장·해산물 / 🦀 게요리 / 🍶 해산물 이자카야 / 🐑 징기스칸(보조) / 🍜 라멘(보조). 시장 자체가 18시쯤 마감하면 상단에 안내문 필수.
+- **타지 점심** (예: 오타루): 그 도시 명물 카테고리를 첫 탭에 (오타루 = 스시·해산물). 도보 시간은 그 도시의 출발점(역) 기준.
+- **투어 포함 식사**: 2개 정도 카테고리만 + 상단에 "투어 포함" 명시. 자유 식사 옵션은 그 지역의 마을 중심 옵션.
+- **공항 직전 빠른 점심**: 1순위로 빠른 옵션 강조 (역 안 라멘 공화국 같은 곳).
+- 도시별로 그 지역 특산 요리를 첫 탭에 두면 자연스러움 (오사카면 🐙 타코야키·오코노미야키 등).
 
 ## 새 여행지 추가 절차
 
