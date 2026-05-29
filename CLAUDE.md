@@ -266,6 +266,13 @@ const DAY_MAPS = {
 - 별점은 Google·Tabelog 기준 근사치라는 disclaimer 를 `transit-note` 형태로 본문 상단에 넣어둘 것.
 - 도보 시간은 호텔 기준 — 도시별 호텔 위치에 따라 재계산 필요.
 
+**카드 이미지** — 각 카드 최상단에 `<div class="restaurant-image" data-cuisine="X" aria-hidden="true">이모지</div>` 를 둔다. CSS 에서 `data-cuisine` 별로 그라데이션 배경 + 큰 이모지로 시각적 구분 (외부 이미지 의존성 없음). 지원 cuisine 키: `ramen / curry / washoku / seafood / sushi / cafe / jingisukan / izakaya`. 새 카테고리 추가하면 styles.css 의 `.restaurant-image[data-cuisine="..."]` 규칙도 함께 추가. 실제 사진을 쓰고 싶으면 `./files/` 에 이미지 두고 `<img src="./files/...">` 로 교체.
+
+**점심 vs 저녁** — 같은 카드 구조를 점심·저녁 모두에 사용. 카테고리만 시간대에 맞게 조정:
+- 점심: 라멘 / 수프 카레 / 정식·일식 / 해산물·스시 / 카페·디저트
+- 저녁: 징기스칸(삿포로 특산) / 라멘 / 스시·해산물 / 이자카야 / 수프 카레
+- 도시별로 그 지역 특산 요리를 첫 탭에 두면 자연스러움 (오사카면 타코야키·오코노미야키 등).
+
 ## 새 여행지 추가 절차
 
 사용자가 "X 여행 추가해줘" 요청하면:
