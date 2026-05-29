@@ -403,6 +403,97 @@ function fetchPlacePhoto(query) {
   });
 }
 
+const TRANSIT_GUIDES = {
+  "jr-hokkaido": {
+    title: "JR 홋카이도 표 구매·이용 가이드",
+    sections: [
+      {
+        heading: "📍 어디서 구매",
+        items: [
+          "<strong>자동발매기 (券売機)</strong> — 모든 역 비치. 한국어/영어 지원. 현금·카드 결제",
+          "<strong>みどりの窓口 (미도리노 마도구치)</strong> — 유인 창구. 특급권·지정석 구매",
+          "<strong>IC카드 (Kitaca/Suica)</strong> — 자유석 한정. 탭만 하면 끝. 사전 충전 필요",
+          "<strong>온라인 사전 예약</strong> — <a href=\"https://www.jrhokkaido.co.jp/global/english/\" target=\"_blank\" rel=\"noopener noreferrer\">JR Hokkaido eきっぷ</a> 할인 혜택"
+        ]
+      },
+      {
+        heading: "🎫 표 종류",
+        items: [
+          "<strong>자유석권 (普通乗車券)</strong> — 가장 일반적, 좌석 보장 X. 한산할 땐 충분",
+          "<strong>U-Seat 지정석 (자유석 + ¥840)</strong> — 신치토세 쾌속 한정. 좌석 보장 + 캐리어 공간",
+          "<strong>특급권 (特急券, ¥1,290~)</strong> — 호쿠토 같은 특급 열차 탑승 시 필수 (자유석권과 별도 구매)"
+        ]
+      },
+      {
+        heading: "🚉 이용 순서",
+        items: [
+          "자동발매기 화면에서 <strong>한국어/영어</strong> 선택",
+          "출발지(예: 札幌 / Sapporo)와 도착지(新千歳空港 / Otaru) 선택",
+          "표 종류 (자유석/U-Seat/특급) 선택 → 결제",
+          "발권된 표를 <strong>개찰구</strong>에 투입 → 통과 시 다시 받음 (잃어버리지 X)",
+          "열차 탑승 — 자유석은 보통 4~6호차 (열차마다 다름, 플랫폼 안내 확인)",
+          "도착역 개찰구에 표 회수 (IC카드면 탭)"
+        ]
+      },
+      {
+        heading: "💳 IC카드 추천",
+        items: [
+          "<strong>Welcome Suica</strong> — 외국인 전용 모바일 앱. 보증금 없음, iPhone Wallet 으로 발급 가능",
+          "<strong>Kitaca</strong> — 홋카이도 JR IC카드. 신치토세 공항·삿포로역 발매기에서 <strong>¥2,000</strong> (¥500 보증금 + ¥1,500 충전, 환불 가능)",
+          "한국 Tmoney/캐시비는 사용 불가 — 일본 IC카드 별도 필요"
+        ]
+      }
+    ],
+    tip: "💡 짐 많은 날 (신치토세 도착·출국)은 <strong>U-Seat 지정석</strong> 추천. 큰 캐리어 둘 공간 있고 자리 못 잡을 걱정 없음."
+  }
+};
+
+function openTransitGuide(key) {
+  const guide = TRANSIT_GUIDES[key];
+  if (!guide) return;
+
+  document.querySelectorAll(".transit-guide-modal").forEach((m) => m.remove());
+
+  const modal = document.createElement("div");
+  modal.className = "transit-guide-modal";
+
+  const sectionsHtml = guide.sections.map((s) => `
+    <section>
+      <h3>${s.heading}</h3>
+      <ul>${s.items.map((it) => `<li>${it}</li>`).join("")}</ul>
+    </section>
+  `).join("");
+
+  modal.innerHTML = `
+    <div class="transit-guide-card" role="dialog" aria-modal="true">
+      <button class="transit-guide-close" type="button" aria-label="닫기">×</button>
+      <h2>${guide.title}</h2>
+      ${sectionsHtml}
+      <p class="transit-guide-tip">${guide.tip}</p>
+      <button class="btn transit-guide-done" type="button">알겠습니다</button>
+    </div>
+  `;
+
+  const close = () => modal.remove();
+  modal.querySelector(".transit-guide-close").addEventListener("click", close);
+  modal.querySelector(".transit-guide-done").addEventListener("click", close);
+  modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+  document.addEventListener("keydown", function escHandler(e) {
+    if (e.key === "Escape") {
+      close();
+      document.removeEventListener("keydown", escHandler);
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
+function setupTransitGuides() {
+  document.querySelectorAll(".transit-guide-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openTransitGuide(btn.dataset.guide));
+  });
+}
+
 async function loadPhotosForCategory(panel) {
   if (!panel) return;
   try { await loadMapsApi(); } catch { return; }
@@ -545,6 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadWeather();
   renderChecklist();
   setupRestaurantTabs();
+  setupTransitGuides();
   whenUnlocked(loadFlight);
 
   document.querySelectorAll(".tab[data-panel]").forEach((tab) => {

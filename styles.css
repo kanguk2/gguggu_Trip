@@ -226,6 +226,128 @@ main {
   margin: 0.5rem 0 0;
 }
 
+.transit-guide-btn {
+  display: inline-block;
+  margin-top: 0.7rem;
+  padding: 0.45rem 0.9rem;
+  background: #fff;
+  color: #2c4f8a;
+  border: 1px solid #b6dcff;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.transit-guide-btn:hover {
+  background: #eef3ff;
+  border-color: #2c6fbb;
+}
+
+.transit-guide-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.transit-guide-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3);
+}
+
+.transit-guide-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  padding-right: 2rem;
+}
+
+.transit-guide-card section {
+  margin-bottom: 1.1rem;
+}
+
+.transit-guide-card h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.transit-guide-card ul,
+.transit-guide-card ol {
+  margin: 0;
+  padding-left: 1.3rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #444;
+}
+
+.transit-guide-card ul li,
+.transit-guide-card ol li {
+  margin-bottom: 0.3rem;
+}
+
+.transit-guide-card a {
+  color: #2c6fbb;
+}
+
+.transit-guide-tip {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #6b4d00;
+}
+
+.transit-guide-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #888;
+  padding: 0.25rem 0.5rem;
+}
+
+.transit-guide-close:hover {
+  color: #222;
+}
+
+.transit-guide-done {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.7rem;
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.transit-guide-done:hover {
+  background: #444;
+}
+
 .restaurant-tabs {
   display: flex;
   gap: 0.35rem;
