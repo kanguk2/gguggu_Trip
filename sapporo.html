@@ -351,29 +351,124 @@
             <summary>
               <span class="summary-row">
                 <span class="plan-time">19:00</span>
-                <span class="plan-name">저녁식사</span>
+                <span class="plan-name">저녁식사 (니조 시장 위주)</span>
                 <span class="plan-toggle-icon" aria-hidden="true">▾</span>
               </span>
             </summary>
             <div class="plan-detail">
-              <p class="transit-note">호텔에서 스스키노 방향 도보 10~15분 내 추천 저녁 식당. 클릭 시 구글맵 리뷰로 이동. 별점은 Google·Tabelog 기준 근사치 — 인기 매장은 대기 길 수 있으니 예약 권장.</p>
+              <p class="transit-note"><strong>니조 시장(二条市場)</strong> · 호텔에서 도보 7분 · 삿포로 신선 해산물의 중심. ⚠️ <strong>시장 내 가게들은 대부분 18:00 전후로 영업 종료</strong>이므로 19:00 저녁이면 시장 내 식사는 어려움. 시장 인근 해산물·게요리 식당 위주로 구성. 클릭 시 구글맵 리뷰로.</p>
 
               <nav class="restaurant-tabs" role="tablist">
-                <button class="restaurant-tab is-active" role="tab" data-category="jingisukan">🐑 징기스칸</button>
+                <button class="restaurant-tab is-active" role="tab" data-category="seafood">🍣 니조·해산물</button>
+                <button class="restaurant-tab" role="tab" data-category="kani">🦀 게요리</button>
+                <button class="restaurant-tab" role="tab" data-category="izakaya">🍶 해산물 이자카야</button>
+                <button class="restaurant-tab" role="tab" data-category="jingisukan">🐑 징기스칸</button>
                 <button class="restaurant-tab" role="tab" data-category="ramen">🍜 라멘</button>
-                <button class="restaurant-tab" role="tab" data-category="sushi">🍣 스시·해산물</button>
-                <button class="restaurant-tab" role="tab" data-category="izakaya">🍶 이자카야</button>
-                <button class="restaurant-tab" role="tab" data-category="curry">🍛 수프 카레</button>
               </nav>
 
-              <div class="restaurant-category is-active" role="tabpanel" data-category="jingisukan">
+              <div class="restaurant-category is-active" role="tabpanel" data-category="seafood">
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Oiso+Nijo+Market+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">大磯 (Oiso) - 니조 시장 내</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">해산물 정식</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">니조 시장 안 인기점 · 보통 18:00 까지 영업 · 19:00 전에 갈 경우 추천 (개점시간 확인 필수)</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kita+no+Gourmet+Tei+Nijo+Market" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">北のグルメ亭</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">해산물 덮밥</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">니조 시장 옆 · 카이센동(해산물 덮밥) 정평 · 보통 18:00 까지</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sushi+Hokkaido+Sapporo+Nijo+Area" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">스시 홋카이도</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">정통 스시</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">니조 시장 인근 · 저녁 영업 (~22:00) · 19:00 저녁에 가장 안정적</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kaiten+Sushi+Hantaro+Susukino" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">회전스시 함타로 (스스키노)</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">회전스시</span><span class="badge">도보 10분</span></div>
+                      <p class="restaurant-note">밤 늦게까지 영업 · 가성비 좋은 회전스시 · 시장 못 가도 신선한 해산물</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="restaurant-category" role="tabpanel" data-category="kani" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kani+Honke+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="seafood" aria-hidden="true">🦀</div>
+                      <div class="restaurant-head"><span class="restaurant-name">카니혼케 본점 (かに本家)</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">게요리 코스</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">홋카이도 게 요리 대표 · 다리살 무한리필 / 게회 / 게전골 풀코스 · 예약 권장</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kani+Shogun+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="seafood" aria-hidden="true">🦀</div>
+                      <div class="restaurant-head"><span class="restaurant-name">카니 쇼군 (かに将軍)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">게요리</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">합리적 가격대 게요리 · 점심·저녁 세트 다양 · 가족 단위</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ebi+Kani+Gassen+Sapporo+Susukino" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="seafood" aria-hidden="true">🦀</div>
+                      <div class="restaurant-head"><span class="restaurant-name">에비카니 가센</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">게·새우 무한리필</span><span class="badge">도보 10분</span></div>
+                      <p class="restaurant-note">90분 게·새우 무한리필 · 가성비 ★ · 줄 길 수 있음</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="restaurant-category" role="tabpanel" data-category="izakaya" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Uomasa+Sapporo+Nijo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
+                      <div class="restaurant-head"><span class="restaurant-name">우오마사 (魚政)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">해산물 이자카야</span><span class="badge">도보 6분</span></div>
+                      <p class="restaurant-note">니조 시장 부근 · 시장에서 받은 신선한 회·해산물 안주 · 사케 잘 갖춰짐</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Miyagawa+Sapporo+Sushi+Izakaya" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
+                      <div class="restaurant-head"><span class="restaurant-name">미야가와 (宮川)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">회·해산물 이자카야</span><span class="badge">도보 10분</span></div>
+                      <p class="restaurant-note">현지인 단골 · 스스키노 입구 · 사시미 정평</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Uotaro+Sapporo+Izakaya" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
+                      <div class="restaurant-head"><span class="restaurant-name">우오타로 (魚太郎)</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">해산물 이자카야</span><span class="badge">도보 9분</span></div>
+                      <p class="restaurant-note">합리적 가격 · 해산물 안주 종류 많음 · 분위기 캐주얼</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="restaurant-category" role="tabpanel" data-category="jingisukan" hidden>
                 <ul class="restaurant-list">
                   <li>
                     <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Daruma+Honten+Susukino+Sapporo" target="_blank" rel="noopener noreferrer">
                       <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
                       <div class="restaurant-head"><span class="restaurant-name">다루마 본점 (스스키노)</span><span class="restaurant-rating">★ 4.6</span></div>
                       <div class="restaurant-meta"><span class="badge">정통 양고기</span><span class="badge">도보 15분</span></div>
-                      <p class="restaurant-note">삿포로 징기스칸의 대명사 · 작은 본점은 줄 길어서 분점도 고려</p>
+                      <p class="restaurant-note">삿포로 징기스칸의 대명사 · 해산물 외 옵션 원할 때</p>
                     </a>
                   </li>
                   <li>
@@ -381,23 +476,7 @@
                       <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
                       <div class="restaurant-head"><span class="restaurant-name">마쓰오 징기스칸 (松尾)</span><span class="restaurant-rating">★ 4.4</span></div>
                       <div class="restaurant-meta"><span class="badge">양념 양고기</span><span class="badge">도보 13분</span></div>
-                      <p class="restaurant-note">간장 베이스 양념이 특징 · 가족 단위 · 한국어 메뉴 있음</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Beer+Garden+Jingisukan" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
-                      <div class="restaurant-head"><span class="restaurant-name">삿포로 비루엔</span><span class="restaurant-rating">★ 4.3</span></div>
-                      <div class="restaurant-meta"><span class="badge">비어가든+양고기</span><span class="badge">차로 15분</span></div>
-                      <p class="restaurant-note">붉은 벽돌 비어가든 · 100분 무한리필 코스 · 관광지 분위기</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Daruma+44+Sapporo+Susukino" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
-                      <div class="restaurant-head"><span class="restaurant-name">다루마 4·4점</span><span class="restaurant-rating">★ 4.3</span></div>
-                      <div class="restaurant-meta"><span class="badge">본점 분점</span><span class="badge">도보 10분</span></div>
-                      <p class="restaurant-note">본점 줄 길 때 대안 · 같은 맛 · 자리 더 많음</p>
+                      <p class="restaurant-note">간장 베이스 양념 · 한국어 메뉴 있음</p>
                     </a>
                   </li>
                 </ul>
@@ -408,17 +487,9 @@
                   <li>
                     <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sumire+Susukino+Honten+Sapporo" target="_blank" rel="noopener noreferrer">
                       <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
-                      <div class="restaurant-head"><span class="restaurant-name">스미레 본점 (스스키노)</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-head"><span class="restaurant-name">스미레 본점</span><span class="restaurant-rating">★ 4.5</span></div>
                       <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 12분</span></div>
-                      <p class="restaurant-note">정통 삿포로 미소 라멘의 전설 · 본점만의 깊은 맛</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Shinra+Ramen+Sapporo" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
-                      <div class="restaurant-head"><span class="restaurant-name">신라 (神羅)</span><span class="restaurant-rating">★ 4.3</span></div>
-                      <div class="restaurant-meta"><span class="badge">카타 미소</span><span class="badge">도보 10분</span></div>
-                      <p class="restaurant-note">진한 미소 + 카타멘(딱딱한 면) · 든든한 한끼</p>
+                      <p class="restaurant-note">정통 삿포로 미소 라멘 · 해산물 외 가벼운 한끼 원할 때</p>
                     </a>
                   </li>
                   <li>
@@ -426,86 +497,7 @@
                       <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
                       <div class="restaurant-head"><span class="restaurant-name">라멘 산파치 大通本店</span><span class="restaurant-rating">★ 4.0</span></div>
                       <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 5분</span></div>
-                      <p class="restaurant-note">24시간 영업 · 늦은 저녁/야식에 좋음</p>
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="restaurant-category" role="tabpanel" data-category="sushi" hidden>
-                <ul class="restaurant-list">
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sushidan+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
-                      <div class="restaurant-head"><span class="restaurant-name">스시단 본점</span><span class="restaurant-rating">★ 4.5</span></div>
-                      <div class="restaurant-meta"><span class="badge">정통 스시야</span><span class="badge">도보 10분</span></div>
-                      <p class="restaurant-note">중급 가격대 정통 스시 · 저녁 오마카세 추천 · 예약 권장</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kaiten+Sushi+Toriton+Sapporo+Daimaru" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
-                      <div class="restaurant-head"><span class="restaurant-name">회전스시 토리톤 (다이마루)</span><span class="restaurant-rating">★ 4.4</span></div>
-                      <div class="restaurant-meta"><span class="badge">회전스시</span><span class="badge">도보 8분</span></div>
-                      <p class="restaurant-note">JR 다이마루 백화점 9F · 가성비 좋은 회전스시 · 가족 단위</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Uomasa+Sapporo" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
-                      <div class="restaurant-head"><span class="restaurant-name">우오마사 (魚政)</span><span class="restaurant-rating">★ 4.3</span></div>
-                      <div class="restaurant-meta"><span class="badge">해산물 이자카야</span><span class="badge">도보 11분</span></div>
-                      <p class="restaurant-note">신선한 회·해산물 안주 · 사케 잘 갖춰짐</p>
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="restaurant-category" role="tabpanel" data-category="izakaya" hidden>
-                <ul class="restaurant-list">
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sankoku+Izakaya+Sapporo" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
-                      <div class="restaurant-head"><span class="restaurant-name">산코쿠 이자카야</span><span class="restaurant-rating">★ 4.4</span></div>
-                      <div class="restaurant-meta"><span class="badge">정통 이자카야</span><span class="badge">도보 11분</span></div>
-                      <p class="restaurant-note">현지인 단골 · 다양한 사시미 + 야키토리 · 분위기 좋음</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Hanami+Izakaya+Sapporo" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
-                      <div class="restaurant-head"><span class="restaurant-name">하나미즈키</span><span class="restaurant-rating">★ 4.3</span></div>
-                      <div class="restaurant-meta"><span class="badge">캐주얼 이자카야</span><span class="badge">도보 9분</span></div>
-                      <p class="restaurant-note">젊은 손님 많은 캐주얼 분위기 · 합리적 가격</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Torikizoku+Sapporo+Susukino" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
-                      <div class="restaurant-head"><span class="restaurant-name">토리키조쿠</span><span class="restaurant-rating">★ 4.0</span></div>
-                      <div class="restaurant-meta"><span class="badge">닭요리 체인</span><span class="badge">도보 8분</span></div>
-                      <p class="restaurant-note">전 메뉴 ¥350 일정가 체인 · 야키토리 가성비 끝판왕</p>
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="restaurant-category" role="tabpanel" data-category="curry" hidden>
-                <ul class="restaurant-list">
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Garaku+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="curry" aria-hidden="true">🍛</div>
-                      <div class="restaurant-head"><span class="restaurant-name">GARAKU 大通本店</span><span class="restaurant-rating">★ 4.5</span></div>
-                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 5분</span></div>
-                      <p class="restaurant-note">저녁에도 영업 · 점심에 못 갔다면 저녁에라도 들러볼 만</p>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Savoy+Sapporo" target="_blank" rel="noopener noreferrer">
-                      <div class="restaurant-image" data-cuisine="curry" aria-hidden="true">🍛</div>
-                      <div class="restaurant-head"><span class="restaurant-name">SAVOY</span><span class="restaurant-rating">★ 4.2</span></div>
-                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 7분</span></div>
-                      <p class="restaurant-note">양고기 수프카레 추천 · 저녁 메뉴 충실</p>
+                      <p class="restaurant-note">24시간 영업 · 야식</p>
                     </a>
                   </li>
                 </ul>
@@ -545,9 +537,63 @@
           <span class="plan-time">11:30</span>
           <span class="plan-name">시키사이노오카 (꽃밭)</span>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">12:30</span>
-          <span class="plan-name">점심 (투어 포함, 현지 식당)</span>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">12:30</span>
+                <span class="plan-name">점심식사</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <p class="transit-note"><strong>투어 포함 식사</strong> — 보통 비에이 농원·시키사이노오카 근처 단체 식당에서 정식. 투어 외 자유 식사를 원할 경우 비에이 마을 / JR 비에이역 인근 옵션:</p>
+              <nav class="restaurant-tabs" role="tablist">
+                <button class="restaurant-tab is-active" role="tab" data-category="washoku">🍱 정식·우동</button>
+                <button class="restaurant-tab" role="tab" data-category="cafe">☕ 카페·빵</button>
+              </nav>
+              <div class="restaurant-category is-active" role="tabpanel" data-category="washoku">
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Biei+Sansui+Udon" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="washoku" aria-hidden="true">🍱</div>
+                      <div class="restaurant-head"><span class="restaurant-name">비에이 산수 우동</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">우동 정식</span><span class="badge">비에이 마을</span></div>
+                      <p class="restaurant-note">비에이 식재료 우동 정식 · 합리적 가격 · 가족 단위</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Biei+Junpei+Restaurant" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="washoku" aria-hidden="true">🍱</div>
+                      <div class="restaurant-head"><span class="restaurant-name">준페이 (準平)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">텐푸라 정식</span><span class="badge">비에이</span></div>
+                      <p class="restaurant-note">비에이 명물 새우 텐푸라 덮밥 정평</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="cafe" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Cafe+Peren+Biei" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="cafe" aria-hidden="true">☕</div>
+                      <div class="restaurant-head"><span class="restaurant-name">카페 페렌 (Peren)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">빵·커피</span><span class="badge">비에이 마을</span></div>
+                      <p class="restaurant-note">홈메이드 빵 · 비에이 우유 라떼 · 가벼운 점심</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Yamano+Ue+Cafe+Biei" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="cafe" aria-hidden="true">☕</div>
+                      <div class="restaurant-head"><span class="restaurant-name">야마노 우에 카페</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">풍경 카페</span><span class="badge">비에이 언덕</span></div>
+                      <p class="restaurant-note">비에이 언덕 전망 카페 · 디저트 + 가벼운 식사</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </details>
         </li>
         <li class="plan-item">
           <span class="plan-time">14:00</span>
@@ -565,9 +611,89 @@
           <span class="plan-time">18:30</span>
           <span class="plan-name">JR 삿포로역 도착</span>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">19:30</span>
-          <span class="plan-name">저녁: 자유시간 (스스키노 등)</span>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">19:30</span>
+                <span class="plan-name">저녁식사 (자유시간)</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <p class="transit-note">투어 끝나고 삿포로역 도착 후 자유 식사. 스스키노 방향 도보 10~15분. 클릭 시 구글맵 리뷰로.</p>
+              <nav class="restaurant-tabs" role="tablist">
+                <button class="restaurant-tab is-active" role="tab" data-category="jingisukan">🐑 징기스칸</button>
+                <button class="restaurant-tab" role="tab" data-category="ramen">🍜 라멘</button>
+                <button class="restaurant-tab" role="tab" data-category="sushi">🍣 스시·해산물</button>
+                <button class="restaurant-tab" role="tab" data-category="izakaya">🍶 이자카야</button>
+              </nav>
+              <div class="restaurant-category is-active" role="tabpanel" data-category="jingisukan">
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Matsuo+Jingisukan+Susukino+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
+                      <div class="restaurant-head"><span class="restaurant-name">마쓰오 징기스칸 (松尾)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">양념 양고기</span><span class="badge">도보 13분</span></div>
+                      <p class="restaurant-note">간장 베이스 양념 · 한국어 메뉴 있음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Beer+Garden+Jingisukan" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
+                      <div class="restaurant-head"><span class="restaurant-name">삿포로 비루엔</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">비어가든+양고기</span><span class="badge">차로 15분</span></div>
+                      <p class="restaurant-note">100분 무한리필 · 관광지 분위기</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="ramen" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sumire+Susukino+Honten+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">스미레 본점</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 12분</span></div>
+                      <p class="restaurant-note">정통 삿포로 미소 라멘</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Sanpachi+Odori+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">라멘 산파치 大通本店</span><span class="restaurant-rating">★ 4.0</span></div>
+                      <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">24시간 영업 · 늦은 저녁/야식</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="sushi" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kaiten+Sushi+Toriton+Sapporo+Daimaru" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">회전스시 토리톤 (다이마루)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">회전스시</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">JR 다이마루 백화점 9F · 가성비 회전스시</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="izakaya" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sankoku+Izakaya+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
+                      <div class="restaurant-head"><span class="restaurant-name">산코쿠 이자카야</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">정통 이자카야</span><span class="badge">도보 11분</span></div>
+                      <p class="restaurant-note">사시미 + 야키토리 · 사케 잘 갖춰짐</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </details>
         </li>
         <li class="plan-item">
           <span class="plan-time">22:00</span>
@@ -584,10 +710,60 @@
           <span class="plan-time">08:00</span>
           <span class="plan-name">호텔 조식</span>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">09:00</span>
-          <span class="plan-name">삿포로역 → 오타루역 (JR 쾌속, 32분)</span>
-          <a class="plan-link" href="https://www.jrhokkaido.co.jp/global/english/" target="_blank" rel="noopener noreferrer" title="JR Hokkaido">🔗</a>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">09:00</span>
+                <span class="plan-name">이동: 삿포로역 → 오타루역</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <h4>이동 옵션</h4>
+              <ul class="transit-options">
+                <li>
+                  <div class="transit-name">JR 쾌속 (하코다테 본선)</div>
+                  <div class="transit-meta"><span class="badge">32분</span><span class="badge">¥640</span></div>
+                  <p class="transit-note">매시간 2~4편 · 자유석 · 가성비 ★</p>
+                </li>
+                <li>
+                  <div class="transit-name">JR 보통 (각역정차)</div>
+                  <div class="transit-meta"><span class="badge">50분</span><span class="badge">¥640</span></div>
+                  <p class="transit-note">쾌속 놓쳤을 때 대안 · 같은 요금</p>
+                </li>
+                <li>
+                  <div class="transit-name">JR 특급 호쿠토 (지정석)</div>
+                  <div class="transit-meta"><span class="badge">26분</span><span class="badge">¥1,930</span></div>
+                  <p class="transit-note">¥640 + 특급권 ¥1,290 · 좌석 보장 · 짐 많을 때</p>
+                </li>
+                <li>
+                  <div class="transit-name">홋카이도 츄오 버스 (고속버스)</div>
+                  <div class="transit-meta"><span class="badge">1h 10m</span><span class="badge">¥780</span></div>
+                  <p class="transit-note">삿포로역 앞 버스터미널 · 오타루 운하 부근 정차</p>
+                </li>
+                <li>
+                  <div class="transit-name">택시</div>
+                  <div class="transit-meta"><span class="badge">약 45분</span><span class="badge">¥9,000 ~ 12,000</span></div>
+                  <p class="transit-note">2~4인 분담 시 합리적 · 직접 운하 도착</p>
+                </li>
+              </ul>
+
+              <h4>JR 시간표 — 09:00 전후 출발편 (삿포로 → 오타루)</h4>
+              <p class="transit-note">평일 기준 · 매시간 2~4편 · 실제 시각은 시즌·요일에 따라 변동 가능.</p>
+              <ul class="transit-times">
+                <li>삿포로 09:00 → 오타루 09:34 (쾌속)</li>
+                <li>삿포로 09:15 → 오타루 09:46 (쾌속)</li>
+                <li>삿포로 09:30 → 오타루 10:18 (보통)</li>
+                <li>삿포로 09:45 → 오타루 10:18 (쾌속)</li>
+                <li>삿포로 10:00 → 오타루 10:34 (쾌속)</li>
+              </ul>
+              <p class="transit-disclaimer">최신 시간표:
+                <a href="https://www.jrhokkaido.co.jp/global/english/timetable.html" target="_blank" rel="noopener noreferrer">JR Hokkaido (영문)</a>
+                · <a href="https://ekitan.com/timetable/railway/station/1180-1" target="_blank" rel="noopener noreferrer">Ekitan (삿포로역)</a>
+              </p>
+            </div>
+          </details>
         </li>
         <li class="plan-item">
           <span class="plan-time">10:00</span>
@@ -597,9 +773,129 @@
           <span class="plan-time">11:30</span>
           <span class="plan-name">르타오 본점 (디저트)</span>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">12:30</span>
-          <span class="plan-name">점심: 마사스시 (스시야도리)</span>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">12:30</span>
+                <span class="plan-name">점심식사</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <p class="transit-note">오타루 운하·스시야도리 일대 도보 5~10분. 별점은 근사치 — 오타루는 스시야도리(스시 거리) 가 명물. 클릭 시 구글맵 리뷰로.</p>
+              <nav class="restaurant-tabs" role="tablist">
+                <button class="restaurant-tab is-active" role="tab" data-category="sushi">🍣 스시·해산물</button>
+                <button class="restaurant-tab" role="tab" data-category="washoku">🍱 정식·소바</button>
+                <button class="restaurant-tab" role="tab" data-category="ramen">🍜 라멘</button>
+                <button class="restaurant-tab" role="tab" data-category="cafe">☕ 카페·디저트</button>
+              </nav>
+              <div class="restaurant-category is-active" role="tabpanel" data-category="sushi">
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Masazushi+Otaru+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">마사스시 본점</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">정통 스시</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">스시야도리 대표 명소 · 점심 한정 메뉴 가성비 좋음 · 줄 길 수 있음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Otaru+Masazushi+Zen+An" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">마사스시 젠안</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">분점</span><span class="badge">도보 6분</span></div>
+                      <p class="restaurant-note">본점 줄 길 때 대안 · 같은 그룹 · 분위기 차분</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kaiten+Sushi+Toriton+Otaru" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">회전스시 토리톤 (오타루점)</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">회전스시</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">가성비 회전스시 · 가족 단위 · 빠른 점심</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Otaru+Takinami+Sushi" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">다키나미 스시</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">고급 스시야</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">오마카세 코스 정평 · 점심 세트 추천 · 예약 권장</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="washoku" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Otaru+Yabuhan+Soba" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="washoku" aria-hidden="true">🍱</div>
+                      <div class="restaurant-head"><span class="restaurant-name">오타루 야부한 (소바)</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">정통 소바</span><span class="badge">도보 6분</span></div>
+                      <p class="restaurant-note">100년 넘은 노포 · 오타루 대표 소바집 · 점심 한정 세트 좋음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Otaru+Shokudo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="washoku" aria-hidden="true">🍱</div>
+                      <div class="restaurant-head"><span class="restaurant-name">오타루 식당 본점</span><span class="restaurant-rating">★ 4.2</span></div>
+                      <div class="restaurant-meta"><span class="badge">홋카이도 정식</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">홋카이도 식재료 정식 · 점심 메뉴 알찬 편</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="ramen" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Otaru+Ramen+Aoba" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">오타루 라멘 아오바</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">간장 라멘</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">오타루 시장 근처 · 진한 간장 베이스 · 점심 줄 있음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Otaru+Ramen+Katakana" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">라멘 가타카나</span><span class="restaurant-rating">★ 4.1</span></div>
+                      <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 9분</span></div>
+                      <p class="restaurant-note">가벼운 미소 라멘 · 캐주얼 분위기</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="cafe" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=LeTAO+Otaru+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="cafe" aria-hidden="true">☕</div>
+                      <div class="restaurant-head"><span class="restaurant-name">르타오 본점</span><span class="restaurant-rating">★ 4.6</span></div>
+                      <div class="restaurant-meta"><span class="badge">치즈케이크·커피</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">오타루 디저트 명물 · 본점만의 메뉴 · 가벼운 점심 + 디저트</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kitaichi+Hall+Otaru" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="cafe" aria-hidden="true">☕</div>
+                      <div class="restaurant-head"><span class="restaurant-name">키타이치 홀</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">석유램프 분위기</span><span class="badge">도보 7분</span></div>
+                      <p class="restaurant-note">키타이치 글라스 옆 카페 · 167개 석유램프 인테리어 · 분위기 ★</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Morihiko+Otaru" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="cafe" aria-hidden="true">☕</div>
+                      <div class="restaurant-head"><span class="restaurant-name">모리히코 오타루</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">스페셜티 커피</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">삿포로 본점의 오타루 지점 · 자가배전 커피</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </details>
         </li>
         <li class="plan-item">
           <span class="plan-time">14:30</span>
@@ -609,13 +905,149 @@
           <span class="plan-time">16:00</span>
           <span class="plan-name">오르골당</span>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">17:30</span>
-          <span class="plan-name">오타루역 → 삿포로역</span>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">17:30</span>
+                <span class="plan-name">이동: 오타루역 → 삿포로역</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <h4>이동 옵션 (역방향, 09:00 과 동일)</h4>
+              <ul class="transit-options">
+                <li>
+                  <div class="transit-name">JR 쾌속 (하코다테 본선)</div>
+                  <div class="transit-meta"><span class="badge">32분</span><span class="badge">¥640</span></div>
+                  <p class="transit-note">매시간 2~4편 · 자유석 · 가장 무난</p>
+                </li>
+                <li>
+                  <div class="transit-name">JR 보통</div>
+                  <div class="transit-meta"><span class="badge">50분</span><span class="badge">¥640</span></div>
+                  <p class="transit-note">쾌속 놓쳤을 때 대안</p>
+                </li>
+                <li>
+                  <div class="transit-name">홋카이도 츄오 버스</div>
+                  <div class="transit-meta"><span class="badge">1h 10m</span><span class="badge">¥780</span></div>
+                  <p class="transit-note">오타루 운하 부근 → 삿포로역 앞</p>
+                </li>
+              </ul>
+              <h4>JR 시간표 — 17:30 전후 출발편 (오타루 → 삿포로)</h4>
+              <p class="transit-note">평일 기준 · 매시간 2~4편 · 실제 시각은 변동 가능.</p>
+              <ul class="transit-times">
+                <li>오타루 17:14 → 삿포로 17:46 (쾌속)</li>
+                <li>오타루 17:30 → 삿포로 18:04 (쾌속)</li>
+                <li>오타루 17:45 → 삿포로 18:33 (보통)</li>
+                <li>오타루 18:00 → 삿포로 18:34 (쾌속)</li>
+                <li>오타루 18:14 → 삿포로 18:48 (쾌속)</li>
+              </ul>
+              <p class="transit-disclaimer">최신 시간표:
+                <a href="https://www.jrhokkaido.co.jp/global/english/timetable.html" target="_blank" rel="noopener noreferrer">JR Hokkaido (영문)</a>
+                · <a href="https://ekitan.com/timetable/railway/station/1180-2" target="_blank" rel="noopener noreferrer">Ekitan (오타루역)</a>
+              </p>
+            </div>
+          </details>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">19:00</span>
-          <span class="plan-name">저녁: 다루마 본점 (징기스칸)</span>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">19:00</span>
+                <span class="plan-name">저녁식사</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <p class="transit-note">삿포로 도착 후 스스키노 방향 · 도보 10~15분. 다루마 본점이 인기 1순위. 클릭 시 구글맵 리뷰로.</p>
+              <nav class="restaurant-tabs" role="tablist">
+                <button class="restaurant-tab is-active" role="tab" data-category="jingisukan">🐑 징기스칸</button>
+                <button class="restaurant-tab" role="tab" data-category="ramen">🍜 라멘</button>
+                <button class="restaurant-tab" role="tab" data-category="izakaya">🍶 이자카야</button>
+                <button class="restaurant-tab" role="tab" data-category="curry">🍛 수프 카레</button>
+              </nav>
+              <div class="restaurant-category is-active" role="tabpanel" data-category="jingisukan">
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Daruma+Honten+Susukino+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
+                      <div class="restaurant-head"><span class="restaurant-name">다루마 본점 (스스키노)</span><span class="restaurant-rating">★ 4.6</span></div>
+                      <div class="restaurant-meta"><span class="badge">정통 양고기</span><span class="badge">도보 15분</span></div>
+                      <p class="restaurant-note">오늘의 계획 · 작은 본점 · 줄 길면 분점도 OK</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Matsuo+Jingisukan+Susukino+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
+                      <div class="restaurant-head"><span class="restaurant-name">마쓰오 징기스칸 (松尾)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">양념 양고기</span><span class="badge">도보 13분</span></div>
+                      <p class="restaurant-note">간장 베이스 양념 · 한국어 메뉴 있음</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Daruma+44+Sapporo+Susukino" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="jingisukan" aria-hidden="true">🐑</div>
+                      <div class="restaurant-head"><span class="restaurant-name">다루마 4·4점</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">본점 분점</span><span class="badge">도보 10분</span></div>
+                      <p class="restaurant-note">본점 줄 길 때 대안 · 같은 맛 · 자리 더 많음</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="ramen" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sumire+Susukino+Honten+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">스미레 본점</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 12분</span></div>
+                      <p class="restaurant-note">정통 삿포로 미소 라멘의 전설</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Sanpachi+Odori+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">라멘 산파치 大通本店</span><span class="restaurant-rating">★ 4.0</span></div>
+                      <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">24시간 영업 · 늦은 저녁/야식</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="izakaya" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sankoku+Izakaya+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
+                      <div class="restaurant-head"><span class="restaurant-name">산코쿠 이자카야</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">정통 이자카야</span><span class="badge">도보 11분</span></div>
+                      <p class="restaurant-note">사시미 + 야키토리 · 사케 잘 갖춰짐</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Torikizoku+Sapporo+Susukino" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="izakaya" aria-hidden="true">🍶</div>
+                      <div class="restaurant-head"><span class="restaurant-name">토리키조쿠</span><span class="restaurant-rating">★ 4.0</span></div>
+                      <div class="restaurant-meta"><span class="badge">닭요리 체인</span><span class="badge">도보 8분</span></div>
+                      <p class="restaurant-note">전 메뉴 ¥350 일정가 · 야키토리 가성비</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="curry" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Garaku+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="curry" aria-hidden="true">🍛</div>
+                      <div class="restaurant-head"><span class="restaurant-name">GARAKU 大通本店</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">저녁에도 영업 · 점심 못 갔다면 저녁에</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </details>
         </li>
         <li class="plan-item">
           <span class="plan-time">21:30</span>
@@ -644,9 +1076,97 @@
           <span class="plan-time">10:30</span>
           <span class="plan-name">삿포로역 기념품 (도쿄야 등)</span>
         </li>
-        <li class="plan-item">
-          <span class="plan-time">11:30</span>
-          <span class="plan-name">점심: 마지막 라멘</span>
+        <li class="plan-item plan-item-expandable">
+          <details>
+            <summary>
+              <span class="summary-row">
+                <span class="plan-time">11:30</span>
+                <span class="plan-name">점심식사 (마지막)</span>
+                <span class="plan-toggle-icon" aria-hidden="true">▾</span>
+              </span>
+            </summary>
+            <div class="plan-detail">
+              <p class="transit-note">JR 삿포로역 인근 도보 5분 내 — 12:30 공항행 JR 출발 전 빠른 점심. 라멘 공화국(JR 삿포로역 ESTA 10F) 추천 옵션 다수.</p>
+              <nav class="restaurant-tabs" role="tablist">
+                <button class="restaurant-tab is-active" role="tab" data-category="ramen">🍜 라멘</button>
+                <button class="restaurant-tab" role="tab" data-category="sushi">🍣 스시·해산물</button>
+                <button class="restaurant-tab" role="tab" data-category="curry">🍛 수프 카레</button>
+                <button class="restaurant-tab" role="tab" data-category="washoku">🍱 정식·일식</button>
+              </nav>
+              <div class="restaurant-category is-active" role="tabpanel" data-category="ramen">
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sapporo+Ramen+Republic+ESTA" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">라멘 공화국 (ESTA 10F)</span><span class="restaurant-rating">★ 4.2</span></div>
+                      <div class="restaurant-meta"><span class="badge">8개 라멘집 한곳에</span><span class="badge">도보 2분</span></div>
+                      <p class="restaurant-note">JR 삿포로역 바로 위 · 스미레·케이스케 등 인기 라멘집 분점 모음 · 마지막 라멘 한판 추천</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Keisuke+Sapporo" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">케이스케 라멘</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">시오 라멘</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">맑은 닭육수 시오 · 깔끔하게 마무리</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Ramen+Tomita+Sapporo+Station" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="ramen" aria-hidden="true">🍜</div>
+                      <div class="restaurant-head"><span class="restaurant-name">라멘 토미타</span><span class="restaurant-rating">★ 4.2</span></div>
+                      <div class="restaurant-meta"><span class="badge">츠케멘</span><span class="badge">도보 5분</span></div>
+                      <p class="restaurant-note">진한 어개 츠케멘 · 든든한 점심</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="sushi" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Kaiten+Sushi+Toriton+Sapporo+Daimaru" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">회전스시 토리톤 (다이마루)</span><span class="restaurant-rating">★ 4.4</span></div>
+                      <div class="restaurant-meta"><span class="badge">회전스시</span><span class="badge">도보 3분</span></div>
+                      <p class="restaurant-note">JR 다이마루 백화점 9F · 빠른 회전스시 점심</p>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Sushidan+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="sushi" aria-hidden="true">🍣</div>
+                      <div class="restaurant-head"><span class="restaurant-name">스시단 본점</span><span class="restaurant-rating">★ 4.3</span></div>
+                      <div class="restaurant-meta"><span class="badge">정통 스시</span><span class="badge">도보 6분</span></div>
+                      <p class="restaurant-note">점심 스시 세트 · 마지막 인사로 좋음</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="curry" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Soup+Curry+Garaku+Sapporo+Honten" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="curry" aria-hidden="true">🍛</div>
+                      <div class="restaurant-head"><span class="restaurant-name">GARAKU 大通本店</span><span class="restaurant-rating">★ 4.5</span></div>
+                      <div class="restaurant-meta"><span class="badge">수프 카레</span><span class="badge">도보 6분</span></div>
+                      <p class="restaurant-note">삿포로 특산 수프카레로 마무리 · 줄 길면 패스</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant-category" role="tabpanel" data-category="washoku" hidden>
+                <ul class="restaurant-list">
+                  <li>
+                    <a class="restaurant-card" href="https://www.google.com/maps/search/?api=1&query=Donburi+Sapporo+Station" target="_blank" rel="noopener noreferrer">
+                      <div class="restaurant-image" data-cuisine="washoku" aria-hidden="true">🍱</div>
+                      <div class="restaurant-head"><span class="restaurant-name">덮밥집 (삿포로역)</span><span class="restaurant-rating">★ 4.1</span></div>
+                      <div class="restaurant-meta"><span class="badge">덮밥</span><span class="badge">도보 2분</span></div>
+                      <p class="restaurant-note">해산물 덮밥 · 가장 빠른 점심 옵션</p>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </details>
         </li>
         <li class="plan-item">
           <span class="plan-time">12:30</span>
