@@ -348,11 +348,82 @@ function loadMapsApi() {
     const script = document.createElement("script");
     script.async = true;
     script.defer = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&language=ko&region=JP&libraries=marker&callback=__onMapsLoaded&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&language=ko&region=JP&libraries=marker,places&callback=__onMapsLoaded&loading=async`;
     script.onerror = reject;
     document.head.appendChild(script);
   });
   return mapsApiLoadPromise;
+}
+
+const PLACE_PHOTO_CACHE_KEY = "place-photos-v1";
+
+function loadPhotoCache() {
+  try { return JSON.parse(localStorage.getItem(PLACE_PHOTO_CACHE_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function savePhotoCache(cache) {
+  try { localStorage.setItem(PLACE_PHOTO_CACHE_KEY, JSON.stringify(cache)); }
+  catch {}
+}
+
+const photoCache = loadPhotoCache();
+
+function fetchPlacePhoto(query) {
+  if (Object.prototype.hasOwnProperty.call(photoCache, query)) {
+    return Promise.resolve(photoCache[query]);
+  }
+  return new Promise((resolve) => {
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+      resolve(null);
+      return;
+    }
+    try {
+      const service = new google.maps.places.PlacesService(document.createElement("div"));
+      service.findPlaceFromQuery(
+        { query, fields: ["photos"] },
+        (results, status) => {
+          let url = null;
+          try {
+            if (
+              status === google.maps.places.PlacesServiceStatus.OK &&
+              results && results[0] && results[0].photos && results[0].photos[0]
+            ) {
+              url = results[0].photos[0].getUrl({ maxWidth: 400, maxHeight: 250 });
+            }
+          } catch {}
+          photoCache[query] = url;
+          savePhotoCache(photoCache);
+          resolve(url);
+        }
+      );
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function loadPhotosForCategory(panel) {
+  if (!panel) return;
+  try { await loadMapsApi(); } catch { return; }
+  const cards = panel.querySelectorAll(".restaurant-card");
+  cards.forEach((card) => {
+    if (card.dataset.photoTried) return;
+    card.dataset.photoTried = "1";
+    const imageEl = card.querySelector(".restaurant-image");
+    if (!imageEl) return;
+    let query;
+    try {
+      const u = new URL(card.href);
+      query = u.searchParams.get("query");
+    } catch { return; }
+    if (!query) return;
+    fetchPlacePhoto(query).then((url) => {
+      if (!url) return;
+      imageEl.style.backgroundImage = `url("${url}")`;
+      imageEl.classList.add("has-photo");
+    });
+  });
 }
 
 async function initDayMap(date) {
@@ -454,8 +525,17 @@ function setupRestaurantTabs() {
           const active = p.dataset.category === cat;
           p.classList.toggle("is-active", active);
           p.hidden = !active;
+          if (active) loadPhotosForCategory(p);
         });
       });
+    });
+  });
+
+  document.querySelectorAll(".plan-item-expandable > details").forEach((d) => {
+    d.addEventListener("toggle", () => {
+      if (!d.open) return;
+      const active = d.querySelector(".restaurant-category.is-active");
+      if (active) loadPhotosForCategory(active);
     });
   });
 }
