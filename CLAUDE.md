@@ -236,6 +236,19 @@ const DAY_MAPS = {
 
 **중요**: 반드시 `class="plan-item plan-item-expandable"` 두 개 다 — `.plan-item` 의 `display: grid` 가 뒤늦게 정의된 `.plan-item-expandable` 의 `display: block` 을 덮어쓰는 specificity 문제 때문에 `.plan-item.plan-item-expandable` 결합 셀렉터로 specificity 올려둠.
 
+### 교통 안내 모달 (transit guide modal)
+
+이동 항목 (JR/버스/택시 옵션) 펼침 안에 표 구매·이용 방법 안내 버튼을 둘 수 있다:
+
+```html
+<p class="transit-disclaimer">최신 시간표: ...</p>
+<button class="transit-guide-btn" data-guide="jr-hokkaido" type="button">🎫 표 구매·이용 방법 안내</button>
+```
+
+- 클릭 시 `sapporo.js` 의 `openTransitGuide(key)` 가 모달 띄움. 콘텐츠는 `TRANSIT_GUIDES` 상수에서 정의 (title + sections + tip).
+- 현재 등록된 가이드: `jr-hokkaido` (JR Hokkaido 표 구매·IC카드·승차 절차). 새 가이드 추가 (예: 비에이 투어버스, 신칸센) 는 `TRANSIT_GUIDES[key] = { title, sections, tip }` 형태로.
+- 모달 닫기: 우측 상단 ×, 백드롭 클릭, Esc 키, 하단 "알겠습니다" 버튼 — 4가지 다 동작.
+
 ### 식당·카페 추천 (펼침 안의 서브탭)
 
 식사 시간 항목을 펼치면 요리 카테고리별 탭과 식당 카드를 보여주는 패턴 (Day 1 15:00 점심식사 예시):
@@ -268,6 +281,20 @@ const DAY_MAPS = {
 - 도보 시간은 호텔 기준 — 도시별 호텔 위치에 따라 재계산 필요.
 
 **카드 이미지** — 각 카드 최상단에 `<div class="restaurant-image" data-cuisine="X" aria-hidden="true">이모지</div>` 를 둔다. CSS 에서 `data-cuisine` 별로 그라데이션 배경 + 큰 이모지가 기본 fallback. 지원 cuisine 키: `ramen / curry / washoku / seafood / sushi / cafe / jingisukan / izakaya`. 새 카테고리 추가하면 styles.css 의 `.restaurant-image[data-cuisine="..."]` 규칙도 함께 추가. 카드 비율은 `aspect-ratio: 16/10` 으로 자동 (Places 사진 비율에 맞춤).
+
+**메뉴·가격** — 각 카드의 `<p class="restaurant-note">` 뒤에 `<ul class="restaurant-menu">` 로 3가지 대표 메뉴 + 가격 표시:
+
+```html
+<ul class="restaurant-menu">
+  <li><span class="menu-item">미소 라멘</span><span class="menu-price">¥1,000</span></li>
+  <li><span class="menu-item">토로 차슈 미소</span><span class="menu-price">¥1,400</span></li>
+  <li><span class="menu-item">교자 5개</span><span class="menu-price">¥400</span></li>
+</ul>
+```
+
+- 가격은 2025~2026 한국 여행자 기준 근사치 — 실제 방문 시점에 변동 가능 (상단 `transit-note` 에 disclaimer 권장).
+- 새 식당 카드 추가 시 그 식당의 대표 메뉴 2~3개 + 일반 가격대 (¥) 같이 적기.
+- 가격 형식: `¥850` / `¥850~1,500` (가격대) / `¥350 일정` (균일가) / `¥150~` (시작가).
 
 **식당 사진 (Places API 자동 로드)** — 카테고리 탭이 열리면 `sapporo.js` 의 `loadPhotosForCategory()` 가 그 패널의 모든 카드에 대해:
 1. `<a class="restaurant-card">` 의 `href` 의 `query=` 값 추출 (영문 검색어)
