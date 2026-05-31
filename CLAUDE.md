@@ -1,6 +1,6 @@
 # gguggu_Trip — 정적 여행 페이지 프로젝트
 
-GitHub Pages에 올리는 정적 HTML 사이트. 백엔드 없음, 모든 페이지는 상대경로로 연결되며 모든 페이지의 `<head>`에 `noindex, nofollow` 메타태그가 포함된다.
+GitHub Pages 정적 HTML + Cloudflare Worker (편집용 백엔드). 모든 페이지는 상대경로로 연결되며 모든 페이지의 `<head>`에 `noindex, nofollow` 메타태그가 포함된다.
 
 ## 디렉토리 구조
 
@@ -15,11 +15,17 @@ notfound.html       게이트 통과 실패 시 도달 (게이트 없음)
 secret.js           암호화된 시크릿 묶음 (PNR·탑승객 등)
 gate.js             모든 보호 페이지가 로드하는 키 게이트
 edit-page.js        모든 페이지에 ✏️ 수정요청 FAB 주입
+overrides.js        도시 페이지에 메모·새 일정 UI 주입 (Worker 백엔드 연동)
 request.js          about.html의 폼 → GitHub Issues URL 변환
 styles.css          모든 페이지가 공유하는 단일 스타일시트
 script.js           index.html의 공용 스크립트 (현재 비어있음)
 robots.txt          모든 크롤러 차단
 files/              여행 관련 첨부 파일 (PDF·이미지 등). 비식별 처리 필수
+trips/              도시별 동적 데이터 (overrides JSON)
+  sapporo-overrides.json   사용자가 추가한 일정 + 메모 (Worker 가 갱신)
+worker/             Cloudflare Worker 백엔드 소스
+  index.js                 GitHub API 자동 커밋 로직
+wrangler.toml       Worker 배포 설정 (npx wrangler deploy 용)
 ```
 
 ## 페이지 골격 — 보호 페이지
@@ -91,6 +97,97 @@ const SENTINEL = "trip-gate-ok";
 ## 수정요청 FAB (edit-page.js)
 
 `<main>` 안에 우측 하단 플로팅 버튼 + 모달 자동 주입. 클릭 → 제목/내용 입력 → 제출 시 GitHub Issues 생성 URL 새 탭으로 (현재는 리다이렉트 방식 유지). 이슈 제목은 `[<페이지파일명>] <사용자제목>`, 본문에는 페이지명·URL 자동 첨부. FAB 는 `<main>` 자식이라 `body.gated` 동안 자동으로 숨겨짐.
+
+## 메모·새 일정 (overrides.js + Cloudflare Worker)
+
+도시 페이지에서 일행과 실시간으로 메모·새 일정을 공유할 수 있다. Worker 가 GitHub API 로 `trips/<city>-overrides.json` 을 자동 커밋해서 모든 사용자가 새로고침하면 봄.
+
+### 아키텍처
+
+```
+브라우저(<city>.html)
+  ↓ GET /overrides
+Cloudflare Worker (https://gguggutrip.tches0606.workers.dev)
+  ↓ GitHub API (Bearer GITHUB_TOKEN)
+GitHub repo (trips/sapporo-overrides.json)
+  ↓ Pages 자동 빌드 (~30초)
+브라우저 (다음 방문 시 최신 데이터)
+```
+
+### 데이터 구조 (`trips/<city>-overrides.json`)
+
+```json
+{
+  "additions": {
+    "2026-06-05": [
+      { "id": "add-abc123", "time": "20:30", "name": "카페 휴식" }
+    ]
+  },
+  "notes": {
+    "2026-06-05/13:00": "이 항목 메모",
+    "2026-06-05/add-abc123": "추가 항목 메모"
+  }
+}
+```
+
+- `additions[date]` — 사용자가 추가한 일정 (id, time, name). 페이지 로드 시 시간순으로 자동 삽입.
+- `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목) 또는 `<date>/<add-id>` (추가 항목).
+
+### overrides.js 동작
+
+게이트 통과 후 실행:
+1. `WORKER_URL/overrides` GET → JSON 받음
+2. 정적 plan-item 마다 `data-item-key` 설정 + 메모 있으면 노란 박스로 표시
+3. `additions` 항목들을 해당 날짜 패널의 plan-list 에 시간순 삽입 (초록 배경)
+4. 모든 plan-item 우측에 📝(메모) / ✎(편집) 버튼 추가
+5. 각 날짜 패널 맨 아래에 `+ 새 일정 추가` 버튼 추가
+6. 편집 비번은 localStorage(`trip-edit-password-v1`)에 저장, 최초 1회만 입력
+
+### Worker API
+
+`POST /edit` — body: `{ password, action, ...payload }`
+
+| action | payload | 동작 |
+|---|---|---|
+| `addItem` | `date, time, name` | `additions[date]` 에 새 항목 추가 |
+| `updateItem` | `date, id, time?, name?` | 추가된 항목의 시간·이름 수정 |
+| `deleteItem` | `date, id` | 추가된 항목 삭제 |
+| `setNote` | `key, note` | 메모 설정 (빈 문자열이면 삭제) |
+
+모든 변경은 즉시 GitHub 커밋. 응답에 최신 overrides JSON 포함.
+
+### Worker 환경변수 (Cloudflare Secrets)
+
+- `GITHUB_TOKEN` — Fine-grained PAT, `kanguk2/gguggu_Trip` 에 Contents:write 권한
+- `EDIT_PASSWORD` — 편집 시 클라이언트가 보내야 하는 공유 비밀번호
+
+### Worker 배포 / 재배포
+
+```powershell
+cd D:\Kanguk\gguggu_2
+npx wrangler login        # 최초 1회
+npx wrangler deploy       # 코드 변경할 때마다
+```
+
+Secret 만 바꾸려면 Cloudflare 대시보드 → Worker → Settings → Variables and Secrets → 해당 항목 삭제 후 새로 추가 → Deploy. (Secret 값은 저장 후 확인 불가능, 잊으면 재발급 필요)
+
+### CORS 정책
+
+Worker 는 `https://kanguk2.github.io` Origin 만 허용. 다른 도메인 (또는 로컬 file://) 에서 호출하면 차단됨. 로컬 테스트가 필요하면 `ALLOWED_ORIGINS` 배열에 `http://localhost:포트` 추가하고 재배포.
+
+### 토큰 회전 (90일마다)
+
+GitHub Fine-grained PAT 는 최대 1년 유효. 만료 임박 시:
+1. https://github.com/settings/personal-access-tokens → 해당 토큰 → **Regenerate token** 또는 새로 발급
+2. Cloudflare Worker Settings → Secrets → `GITHUB_TOKEN` 삭제 → 새 토큰으로 다시 등록 → Deploy
+3. 새 토큰 권한은 기존과 동일 (`kanguk2/gguggu_Trip` Contents: Read and write)
+
+### 새 도시 페이지에 적용하려면
+
+- `trips/<city>-overrides.json` 빈 `{}` 로 생성·커밋
+- `<city>.html` `<head>` 에 `<script src="./overrides.js" defer></script>` 추가
+- overrides.js 의 `OVERRIDES_PATH` 가 도시명 포함하도록 Worker 코드 수정 (또는 URL 파라미터로 도시 식별)
+  - 단순화: 도시마다 별도 Worker 운영해도 됨 (Cloudflare 무료 플랜은 100개 Worker 가능)
 
 ## 도시 페이지 구조 (`sapporo.html` 이 기준)
 
