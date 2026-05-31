@@ -44,7 +44,9 @@
       return { error: "invalid_password" };
     }
     if (!res.ok) {
-      alert(`저장 실패: ${data.error || res.status}`);
+      const detail = data.message ? `\n\n[상세] ${data.message}` : "";
+      alert(`저장 실패: ${data.error || res.status}${detail}`);
+      console.error("[overrides] save failed", data);
       return { error: data.error || "unknown" };
     }
     setStoredPassword(password);
