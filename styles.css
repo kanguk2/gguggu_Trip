@@ -582,6 +582,20 @@ main {
   background: #dcedc8;
 }
 
+.plan-item-overridden {
+  background: #fff8e1;
+  border-bottom-color: #ffe082;
+}
+
+.plan-item-overridden:hover {
+  background: #ffecb3;
+}
+
+.plan-item-overridden .plan-time,
+.plan-item-overridden .plan-name {
+  font-style: italic;
+}
+
 .plan-added-badge {
   color: #689f38;
   font-weight: 700;

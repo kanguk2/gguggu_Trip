@@ -2,7 +2,7 @@
   const WORKER_URL = "https://gguggutrip.tches0606.workers.dev";
   const PASSWORD_STORAGE_KEY = "trip-edit-password-v1";
 
-  let overrides = { additions: {}, notes: {}, checks: {} };
+  let overrides = { additions: {}, notes: {}, checks: {}, itemEdits: {} };
 
   async function fetchOverrides() {
     try {
@@ -12,6 +12,7 @@
       if (!overrides.additions) overrides.additions = {};
       if (!overrides.notes) overrides.notes = {};
       if (!overrides.checks) overrides.checks = {};
+      if (!overrides.itemEdits) overrides.itemEdits = {};
     } catch (e) {
       console.warn("[overrides] fetch failed, using empty", e);
     }
@@ -56,6 +57,7 @@
       if (!overrides.additions) overrides.additions = {};
       if (!overrides.notes) overrides.notes = {};
       if (!overrides.checks) overrides.checks = {};
+      if (!overrides.itemEdits) overrides.itemEdits = {};
     }
     return data;
   }
@@ -97,9 +99,47 @@
 
   function staticKeyFor(li) {
     const date = li.closest(".tab-panel[data-panel]")?.dataset.panel;
-    const time = li.querySelector(".plan-time")?.textContent.trim();
-    if (!date || !time) return null;
-    return `${date}/${time}`;
+    const origTime = li.dataset.originalTime || li.querySelector(".plan-time")?.textContent.trim();
+    if (!date || !origTime) return null;
+    return `${date}/${origTime}`;
+  }
+
+  function snapshotOriginals() {
+    document.querySelectorAll(".tab-panel[data-panel] .plan-list .plan-item").forEach((li) => {
+      if (li.dataset.addedId) return;
+      if (!li.dataset.originalTime) {
+        const t = li.querySelector(".plan-time")?.textContent.trim();
+        if (t) li.dataset.originalTime = t;
+      }
+      if (!li.dataset.originalName) {
+        const nm = li.querySelector(".plan-name");
+        if (nm) {
+          const first = [...nm.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+          li.dataset.originalName = (first ? first.textContent : nm.textContent).trim();
+        }
+      }
+    });
+  }
+
+  function applyItemEdits() {
+    const edits = overrides.itemEdits || {};
+    document.querySelectorAll(".tab-panel[data-panel] .plan-list .plan-item").forEach((li) => {
+      if (li.dataset.addedId) return;
+      const key = staticKeyFor(li);
+      if (!key) return;
+      const edit = edits[key];
+      const timeEl = li.querySelector(".plan-time");
+      const nameEl = li.querySelector(".plan-name");
+      if (!timeEl || !nameEl) return;
+      const origTime = li.dataset.originalTime;
+      const origName = li.dataset.originalName;
+      timeEl.textContent = (edit && edit.time) || origTime;
+      const firstText = [...nameEl.childNodes].find((n) => n.nodeType === 3);
+      const newName = (edit && edit.name) || origName;
+      if (firstText) firstText.textContent = newName;
+      if (edit && (edit.time || edit.name)) li.classList.add("plan-item-overridden");
+      else li.classList.remove("plan-item-overridden");
+    });
   }
 
   function applyNotes() {
@@ -201,8 +241,8 @@
       const btn = document.createElement("button");
       btn.className = "plan-edit-btn";
       btn.type = "button";
-      btn.title = li.dataset.addedId ? "편집" : "메모 추가";
-      btn.innerHTML = li.dataset.addedId ? "✎" : "📝";
+      btn.title = "편집·메모";
+      btn.innerHTML = "✎";
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         openEditModal(li);
@@ -254,35 +294,36 @@
     const time = li.querySelector(".plan-time").textContent.trim();
     const nameRaw = li.querySelector(".plan-name");
     const name = (nameRaw ? nameRaw.firstChild?.textContent : "").trim();
+    const origTime = li.dataset.originalTime || time;
+    const origName = li.dataset.originalName || name;
     const currentNote = overrides.notes[key] || "";
     const currentCoords = li.dataset.coords || "";
+    const editable = isAdded || true;
 
     const modal = document.createElement("div");
     modal.className = "edit-overlay";
     modal.innerHTML = `
       <form class="edit-card" autocomplete="off">
-        <h2>${isAdded ? "일정 편집" : "메모 추가/수정"}</h2>
-        <p class="edit-page-info">대상 <code>${escapeHtml(date)} ${escapeHtml(time)} · ${escapeHtml(name)}</code></p>
-        ${isAdded ? `
-          <label class="edit-field">
-            <span>시간 (HH:MM)</span>
-            <input type="text" name="time" value="${escapeHtml(time)}" required pattern="[0-9]{2}:[0-9]{2}">
-          </label>
-          <label class="edit-field">
-            <span>장소·내용</span>
-            <input type="text" name="name" value="${escapeHtml(name)}" required>
-          </label>
-          <label class="edit-field">
-            <span>지도 마커 (선택 — 장소·주소·식당명 입력하면 지도에 표시)</span>
-            <input type="text" name="place" placeholder="예: Sapporo Beer Garden" ${currentCoords ? `value="(현재 좌표 있음 — 새 값 입력 시 갱신)"` : ""}>
-          </label>
-        ` : ""}
+        <h2>${isAdded ? "일정 편집 (추가 항목)" : "일정 편집"}</h2>
+        <p class="edit-page-info">대상 <code>${escapeHtml(date)} ${escapeHtml(origTime)} · ${escapeHtml(origName)}</code>${isAdded ? "" : "<br><small>원본은 그대로 두고 표시되는 시간·내용만 덮어쓰기</small>"}</p>
+        <label class="edit-field">
+          <span>시간 (HH:MM)</span>
+          <input type="text" name="time" value="${escapeHtml(time)}" required pattern="[0-9]{2}:[0-9]{2}">
+        </label>
+        <label class="edit-field">
+          <span>장소·내용</span>
+          <input type="text" name="name" value="${escapeHtml(name)}" required>
+        </label>
+        <label class="edit-field">
+          <span>지도 마커 (선택${isAdded ? "" : " — 정적 항목은 추가 마커 불가"})</span>
+          <input type="text" name="place" placeholder="${isAdded ? "예: Sapporo Beer Garden" : "선택 항목"}" ${isAdded && currentCoords ? `value="(현재 좌표 있음 — 새 값 입력 시 갱신)"` : ""} ${isAdded ? "" : "disabled"}>
+        </label>
         <label class="edit-field">
           <span>메모</span>
           <textarea name="note" rows="3" placeholder="이 항목에 대한 메모">${escapeHtml(currentNote)}</textarea>
         </label>
         <div class="edit-actions">
-          ${isAdded ? `<button type="button" class="btn btn-secondary edit-delete">삭제</button>` : ""}
+          ${isAdded ? `<button type="button" class="btn btn-secondary edit-delete">삭제</button>` : `<button type="button" class="btn btn-secondary edit-reset" title="원본 시간·내용으로 되돌리기">원본으로 되돌리기</button>`}
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
           <button type="submit" class="btn">저장</button>
         </div>
@@ -302,18 +343,27 @@
         rebuildCurrentDayMap();
         close();
       });
+    } else {
+      modal.querySelector(".edit-reset").addEventListener("click", async () => {
+        if (!confirm("이 항목 시간·내용 변경을 모두 되돌리시겠습니까?")) return;
+        await callWorker("setItemEdit", { key, time: "", name: "" });
+        applyItemEdits();
+        applyNotes();
+        addEditButtons();
+        close();
+      });
     }
 
     modal.querySelector("form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
       const noteVal = form.note.value;
+      const newTime = form.time.value;
+      const newName = form.name.value;
       let coordsUpdate = undefined;
-      let didUpdate = false;
+      let didMapUpdate = false;
 
       if (isAdded) {
-        const newTime = form.time.value;
-        const newName = form.name.value;
         const placeQuery = form.place?.value?.trim();
         if (placeQuery && !placeQuery.startsWith("(현재 좌표")) {
           const coords = await geocodePlace(placeQuery);
@@ -325,7 +375,17 @@
         if (coordsUpdate !== undefined) payload.coords = coordsUpdate;
         if (newTime !== time || newName !== name || coordsUpdate !== undefined) {
           await callWorker("updateItem", payload);
-          didUpdate = true;
+          didMapUpdate = true;
+        }
+      } else {
+        const editPayload = { key };
+        const editedTime = newTime !== origTime ? newTime : "";
+        const editedName = newName !== origName ? newName : "";
+        const prev = overrides.itemEdits?.[key] || {};
+        if (editedTime !== (prev.time || "") || editedName !== (prev.name || "")) {
+          editPayload.time = editedTime;
+          editPayload.name = editedName;
+          await callWorker("setItemEdit", editPayload);
         }
       }
 
@@ -333,10 +393,11 @@
         await callWorker("setNote", { key, note: noteVal });
       }
 
+      applyItemEdits();
       applyAdditions();
       applyNotes();
       addEditButtons();
-      if (didUpdate) rebuildCurrentDayMap();
+      if (didMapUpdate) rebuildCurrentDayMap();
       close();
     });
 
@@ -408,6 +469,8 @@
   async function syncAll() {
     showToast("동기화 중…");
     await fetchOverrides();
+    snapshotOriginals();
+    applyItemEdits();
     applyNotes();
     applyAdditions();
     applyChecks();
@@ -441,11 +504,14 @@
     get additions() { return overrides.additions || {}; },
     get notes() { return overrides.notes || {}; },
     get checks() { return overrides.checks || {}; },
+    get itemEdits() { return overrides.itemEdits || {}; },
     sync: syncAll,
   };
 
   async function init() {
+    snapshotOriginals();
     await fetchOverrides();
+    applyItemEdits();
     applyNotes();
     applyAdditions();
     applyChecks();
