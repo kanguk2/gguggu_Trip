@@ -120,18 +120,23 @@ GitHub repo (trips/sapporo-overrides.json)
 {
   "additions": {
     "2026-06-05": [
-      { "id": "add-abc123", "time": "20:30", "name": "카페 휴식" }
+      { "id": "add-abc123", "time": "20:30", "name": "카페 휴식", "coords": [43.0635, 141.3520] }
     ]
   },
   "notes": {
     "2026-06-05/13:00": "이 항목 메모",
     "2026-06-05/add-abc123": "추가 항목 메모"
+  },
+  "checks": {
+    "chk-0-0": true,
+    "chk-2-3": true
   }
 }
 ```
 
-- `additions[date]` — 사용자가 추가한 일정 (id, time, name). 페이지 로드 시 시간순으로 자동 삽입.
+- `additions[date]` — 사용자가 추가한 일정. 페이지 로드 시 시간순으로 자동 삽입. `coords` (선택)가 있으면 지도 마커도 표시.
 - `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목) 또는 `<date>/<add-id>` (추가 항목).
+- `checks[id]` — 체크리스트 체크 상태. id 는 `chk-<category>-<item>` 형식 (sapporo.js renderChecklist 가 부여). 일행 간 공유됨.
 
 ### overrides.js 동작
 
@@ -149,10 +154,29 @@ GitHub repo (trips/sapporo-overrides.json)
 
 | action | payload | 동작 |
 |---|---|---|
-| `addItem` | `date, time, name` | `additions[date]` 에 새 항목 추가 |
-| `updateItem` | `date, id, time?, name?` | 추가된 항목의 시간·이름 수정 |
+| `addItem` | `date, time, name, coords?` | `additions[date]` 에 새 항목 추가. coords 는 `[lat, lng]` 형식 (선택, 지도 마커용) |
+| `updateItem` | `date, id, time?, name?, coords?` | 추가된 항목의 시간·이름·좌표 수정. `coords: null` 명시하면 좌표 제거 |
 | `deleteItem` | `date, id` | 추가된 항목 삭제 |
 | `setNote` | `key, note` | 메모 설정 (빈 문자열이면 삭제) |
+| `setCheck` | `key, checked` | 체크리스트 항목 체크/해제 |
+
+### overrides.js 페이지 측 동작
+
+게이트 통과 후 실행되는 주요 함수:
+
+- `applyNotes()` — overrides.notes 의 메모를 정적 plan-item 마다 노란 박스로 표시
+- `applyAdditions()` — overrides.additions 의 새 일정을 해당 날짜 plan-list 에 시간순 삽입 (초록 배경)
+- `applyChecks()` — overrides.checks 와 체크박스 동기화. 각 checkbox 의 change 에 Worker setCheck 호출 listener 추가 (sapporo.js 가 별도로 등록한 localStorage 핸들러와 병행)
+- `addEditButtons()` — 모든 plan-item 우측에 📝(메모) 또는 ✎(편집) 버튼 추가
+- `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가" 버튼
+- `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 현재 활성 날짜의 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 이걸 호출.
+- `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.
+
+### sapporo.js 측 협업 포인트
+
+- `getMergedStops(date)` — `DAY_MAPS[date]` (정적) + `overrides.additions[date]` 중 coords 있는 것들 → 시간순 정렬. initDayMap 이 사용.
+- `rebuildDayMap(date)` — 컨테이너·범례·sync 버튼 제거 → `dayMapBuilt[date]` 리셋 → initDayMap 재호출. `window.TRIP_REBUILD_DAY_MAP` 로 노출.
+- initDayMap 끝부분에서 `.day-map-sync` 버튼을 지도 컨테이너 바로 뒤에 삽입. 클릭 → `window.TRIP_OVERRIDES.sync()`.
 
 모든 변경은 즉시 GitHub 커밋. 응답에 최신 overrides JSON 포함.
 
