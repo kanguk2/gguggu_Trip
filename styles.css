@@ -531,6 +531,85 @@ main {
   flex-shrink: 0;
 }
 
+.plan-edit-btn {
+  background: transparent;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.1rem 0.35rem;
+  color: #888;
+  align-self: center;
+  margin-left: 0.3rem;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.plan-edit-btn:hover {
+  background: #eef3ff;
+  border-color: #2c6fbb;
+  color: #2c6fbb;
+}
+
+.plan-item-expandable .plan-edit-btn {
+  position: absolute;
+  top: 0.45rem;
+  right: 2.5rem;
+  z-index: 1;
+}
+
+.plan-item-expandable {
+  position: relative;
+}
+
+.plan-user-note {
+  display: block;
+  margin-top: 0.2rem;
+  padding: 0.25rem 0.5rem;
+  background: #fff8e1;
+  border-left: 3px solid #ffc107;
+  border-radius: 3px;
+  color: #6b4d00;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.plan-item-added {
+  background: #f1f8e9;
+  border-bottom-color: #aed581;
+}
+
+.plan-item-added:hover {
+  background: #dcedc8;
+}
+
+.plan-added-badge {
+  color: #689f38;
+  font-weight: 700;
+  font-size: 1rem;
+  align-self: center;
+}
+
+.plan-add-btn {
+  display: block;
+  margin: 0.75rem 0 1rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #2c6fbb;
+  border: 1px dashed #b6dcff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.88rem;
+  width: 100%;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.plan-add-btn:hover {
+  background: #eef3ff;
+  border-color: #2c6fbb;
+  border-style: solid;
+}
+
 .weather-card {
   background: #fff;
   border: 1px solid #e5e5e5;
