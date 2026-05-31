@@ -610,6 +610,53 @@ main {
   border-style: solid;
 }
 
+.day-map-sync {
+  display: block;
+  margin: 0 0 0.6rem;
+  padding: 0.4rem 0.8rem;
+  background: #fff;
+  color: #2c4f8a;
+  border: 1px solid #b6dcff;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.day-map-sync:hover {
+  background: #eef3ff;
+  border-color: #2c6fbb;
+}
+
+.plan-coord-badge {
+  display: inline-block;
+  margin-left: 0.3rem;
+  font-size: 0.8rem;
+  color: #689f38;
+}
+
+.sync-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #222;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  z-index: 1500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.sync-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .weather-card {
   background: #fff;
   border: 1px solid #e5e5e5;

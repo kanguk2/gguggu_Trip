@@ -40,28 +40,42 @@ export default {
         delete overrides._sha;
         if (!overrides.additions) overrides.additions = {};
         if (!overrides.notes) overrides.notes = {};
+        if (!overrides.checks) overrides.checks = {};
 
         const action = body.action;
         if (action === "addItem") {
-          const { date, time, name } = body;
+          const { date, time, name, coords } = body;
           if (!date || !time || !name) {
             return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
           }
           if (!overrides.additions[date]) overrides.additions[date] = [];
           const id = "add-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
-          overrides.additions[date].push({ id, time, name });
+          const item = { id, time, name };
+          if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
+          overrides.additions[date].push(item);
           await saveOverrides(env, overrides, sha, `Add ${date} ${time} ${name}`);
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
 
         if (action === "updateItem") {
-          const { date, id, time, name } = body;
+          const { date, id, time, name, coords } = body;
           const list = overrides.additions[date] || [];
           const item = list.find((i) => i.id === id);
           if (!item) return jsonResp({ error: "not_found" }, 404, corsHeaders);
           if (time) item.time = time;
           if (name) item.name = name;
+          if (coords === null) delete item.coords;
+          else if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
           await saveOverrides(env, overrides, sha, `Edit ${date} ${item.time} ${item.name}`);
+          return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "setCheck") {
+          const { key, checked } = body;
+          if (!key) return jsonResp({ error: "missing_key" }, 400, corsHeaders);
+          if (checked) overrides.checks[key] = true;
+          else delete overrides.checks[key];
+          await saveOverrides(env, overrides, sha, `${checked ? "Check" : "Uncheck"} ${key}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -100,7 +114,7 @@ export default {
 async function loadOverrides(env) {
   const res = await ghFetch(env, "GET", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${OVERRIDES_PATH}`);
   if (res.status === 404) {
-    return { additions: {}, notes: {} };
+    return { additions: {}, notes: {}, checks: {} };
   }
   if (!res.ok) {
     throw new Error(`GitHub GET failed: ${res.status} ${await res.text()}`);
@@ -111,6 +125,7 @@ async function loadOverrides(env) {
   parsed._sha = data.sha;
   if (!parsed.additions) parsed.additions = {};
   if (!parsed.notes) parsed.notes = {};
+  if (!parsed.checks) parsed.checks = {};
   return parsed;
 }
 

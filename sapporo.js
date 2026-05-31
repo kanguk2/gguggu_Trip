@@ -522,10 +522,33 @@ async function loadPhotosForCategory(panel) {
   });
 }
 
+function getMergedStops(date) {
+  const base = DAY_MAPS[date] || [];
+  const added = window.TRIP_OVERRIDES?.additions?.[date] || [];
+  const addedWithCoords = added
+    .filter((i) => Array.isArray(i.coords) && i.coords.length === 2)
+    .map((i) => ({ time: i.time, name: i.name + " (추가)", coords: i.coords }));
+  return [...base, ...addedWithCoords].sort((a, b) =>
+    String(a.time || "").localeCompare(String(b.time || ""))
+  );
+}
+
+function rebuildDayMap(date) {
+  const container = document.getElementById(`day-map-${date}`);
+  if (!container) return;
+  container.innerHTML = "";
+  const parent = container.parentElement;
+  parent.querySelectorAll(".day-map-legend, .day-map-sync").forEach((el) => el.remove());
+  delete dayMapBuilt[date];
+  initDayMap(date);
+}
+
+window.TRIP_REBUILD_DAY_MAP = rebuildDayMap;
+
 async function initDayMap(date) {
   if (dayMapBuilt[date]) return;
   const container = document.getElementById(`day-map-${date}`);
-  const stops = DAY_MAPS[date];
+  const stops = getMergedStops(date);
   if (!container || !stops || stops.length === 0) return;
   dayMapBuilt[date] = true;
 
@@ -577,6 +600,16 @@ async function initDayMap(date) {
   });
 
   map.fitBounds(bounds, 50);
+
+  const syncBtn = document.createElement("button");
+  syncBtn.type = "button";
+  syncBtn.className = "day-map-sync";
+  syncBtn.innerHTML = "🔄 일정 동기화";
+  syncBtn.title = "추가·편집된 일정을 다시 불러와서 지도와 목록을 갱신";
+  syncBtn.addEventListener("click", () => {
+    if (window.TRIP_OVERRIDES?.sync) window.TRIP_OVERRIDES.sync();
+  });
+  container.parentElement.insertBefore(syncBtn, container.nextSibling);
 
   const legend = document.createElement("ol");
   legend.className = "day-map-legend";
