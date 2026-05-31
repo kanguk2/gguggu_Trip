@@ -191,11 +191,17 @@ function jsonResp(data, status, extraHeaders) {
 }
 
 function encodeUtf8(str) {
-  return new TextDecoder("latin1").decode(new TextEncoder().encode(str));
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return binary;
 }
 
-function decodeUtf8(latin1) {
-  const bytes = new Uint8Array(latin1.length);
-  for (let i = 0; i < latin1.length; i++) bytes[i] = latin1.charCodeAt(i);
+function decodeUtf8(binary) {
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return new TextDecoder("utf-8").decode(bytes);
 }
