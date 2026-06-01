@@ -596,6 +596,29 @@ main {
   font-style: italic;
 }
 
+.plan-item {
+  cursor: grab;
+}
+
+.plan-item:active {
+  cursor: grabbing;
+}
+
+.plan-item-ghost {
+  opacity: 0.4;
+  background: #eef3ff !important;
+}
+
+.plan-item-chosen {
+  background: #dbeafe !important;
+  box-shadow: 0 2px 8px rgba(44, 111, 187, 0.2);
+}
+
+.plan-item-expandable.plan-item-ghost {
+  opacity: 0.4;
+  background: #eef3ff !important;
+}
+
 .plan-added-badge {
   color: #689f38;
   font-weight: 700;

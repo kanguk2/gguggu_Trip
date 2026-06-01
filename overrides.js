@@ -205,6 +205,55 @@
     else list.appendChild(li);
   }
 
+  function applyOrder() {
+    const itemOrder = overrides.itemOrder || {};
+    Object.entries(itemOrder).forEach(([date, keys]) => {
+      const panel = document.querySelector(`.tab-panel[data-panel="${date}"]`);
+      if (!panel) return;
+      const list = panel.querySelector(".plan-list");
+      if (!list) return;
+      const itemsByKey = new Map();
+      const unkeyedItems = [];
+      [...list.querySelectorAll(":scope > .plan-item")].forEach((li) => {
+        const key = li.dataset.itemKey;
+        if (key && keys.includes(key)) {
+          itemsByKey.set(key, li);
+        } else {
+          unkeyedItems.push(li);
+        }
+      });
+      keys.forEach((k) => {
+        const li = itemsByKey.get(k);
+        if (li) list.appendChild(li);
+      });
+      unkeyedItems.forEach((li) => list.appendChild(li));
+    });
+  }
+
+  function setupDragDrop() {
+    if (!window.Sortable) return;
+    document.querySelectorAll(".tab-panel[data-panel] .plan-list").forEach((list) => {
+      if (list.dataset.sortableInited) return;
+      list.dataset.sortableInited = "1";
+      new Sortable(list, {
+        animation: 150,
+        filter: ".plan-edit-btn, .plan-toggle-icon, .plan-link, button, a, input, textarea",
+        preventOnFilter: false,
+        ghostClass: "plan-item-ghost",
+        chosenClass: "plan-item-chosen",
+        onEnd: async () => {
+          const panel = list.closest(".tab-panel");
+          const date = panel?.dataset.panel;
+          if (!date) return;
+          const keys = [...list.querySelectorAll(":scope > .plan-item")]
+            .map((li) => li.dataset.itemKey)
+            .filter(Boolean);
+          await callWorker("setOrder", { date, order: keys });
+        },
+      });
+    });
+  }
+
   function applyChecks() {
     const checks = overrides.checks || {};
     document.querySelectorAll(".checklist-item input[type=checkbox]").forEach((cb) => {
@@ -315,8 +364,8 @@
           <input type="text" name="name" value="${escapeHtml(name)}" required>
         </label>
         <label class="edit-field">
-          <span>지도 마커 (선택${isAdded ? "" : " — 정적 항목은 추가 마커 불가"})</span>
-          <input type="text" name="place" placeholder="${isAdded ? "예: Sapporo Beer Garden" : "선택 항목"}" ${isAdded && currentCoords ? `value="(현재 좌표 있음 — 새 값 입력 시 갱신)"` : ""} ${isAdded ? "" : "disabled"}>
+          <span>지도 마커 (선택 — 장소·주소·식당명 입력하면 지도에 마커 표시)</span>
+          <input type="text" name="place" placeholder="예: Sapporo Beer Garden" ${currentCoords ? `value="(현재 좌표 있음 — 새 값 입력 시 갱신)"` : ""}>
         </label>
         <label class="edit-field">
           <span>메모</span>
@@ -381,11 +430,21 @@
         const editPayload = { key };
         const editedTime = newTime !== origTime ? newTime : "";
         const editedName = newName !== origName ? newName : "";
+        const placeQuery = form.place?.value?.trim();
+        let staticCoords = undefined;
+        if (placeQuery && !placeQuery.startsWith("(현재 좌표")) {
+          staticCoords = await geocodePlace(placeQuery);
+        }
         const prev = overrides.itemEdits?.[key] || {};
-        if (editedTime !== (prev.time || "") || editedName !== (prev.name || "")) {
-          editPayload.time = editedTime;
-          editPayload.name = editedName;
+        const changedTime = editedTime !== (prev.time || "");
+        const changedName = editedName !== (prev.name || "");
+        const changedCoords = staticCoords !== undefined;
+        if (changedTime || changedName || changedCoords) {
+          if (changedTime) editPayload.time = editedTime;
+          if (changedName) editPayload.name = editedName;
+          if (changedCoords) editPayload.coords = staticCoords;
           await callWorker("setItemEdit", editPayload);
+          if (changedCoords) didMapUpdate = true;
         }
       }
 
@@ -446,7 +505,9 @@
       const result = await callWorker("addItem", payload);
       if (!result.error) {
         applyAdditions();
+        applyOrder();
         addEditButtons();
+        setupDragDrop();
         if (coords) rebuildCurrentDayMap();
         close();
       }
@@ -473,8 +534,10 @@
     applyItemEdits();
     applyNotes();
     applyAdditions();
+    applyOrder();
     applyChecks();
     addEditButtons();
+    setupDragDrop();
     rebuildCurrentDayMap();
     showToast("동기화 완료", 1500);
   }
@@ -514,9 +577,11 @@
     applyItemEdits();
     applyNotes();
     applyAdditions();
+    applyOrder();
     applyChecks();
     addEditButtons();
     addAddNewButtons();
+    setupDragDrop();
   }
 
   function whenUnlocked(cb) {

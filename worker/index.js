@@ -42,6 +42,7 @@ export default {
         if (!overrides.notes) overrides.notes = {};
         if (!overrides.checks) overrides.checks = {};
         if (!overrides.itemEdits) overrides.itemEdits = {};
+        if (!overrides.itemOrder) overrides.itemOrder = {};
 
         const action = body.action;
         if (action === "addItem") {
@@ -54,6 +55,8 @@ export default {
           const item = { id, time, name };
           if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
           overrides.additions[date].push(item);
+          if (!overrides.itemOrder[date]) overrides.itemOrder[date] = [];
+          overrides.itemOrder[date].unshift(`${date}/${id}`);
           await saveOverrides(env, overrides, sha, `Add ${date} ${time} ${name}`);
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
@@ -77,6 +80,16 @@ export default {
           if (checked) overrides.checks[key] = true;
           else delete overrides.checks[key];
           await saveOverrides(env, overrides, sha, `${checked ? "Check" : "Uncheck"} ${key}`);
+          return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "setOrder") {
+          const { date, order } = body;
+          if (!date || !Array.isArray(order)) {
+            return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
+          }
+          overrides.itemOrder[date] = order;
+          await saveOverrides(env, overrides, sha, `Reorder ${date}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -132,7 +145,7 @@ export default {
 async function loadOverrides(env) {
   const res = await ghFetch(env, "GET", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${OVERRIDES_PATH}`);
   if (res.status === 404) {
-    return { additions: {}, notes: {}, checks: {}, itemEdits: {} };
+    return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {} };
   }
   if (!res.ok) {
     throw new Error(`GitHub GET failed: ${res.status} ${await res.text()}`);
@@ -145,6 +158,7 @@ async function loadOverrides(env) {
   if (!parsed.notes) parsed.notes = {};
   if (!parsed.checks) parsed.checks = {};
   if (!parsed.itemEdits) parsed.itemEdits = {};
+  if (!parsed.itemOrder) parsed.itemOrder = {};
   return parsed;
 }
 

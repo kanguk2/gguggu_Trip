@@ -525,10 +525,19 @@ async function loadPhotosForCategory(panel) {
 function getMergedStops(date) {
   const base = DAY_MAPS[date] || [];
   const added = window.TRIP_OVERRIDES?.additions?.[date] || [];
+  const itemEdits = window.TRIP_OVERRIDES?.itemEdits || {};
   const addedWithCoords = added
     .filter((i) => Array.isArray(i.coords) && i.coords.length === 2)
     .map((i) => ({ time: i.time, name: i.name + " (추가)", coords: i.coords }));
-  return [...base, ...addedWithCoords].sort((a, b) =>
+  const staticEditCoords = Object.entries(itemEdits)
+    .filter(([key, e]) => key.startsWith(date + "/") && Array.isArray(e.coords) && e.coords.length === 2)
+    .map(([key, e]) => {
+      const origTime = key.split("/")[1];
+      const displayTime = e.time || origTime;
+      const displayName = e.name || "(메모 항목)";
+      return { time: displayTime, name: displayName + " (마커)", coords: e.coords };
+    });
+  return [...base, ...staticEditCoords, ...addedWithCoords].sort((a, b) =>
     String(a.time || "").localeCompare(String(b.time || ""))
   );
 }
