@@ -274,7 +274,7 @@
       list.dataset.sortableInited = "1";
       list._sortable = new Sortable(list, {
         animation: 150,
-        delay: 2000,
+        delay: 500,
         delayOnTouchOnly: false,
         touchStartThreshold: 8,
         filter: ".plan-edit-btn, .plan-toggle-icon, .plan-link, button, a, input, textarea",

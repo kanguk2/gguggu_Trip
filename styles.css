@@ -620,7 +620,7 @@ main {
 }
 
 .plan-item-longpress {
-  animation: longpress-pulse 2s ease-out;
+  animation: longpress-pulse 0.5s ease-out;
 }
 
 @keyframes longpress-pulse {
