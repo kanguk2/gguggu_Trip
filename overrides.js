@@ -28,38 +28,75 @@
     catch {}
   }
 
-  async function callWorker(action, payload) {
-    let password = getStoredPassword();
-    if (!password) {
-      password = await promptPassword();
-      if (!password) return { error: "cancelled" };
-    }
-    const res = await fetch(`${WORKER_URL}/edit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, password, ...payload }),
+  let isSaving = false;
+
+  function setBusy(busy) {
+    isSaving = busy;
+    showSavingOverlay(busy);
+    document.querySelectorAll(".plan-list").forEach((list) => {
+      if (list._sortable) list._sortable.option("disabled", busy);
     });
-    const data = await res.json().catch(() => ({}));
-    if (res.status === 401) {
-      try { localStorage.removeItem(PASSWORD_STORAGE_KEY); } catch {}
-      alert("편집 비밀번호가 틀렸습니다. 다시 시도하세요.");
-      return { error: "invalid_password" };
+  }
+
+  async function callWorker(action, payload) {
+    if (isSaving) {
+      showToast("이전 작업을 저장하는 중입니다…", 1800);
+      return { error: "busy" };
     }
-    if (!res.ok) {
-      const detail = data.message ? `\n\n[상세] ${data.message}` : "";
-      alert(`저장 실패: ${data.error || res.status}${detail}`);
-      console.error("[overrides] save failed", data);
-      return { error: data.error || "unknown" };
+    isSaving = true;
+    try {
+      let password = getStoredPassword();
+      if (!password) {
+        password = await promptPassword();
+        if (!password) return { error: "cancelled" };
+      }
+      setBusy(true);
+      const res = await fetch(`${WORKER_URL}/edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, password, ...payload }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        try { localStorage.removeItem(PASSWORD_STORAGE_KEY); } catch {}
+        alert("편집 비밀번호가 틀렸습니다. 다시 시도하세요.");
+        return { error: "invalid_password" };
+      }
+      if (!res.ok) {
+        const detail = data.message ? `\n\n[상세] ${data.message}` : "";
+        alert(`저장 실패: ${data.error || res.status}${detail}`);
+        console.error("[overrides] save failed", data);
+        return { error: data.error || "unknown" };
+      }
+      setStoredPassword(password);
+      if (data.overrides) {
+        overrides = data.overrides;
+        if (!overrides.additions) overrides.additions = {};
+        if (!overrides.notes) overrides.notes = {};
+        if (!overrides.checks) overrides.checks = {};
+        if (!overrides.itemEdits) overrides.itemEdits = {};
+        if (!overrides.itemOrder) overrides.itemOrder = {};
+      }
+      return data;
+    } finally {
+      isSaving = false;
+      setBusy(false);
     }
-    setStoredPassword(password);
-    if (data.overrides) {
-      overrides = data.overrides;
-      if (!overrides.additions) overrides.additions = {};
-      if (!overrides.notes) overrides.notes = {};
-      if (!overrides.checks) overrides.checks = {};
-      if (!overrides.itemEdits) overrides.itemEdits = {};
+  }
+
+  function showSavingOverlay(show) {
+    let ov = document.querySelector(".saving-overlay");
+    if (show) {
+      if (!ov) {
+        ov = document.createElement("div");
+        ov.className = "saving-overlay";
+        ov.innerHTML = `<div class="saving-box"><div class="saving-spinner" aria-hidden="true"></div><div class="saving-text">저장 중…</div></div>`;
+        document.body.appendChild(ov);
+      }
+      requestAnimationFrame(() => ov.classList.add("is-visible"));
+    } else if (ov) {
+      ov.classList.remove("is-visible");
     }
-    return data;
   }
 
   function promptPassword() {
@@ -235,20 +272,33 @@
     document.querySelectorAll(".tab-panel[data-panel] .plan-list").forEach((list) => {
       if (list.dataset.sortableInited) return;
       list.dataset.sortableInited = "1";
-      new Sortable(list, {
+      list._sortable = new Sortable(list, {
         animation: 150,
+        delay: 2000,
+        delayOnTouchOnly: false,
+        touchStartThreshold: 8,
         filter: ".plan-edit-btn, .plan-toggle-icon, .plan-link, button, a, input, textarea",
         preventOnFilter: false,
         ghostClass: "plan-item-ghost",
         chosenClass: "plan-item-chosen",
-        onEnd: async () => {
+        onChoose: (evt) => {
+          evt.item.classList.add("plan-item-longpress");
+        },
+        onUnchoose: (evt) => {
+          evt.item.classList.remove("plan-item-longpress");
+        },
+        onEnd: async (evt) => {
+          evt.item.classList.remove("plan-item-longpress");
           const panel = list.closest(".tab-panel");
           const date = panel?.dataset.panel;
           if (!date) return;
           const keys = [...list.querySelectorAll(":scope > .plan-item")]
             .map((li) => li.dataset.itemKey)
             .filter(Boolean);
-          await callWorker("setOrder", { date, order: keys });
+          const result = await callWorker("setOrder", { date, order: keys });
+          if (result.error) {
+            applyOrder();
+          }
         },
       });
     });
@@ -277,8 +327,14 @@
       }
       if (!cb.dataset.workerSync) {
         cb.dataset.workerSync = "1";
-        cb.addEventListener("change", () => {
-          callWorker("setCheck", { key: cb.id, checked: cb.checked });
+        cb.addEventListener("change", async () => {
+          const wanted = cb.checked;
+          cb.closest(".checklist-item")?.classList.toggle("is-checked", wanted);
+          const result = await callWorker("setCheck", { key: cb.id, checked: wanted });
+          if (result.error) {
+            cb.checked = !wanted;
+            cb.closest(".checklist-item")?.classList.toggle("is-checked", !wanted);
+          }
         });
       }
     });
