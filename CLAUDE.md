@@ -130,23 +130,32 @@ GitHub repo (trips/sapporo-overrides.json)
   "checks": {
     "chk-0-0": true,
     "chk-2-3": true
+  },
+  "itemEdits": {
+    "2026-06-05/19:00": { "time": "19:30", "name": "저녁 (변경)", "coords": [43.05, 141.35] }
+  },
+  "itemOrder": {
+    "2026-06-05": ["2026-06-05/add-abc123", "2026-06-05/06:30", "2026-06-05/09:20"]
   }
 }
 ```
 
-- `additions[date]` — 사용자가 추가한 일정. 페이지 로드 시 시간순으로 자동 삽입. `coords` (선택)가 있으면 지도 마커도 표시.
-- `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목) 또는 `<date>/<add-id>` (추가 항목).
+- `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. 새로 추가하면 Worker 가 `itemOrder[date]` 맨 앞에 넣어서 **목록 최상단**에 뜬다.
+- `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목, **원본 시간** 기준) 또는 `<date>/<add-id>` (추가 항목).
 - `checks[id]` — 체크리스트 체크 상태. id 는 `chk-<category>-<item>` 형식 (sapporo.js renderChecklist 가 부여). 일행 간 공유됨.
+- `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복.
+- `itemOrder[date]` — 그 날짜 plan-item 들의 표시 순서 (item-key 배열). 드래그·드롭으로 갱신. 키 없으면 기본 시간순.
 
 ### overrides.js 동작
 
 게이트 통과 후 실행:
 1. `WORKER_URL/overrides` GET → JSON 받음
-2. 정적 plan-item 마다 `data-item-key` 설정 + 메모 있으면 노란 박스로 표시
-3. `additions` 항목들을 해당 날짜 패널의 plan-list 에 시간순 삽입 (초록 배경)
-4. 모든 plan-item 우측에 📝(메모) / ✎(편집) 버튼 추가
+2. 정적 plan-item 의 원본 시간·이름을 `data-original-*` 에 스냅샷 → `itemEdits` 덮어쓰기 적용 (노란 배경 이탤릭) → `data-item-key` 설정 + 메모 있으면 노란 박스
+3. `additions` 항목들을 해당 날짜 패널의 plan-list 에 삽입 (초록 배경) → `itemOrder` 로 재정렬
+4. 모든 plan-item 우측에 ✎(편집·메모) 버튼 추가
 5. 각 날짜 패널 맨 아래에 `+ 새 일정 추가` 버튼 추가
-6. 편집 비번은 localStorage(`trip-edit-password-v1`)에 저장, 최초 1회만 입력
+6. SortableJS 로 드래그·드롭 활성화 (0.5초 롱프레스)
+7. 편집 비번은 localStorage(`trip-edit-password-v1`)에 저장, 최초 1회만 입력
 
 ### Worker API
 
@@ -154,31 +163,48 @@ GitHub repo (trips/sapporo-overrides.json)
 
 | action | payload | 동작 |
 |---|---|---|
-| `addItem` | `date, time, name, coords?` | `additions[date]` 에 새 항목 추가. coords 는 `[lat, lng]` 형식 (선택, 지도 마커용) |
-| `updateItem` | `date, id, time?, name?, coords?` | 추가된 항목의 시간·이름·좌표 수정. `coords: null` 명시하면 좌표 제거 |
+| `addItem` | `date, time, name, coords?` | `additions[date]` 에 새 항목 추가 + `itemOrder[date]` 맨 앞에 삽입 (최상단 표시). coords 는 `[lat, lng]` |
+| `updateItem` | `date, id, time?, name?, coords?` | 추가된 항목 수정. `coords: null` 명시하면 좌표 제거 |
 | `deleteItem` | `date, id` | 추가된 항목 삭제 |
 | `setNote` | `key, note` | 메모 설정 (빈 문자열이면 삭제) |
 | `setCheck` | `key, checked` | 체크리스트 항목 체크/해제 |
+| `setItemEdit` | `key, time?, name?, coords?` | 정적 항목 덮어쓰기. 모든 값 비면 해당 키 제거 (원복) |
+| `setOrder` | `date, order` | `itemOrder[date]` 를 order 배열로 교체 (드래그 결과 저장) |
 
 ### overrides.js 페이지 측 동작
 
 게이트 통과 후 실행되는 주요 함수:
 
-- `applyNotes()` — overrides.notes 의 메모를 정적 plan-item 마다 노란 박스로 표시
-- `applyAdditions()` — overrides.additions 의 새 일정을 해당 날짜 plan-list 에 시간순 삽입 (초록 배경)
-- `applyChecks()` — overrides.checks 와 체크박스 동기화. 각 checkbox 의 change 에 Worker setCheck 호출 listener 추가 (sapporo.js 가 별도로 등록한 localStorage 핸들러와 병행)
-- `addEditButtons()` — 모든 plan-item 우측에 📝(메모) 또는 ✎(편집) 버튼 추가
+- `snapshotOriginals()` — 정적 plan-item 의 원본 시간·이름을 `data-original-time/name` 에 1회 저장 (itemEdits 적용 전 기준값)
+- `applyItemEdits()` — overrides.itemEdits 로 정적 항목 시간·이름 덮어쓰기 + `.plan-item-overridden` 클래스 (노란 배경)
+- `applyNotes()` — overrides.notes 의 메모를 plan-item 마다 노란 박스로 표시
+- `applyAdditions()` — overrides.additions 의 새 일정을 plan-list 에 삽입 (초록 배경)
+- `applyOrder()` — overrides.itemOrder 로 plan-item 들 재정렬 (키 없는 항목은 뒤로)
+- `applyChecks()` — overrides.checks 와 체크박스 동기화. change 시 Worker setCheck 호출, 실패하면 원복
+- `addEditButtons()` — 모든 plan-item 우측에 ✎ 버튼 (정적·추가 공통: 시간·내용·좌표·메모 편집)
 - `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가" 버튼
-- `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 현재 활성 날짜의 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 이걸 호출.
+- `setupDragDrop()` — SortableJS 적용. `delay: 500` (0.5초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복
+- `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.
 - `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.
+
+### 동시성 가드 (저장 중 편집 차단)
+
+- 전역 `isSaving` 플래그 — `callWorker` 진입 시 set, finally 에서 unset. 진행 중 다른 편집 호출은 토스트로 거부.
+- 저장 중엔 전체 화면 `.saving-overlay` (반투명 + 스피너) 로 클릭·드래그 차단, 모든 Sortable `disabled`.
+- 비밀번호 모달이 떠 있는 동안에도 `isSaving=true` 라 다른 편집 안 들어감.
+- 실패 시 자동 원복: 드래그 → applyOrder, 체크박스 → 체크 상태 되돌림.
 
 ### sapporo.js 측 협업 포인트
 
-- `getMergedStops(date)` — `DAY_MAPS[date]` (정적) + `overrides.additions[date]` 중 coords 있는 것들 → 시간순 정렬. initDayMap 이 사용.
+- `getMergedStops(date)` — `DAY_MAPS[date]` (정적) + `itemEdits` 중 coords 있는 것 + `additions[date]` 중 coords 있는 것 → 시간순 정렬. initDayMap 이 사용.
 - `rebuildDayMap(date)` — 컨테이너·범례·sync 버튼 제거 → `dayMapBuilt[date]` 리셋 → initDayMap 재호출. `window.TRIP_REBUILD_DAY_MAP` 로 노출.
 - initDayMap 끝부분에서 `.day-map-sync` 버튼을 지도 컨테이너 바로 뒤에 삽입. 클릭 → `window.TRIP_OVERRIDES.sync()`.
 
 모든 변경은 즉시 GitHub 커밋. 응답에 최신 overrides JSON 포함.
+
+### 의존성
+
+- `sapporo.html` `<head>` 에 SortableJS CDN 로드: `<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>` (overrides.js 보다 먼저).
 
 ### Worker 환경변수 (Cloudflare Secrets)
 
@@ -370,73 +396,9 @@ const DAY_MAPS = {
 - 현재 등록된 가이드: `jr-hokkaido` (JR Hokkaido 표 구매·IC카드·승차 절차). 새 가이드 추가 (예: 비에이 투어버스, 신칸센) 는 `TRANSIT_GUIDES[key] = { title, sections, tip }` 형태로.
 - 모달 닫기: 우측 상단 ×, 백드롭 클릭, Esc 키, 하단 "알겠습니다" 버튼 — 4가지 다 동작.
 
-### 식당·카페 추천 (펼침 안의 서브탭)
+### 식당 추천 (제거됨)
 
-식사 시간 항목을 펼치면 요리 카테고리별 탭과 식당 카드를 보여주는 패턴 (Day 1 15:00 점심식사 예시):
-
-```html
-<div class="plan-detail">
-  <nav class="restaurant-tabs" role="tablist">
-    <button class="restaurant-tab is-active" data-category="ramen">🍜 라멘</button>
-    <button class="restaurant-tab" data-category="curry">🍛 수프 카레</button>
-    ...
-  </nav>
-  <div class="restaurant-category is-active" data-category="ramen">
-    <ul class="restaurant-list">
-      <li>
-        <a class="restaurant-card" href="<google-maps-search-URL>" target="_blank" rel="noopener noreferrer">
-          <div class="restaurant-head"><span class="restaurant-name">스미레 라멘</span><span class="restaurant-rating">★ 4.3</span></div>
-          <div class="restaurant-meta"><span class="badge">미소 라멘</span><span class="badge">도보 8분</span></div>
-          <p class="restaurant-note">한줄 설명</p>
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div class="restaurant-category" data-category="curry" hidden>...</div>
-</div>
-```
-
-- 탭 전환은 `sapporo.js` 의 `setupRestaurantTabs()` 가 자동 처리. 새 도시 페이지는 그대로 사용.
-- 카드 링크는 기본 Google Maps 검색 URL (`https://www.google.com/maps/search/?api=1&query=<영문+이름>`) — 클릭 시 별점/리뷰/위치 정보 한번에 보임. 특정 블로그 링크가 있으면 그쪽으로 교체.
-- 별점은 Google·Tabelog 기준 근사치라는 disclaimer 를 `transit-note` 형태로 본문 상단에 넣어둘 것.
-- 도보 시간은 호텔 기준 — 도시별 호텔 위치에 따라 재계산 필요.
-
-**카드 이미지** — 각 카드 최상단에 `<div class="restaurant-image" data-cuisine="X" aria-hidden="true">이모지</div>` 를 둔다. CSS 에서 `data-cuisine` 별로 그라데이션 배경 + 큰 이모지가 기본 fallback. 지원 cuisine 키: `ramen / curry / washoku / seafood / sushi / cafe / jingisukan / izakaya`. 새 카테고리 추가하면 styles.css 의 `.restaurant-image[data-cuisine="..."]` 규칙도 함께 추가. 카드 비율은 `aspect-ratio: 16/10` 으로 자동 (Places 사진 비율에 맞춤).
-
-**메뉴·가격** — 각 카드의 `<p class="restaurant-note">` 뒤에 `<ul class="restaurant-menu">` 로 3가지 대표 메뉴 + 가격 표시:
-
-```html
-<ul class="restaurant-menu">
-  <li><span class="menu-item">미소 라멘</span><span class="menu-price">¥1,000</span></li>
-  <li><span class="menu-item">토로 차슈 미소</span><span class="menu-price">¥1,400</span></li>
-  <li><span class="menu-item">교자 5개</span><span class="menu-price">¥400</span></li>
-</ul>
-```
-
-- 가격은 2025~2026 한국 여행자 기준 근사치 — 실제 방문 시점에 변동 가능 (상단 `transit-note` 에 disclaimer 권장).
-- 새 식당 카드 추가 시 그 식당의 대표 메뉴 2~3개 + 일반 가격대 (¥) 같이 적기.
-- 가격 형식: `¥850` / `¥850~1,500` (가격대) / `¥350 일정` (균일가) / `¥150~` (시작가).
-
-**식당 사진 (Places API 자동 로드)** — 카테고리 탭이 열리면 `sapporo.js` 의 `loadPhotosForCategory()` 가 그 패널의 모든 카드에 대해:
-1. `<a class="restaurant-card">` 의 `href` 의 `query=` 값 추출 (영문 검색어)
-2. `google.maps.places.PlacesService.findPlaceFromQuery({ query, fields: ["photos"] })` 호출
-3. `place.photos[0].getUrl({ maxWidth: 400, maxHeight: 250 })` 로 사진 URL 받기
-4. URL 을 `restaurant-image` 의 `background-image` 로 설정 + `.has-photo` 클래스 추가 (이모지 숨김)
-5. 결과는 `localStorage["place-photos-v1"]` 에 영구 캐시 — 같은 사용자는 다음 방문부터 추가 API 호출 없음
-
-Places API 활성화 안 되어 있거나 식당 이름이 매칭 안 되면 자동으로 이모지 fallback. 비용: `findPlaceFromQuery` $0.017 + `Photo` $0.007 = 카드당 약 $0.025. GCP 무료 크레딧 월 $200 으로 사실상 무료. 새 도시 추가 시 카드 `query=` 값을 정확한 영문명으로 설정하면 매칭률 ↑.
-
-**아침·점심·저녁 카테고리** — 같은 카드 구조를 아침·점심·저녁 모두에 사용. 카테고리는 식사 시간대·장소 맥락에 맞게 조정:
-
-- **시장 아침** (예: 니조 시장, 함흥 시장 등): 🍣 카이센동·우니돈 / 🦀 게요리 / 🍱 정식·아침. 시장은 보통 7~9시에 열고 18시쯤 마감 — **아침**이나 **이른 점심**에만 가는 게 효율적. 호텔 조식 대안 카드도 1개 넣어두면 좋음.
-- **일반 점심** (시내 자유): 🍜 라멘 / 🍛 수프 카레 / 🍱 정식·일식 / 🍣 해산물·스시 / ☕ 카페·디저트
-- **일반 저녁** (시내 자유): 🍜 라멘(특산) / 🍛 수프 카레(특산) / 🍶 이자카야 / 🍣 스시·해산물 / 🐑 징기스칸. 도시 특산을 첫 탭에 두는 게 자연스러움 (삿포로 = 라멘/수프카레).
-- **타지 점심** (예: 오타루): 그 도시 명물 카테고리를 첫 탭에 (오타루 = 스시·해산물). 도보 시간은 그 도시의 출발점(역) 기준.
-- **투어 포함 식사**: 2개 정도 카테고리만 + 상단에 "투어 포함" 명시. 자유 식사 옵션은 그 지역의 마을 중심 옵션.
-- **공항 직전 빠른 점심**: 역 안 라멘 공화국 같은 곳을 첫 카드로 강조. 빠른 옵션 위주.
-- **시간대 충돌 주의**: 시장 식당은 저녁에 못 가고, 정통 스시야는 점심 영업 안 할 때 많고, 라멘은 깊은 밤도 OK (24h 산파치 같은 곳). 카드의 `restaurant-meta` badge 에 영업 시간 정보 (`아침 7시~`, `24h` 등) 표시 권장.
-- **공항 직전 빠른 점심**: 1순위로 빠른 옵션 강조 (역 안 라멘 공화국 같은 곳).
-- 도시별로 그 지역 특산 요리를 첫 탭에 두면 자연스러움 (오사카면 🐙 타코야키·오코노미야키 등).
+예전엔 식사 항목 펼침 안에 요리 카테고리 탭 + 식당 카드(사진·메뉴·가격)가 있었으나 **제거됨** (사용자 요청, 커밋 `a834cd6`). 식사는 이제 일반 `.plan-item`. 식당 정보가 필요하면 항목 메모(overrides `notes`)나 좌표 마커로 남기는 방식 사용. 다시 식당 카드가 필요하면 git 히스토리(`a834cd6` 이전)에서 `restaurant-*` 패턴 참고.
 
 ## 새 여행지 추가 절차
 
