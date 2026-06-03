@@ -1535,24 +1535,24 @@ body.gated > main {
   font-variant-numeric: tabular-nums;
 }
 
-/* 지도 접기/펼치기 토글 */
-.day-map-toggle {
+/* 장소 목록(범례) 접기/펼치기 토글 — 지도는 그대로 보이고 목록만 숨김 */
+.day-map-legend-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.55rem 0.85rem;
-  margin: 0 0 0.7rem;
+  padding: 0.5rem 0.8rem;
+  margin: 0 0 0.6rem;
   background: #f4f4f4;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: #333;
 }
 
-.day-map-toggle:hover {
+.day-map-legend-toggle:hover {
   background: #ececec;
   border-color: #cfcfcf;
 }
@@ -1562,7 +1562,7 @@ body.gated > main {
   font-size: 0.8rem;
 }
 
-.day-map-box.is-collapsed {
+.day-map-legend.is-collapsed {
   display: none;
 }
 

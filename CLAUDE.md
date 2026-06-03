@@ -349,7 +349,7 @@ const DAY_MAPS = {
 - **렌더**: 각 날짜 패널의 `<div class="day-map" id="day-map-<date>">` 에 `google.maps.Map` 생성. `getMergedStops(date)` 의 각 stop 을 `AdvancedMarkerElement` + `PinElement` (글리프 `A, B, C…`) 로 추가. `fitBounds` 로 모든 마커 화면에 들어오게 자동 줌.
 - **범례** (`.day-map-legend`): 지도 아래 `<ol>` 자동 생성. `[알파벳] [시간] [장소명]` 한 줄씩. 클릭 시 `map.panTo(position) + zoom 15` + InfoWindow 자동 오픈. Enter/Space 키도 동작.
 - **마커-목록 1:1 + 배지**: 마커는 목록 plan-item 과 1:1 (getMergedStops 가 DOM 순서로 좌표 있는 항목만). 각 마커 letter 가 해당 plan-item 의 `.plan-marker-badge` 로도 표시되고, 배지 클릭 시 그 마커로 이동. 마커는 항목 삭제·숨김·좌표제거로 없앨 수 있음(편집 모달 "지도 마커 제거").
-- **접기/펼치기 (지연 빌드)**: 지도는 `.day-map-box` 로 감싸 **기본 접힘**. h2 아래 `.day-map-toggle`("🗺️ 지도 보기") 클릭 시 `expandDayMap` 이 펼치고 그때 `initDayMap` 으로 빌드(접힌 채 빌드하면 크기가 0 이라 펼칠 때 빌드+`resize`+`fitBounds`). 날짜 탭 클릭 시엔 `setupMapCollapse`+배지 갱신만, 지도 빌드는 안 함. 배지 클릭(`focusMarkerByKey`)은 접혀 있으면 자동으로 펼친 뒤 해당 마커로 이동. 범례·"🔄 동기화" 버튼도 box 안에 있어 접으면 같이 숨음.
+- **지도는 표시, 장소 목록(범례)만 접힘**: 지도(`.day-map`)·마커 핀은 탭 열면 바로 보임(`initDayMap`). 마커·장소 리스트인 `.day-map-legend` 만 **기본 숨김** — 지도 아래 `.day-map-legend-toggle`("📍 장소 목록 보기 (N)") 클릭 시 `.is-collapsed` 토글로 펼침/접힘. 배지 클릭(`focusMarkerByKey`)은 지도가 미빌드면 `initDayMap` 으로 빌드 후 해당 마커로 이동.
 - **지연 로드**: 탭 클릭 시점에 처음 한 번만 Maps JS API 스크립트 주입 (`loadMapsApi()` 가 Promise 캐시). 이후 다른 날짜 탭은 같은 API 인스턴스 재사용.
 - **좌표**: 도시 추가 시 주요 방문지 좌표 직접 채움 (Google Maps 에서 우클릭으로 추출하거나 위키 등 참고). 정확도는 ±수십 m 면 충분.
 
