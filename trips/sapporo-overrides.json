@@ -20,6 +20,8 @@
     ]
   },
   "checklistAdds": [],
-  "checklistEdits": {},
+  "checklistEdits": {
+    "chk-0-0": "여권 (필요 시 사본도)"
+  },
   "checklistHidden": {}
 }
