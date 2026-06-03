@@ -597,10 +597,45 @@ main {
   text-align: center;
 }
 
+.plan-memo-body {
+  min-width: 0;
+}
+
 .plan-memo-text {
   color: #5d4d00;
   line-height: 1.5;
   white-space: pre-wrap;
+}
+
+/* 긴 텍스트 3줄 클램프 + 더보기/접기 토글 */
+.clamp-text {
+  overflow-wrap: anywhere;
+}
+
+.clamp-text.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.clamp-toggle {
+  display: inline-block;
+  margin-left: 0.1rem;
+  margin-top: 0.1rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #2c6fbb;
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.clamp-toggle:hover {
+  color: #1b4b86;
 }
 
 .plan-item-overridden {
@@ -938,6 +973,7 @@ main {
 .plan-name {
   color: #222;
   line-height: 1.45;
+  min-width: 0;
 }
 
 .plan-link {
@@ -1185,6 +1221,45 @@ main {
   max-height: 240px;
   border-radius: 8px;
   border: 1px solid #e3e3e3;
+  cursor: zoom-in;
+}
+
+/* 이미지 확대 라이트박스 */
+.img-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: zoom-out;
+}
+
+.img-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.img-lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #222;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.img-lightbox-close:hover {
+  background: #fff;
 }
 
 /* 편집 모달 내 현재 이미지 미리보기 */

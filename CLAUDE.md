@@ -188,7 +188,7 @@ GitHub repo (trips/sapporo-overrides.json)
 
 - `snapshotOriginals()` — 정적 plan-item 의 원본 시간·이름을 `data-original-time/name` 에 1회 저장 (itemEdits 적용 전 기준값)
 - `applyItemEdits()` — overrides.itemEdits 로 정적 항목 시간·이름 덮어쓰기 + `.plan-item-overridden` 클래스 (노란 배경) + `image` 있으면 항목 아래 전체폭 사진(`setPlanItemImage`) + `links` 있으면 링크 칩(`setPlanItemLinks`)
-- `applyNotes()` — overrides.notes 의 메모를 plan-item 마다 노란 박스로 표시
+- `applyNotes()` — overrides.notes 의 메모를 plan-item 마다 노란 박스로 표시. 긴 메모는 3줄 클램프(`setupClamps`)
 - `applyAdditions()` — overrides.additions 의 새 일정을 plan-list 에 삽입 (초록 배경). `image` 있으면 사진도 렌더. `kind:"memo"` 항목은 `renderMemoItem()` 으로 📝 메모 스타일(노란 배경, 시간 없음)로 렌더
 - `applyOrder()` — overrides.itemOrder 로 plan-item 들 재정렬 (키 없는 항목은 뒤로)
 - `applyChecks()` — overrides.checks 와 체크박스 동기화. change 시 Worker setCheck 호출, 실패하면 원복
@@ -196,6 +196,8 @@ GitHub repo (trips/sapporo-overrides.json)
 - `addChecklistButtons()` — 각 준비물 항목에 ✎/✕ 버튼, **각 카테고리 제목 옆에 ＋ 버튼**(그 카테고리에 바로 항목 추가 → `openCheckAddModal(catName)`), 맨 아래 **"+ 새 카테고리 추가"** 버튼(`openCheckCategoryModal` — 카테고리명+첫 항목)
 - `addEditButtons()` — 모든 plan-item 우측에 ✎ 버튼 (정적·추가 공통: 시간·내용·좌표·**이미지**·**참고 링크(여러 개)**·메모 편집). 링크·이미지 영역은 항상 항목의 마지막 자식들로 유지
 - `setPlanItemLinks(li, links)` / `buildLinksEditor(initial)` — 항목에 참고 링크 칩 렌더, 모달용 링크 추가/삭제 에디터(`_read()` 로 `[{url,label?}]` 반환)
+- `setPlanItemImage(li, src)` — 항목 아래 전체폭 사진. 클릭 시 `openLightbox(src)` 로 확대(어둠 배경 오버레이, 클릭·Esc·✕ 로 닫힘)
+- `setupClamp(el)` / `setupClamps()` — 긴 메모/메모항목 텍스트를 3줄로 접고 넘칠 때만 '더보기/접기' 토글 추가. 숨은 날짜 탭은 측정 불가라 미완료로 두고 **탭 클릭 시 재측정**. `.clamp-text` 가 대상, 토글은 `.clamp-toggle`
 - `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가"·"+ 메모 추가" 버튼 (`openAddModal`/`openMemoAddModal`). 메모 항목 클릭 시 `addEditButtons` 의 ✎ 가 `openMemoModal`(텍스트 편집·삭제)로 분기
 - `setupDragDrop()` — SortableJS 적용. `delay: 500` (0.5초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복
 - `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.

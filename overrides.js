@@ -38,12 +38,42 @@
       img.className = "plan-thumb";
       img.loading = "lazy";
       img.alt = "일정 이미지";
+      img.title = "클릭하면 확대";
+      img.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openLightbox(img.src);
+      });
       wrap.appendChild(img);
     }
     const img = wrap.querySelector("img");
     const realSrc = imgSrcFor(src);
     if (img.getAttribute("src") !== realSrc) img.src = realSrc;
     li.appendChild(wrap); // 항상 마지막 자식으로 (이미지는 항목 맨 아래 전체폭)
+  }
+
+  // 이미지 확대 (라이트박스) — 클릭/Esc/✕ 로 닫힘
+  function openLightbox(src) {
+    const ov = document.createElement("div");
+    ov.className = "img-lightbox";
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "img-lightbox-close";
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", "닫기");
+    closeBtn.textContent = "✕";
+    ov.appendChild(img);
+    ov.appendChild(closeBtn);
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    function close() {
+      ov.remove();
+      document.removeEventListener("keydown", onKey);
+    }
+    ov.addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(ov);
   }
 
   // li(plan-item) 의 참고 링크 칩들을 갱신. 빈 배열이면 제거.
@@ -338,6 +368,7 @@
       const note = overrides.notes[key];
       if (note) appendNote(li, note);
     });
+    setupClamps();
   }
 
   function appendNote(li, text) {
@@ -345,8 +376,44 @@
     if (!nameSpan) return;
     const small = document.createElement("small");
     small.className = "plan-user-note";
-    small.textContent = `📝 ${text}`;
+    const t = document.createElement("span");
+    t.className = "plan-note-text clamp-text";
+    t.textContent = `📝 ${text}`;
+    small.appendChild(t);
     nameSpan.appendChild(small);
+  }
+
+  // 긴 텍스트(메모) 3줄 클램프 + '더보기/접기' 토글. 넘칠 때만 버튼 표시.
+  // 숨은 탭(display:none)에선 높이 측정 불가 → 미완료로 두고 탭이 보일 때 재시도.
+  function setupClamp(textEl) {
+    if (textEl.dataset.clampDone) return;
+    textEl.classList.add("is-clamped"); // 측정 전까지 미리 접어둠(긴 텍스트 깜빡임 방지)
+    requestAnimationFrame(() => {
+      if (!textEl.isConnected || textEl.dataset.clampDone) return;
+      if (textEl.offsetParent === null && textEl.clientHeight === 0) return; // 아직 안 보임 → 다음 기회에
+      textEl.dataset.clampDone = "1";
+      if (textEl.scrollHeight - textEl.clientHeight > 2) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "clamp-toggle";
+        btn.textContent = "더보기";
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const clamped = textEl.classList.toggle("is-clamped");
+          btn.textContent = clamped ? "더보기" : "접기";
+        });
+        textEl.after(btn);
+      } else {
+        textEl.classList.remove("is-clamped");
+      }
+    });
+  }
+
+  function setupClamps() {
+    document.querySelectorAll(".clamp-text").forEach((el) => {
+      if (!el.dataset.clampDone) setupClamp(el);
+    });
   }
 
   function applyAdditions() {
@@ -361,6 +428,7 @@
         insertByTime(list, li);
       });
     });
+    setupClamps();
   }
 
   function renderAddedItem(date, item) {
@@ -390,7 +458,7 @@
     li.dataset.itemKey = `${date}/${item.id}`;
     li.innerHTML = `
       <span class="plan-memo-icon" aria-hidden="true">📝</span>
-      <span class="plan-memo-text">${escapeHtml(item.text)}</span>
+      <span class="plan-memo-body"><span class="plan-memo-text clamp-text">${escapeHtml(item.text)}</span></span>
     `;
     return li;
   }
@@ -443,7 +511,7 @@
         delay: 500,
         delayOnTouchOnly: false,
         touchStartThreshold: 8,
-        filter: ".plan-edit-btn, .plan-toggle-icon, .plan-link, button, a, input, textarea",
+        filter: ".plan-edit-btn, .plan-toggle-icon, .plan-link, .plan-link-chip, .plan-thumb, .clamp-toggle, button, a, input, textarea",
         preventOnFilter: false,
         ghostClass: "plan-item-ghost",
         chosenClass: "plan-item-chosen",
@@ -1217,6 +1285,10 @@
     document.addEventListener("checklist:rendered", () => {
       applyChecklistCustomizations();
       applyChecks();
+    });
+    // 날짜 탭이 보일 때 클램프 재측정 (숨은 탭에선 높이 측정 불가)
+    document.querySelectorAll(".tabs .tab").forEach((tab) => {
+      tab.addEventListener("click", () => requestAnimationFrame(setupClamps));
     });
   }
 
