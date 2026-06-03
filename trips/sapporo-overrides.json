@@ -4,7 +4,8 @@
   "checks": {
     "chk-0-1": true,
     "chk-0-3": true,
-    "chk-0-2": true
+    "chk-0-2": true,
+    "chk-0-4": true
   },
   "itemEdits": {},
   "itemOrder": {
