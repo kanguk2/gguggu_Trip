@@ -336,6 +336,7 @@ const DAY_MAPS = {
 
 const GOOGLE_MAPS_KEY = "AIzaSyDCpsu8RPxm4pme2o01htptD1VM9fXVzss";
 const dayMapBuilt = {};
+const dayMarkers = {}; // date → { map, items: [{key, marker, info, position}] } (마커 배지 클릭→이동용)
 let mapsApiLoadPromise = null;
 
 function loadMapsApi() {
@@ -443,25 +444,50 @@ function setupTransitGuides() {
   });
 }
 
+// 마커는 목록 항목과 1:1. 보이는 plan-item 을 DOM 순서대로 훑어 좌표 있는 것만 stop 으로.
+// 정적 항목 좌표: itemEdits[key].coords(있으면, null=제거) > DAY_MAPS(원본시간 매칭).
+// 추가 항목 좌표: additions[id].coords. 메모·숨김·좌표없음은 마커 없음.
 function getMergedStops(date) {
-  const itemHidden = window.TRIP_OVERRIDES?.itemHidden || {};
-  const base = (DAY_MAPS[date] || []).filter((s) => !itemHidden[`${date}/${s.time}`]);
-  const added = window.TRIP_OVERRIDES?.additions?.[date] || [];
-  const itemEdits = window.TRIP_OVERRIDES?.itemEdits || {};
-  const addedWithCoords = added
-    .filter((i) => Array.isArray(i.coords) && i.coords.length === 2)
-    .map((i) => ({ time: i.time, name: i.name + " (추가)", coords: i.coords }));
-  const staticEditCoords = Object.entries(itemEdits)
-    .filter(([key, e]) => key.startsWith(date + "/") && Array.isArray(e.coords) && e.coords.length === 2)
-    .map(([key, e]) => {
-      const origTime = key.split("/")[1];
-      const displayTime = e.time || origTime;
-      const displayName = e.name || "(메모 항목)";
-      return { time: displayTime, name: displayName + " (마커)", coords: e.coords };
-    });
-  return [...base, ...staticEditCoords, ...addedWithCoords].sort((a, b) =>
-    String(a.time || "").localeCompare(String(b.time || ""))
-  );
+  const ov = window.TRIP_OVERRIDES || {};
+  const additions = ov.additions?.[date] || [];
+  const itemEdits = ov.itemEdits || {};
+  const itemHidden = ov.itemHidden || {};
+  const dayMapByTime = {};
+  (DAY_MAPS[date] || []).forEach((s) => { dayMapByTime[s.time] = s; });
+
+  const panel = document.querySelector(`.tab-panel[data-panel="${date}"]`);
+  const list = panel && panel.querySelector(".plan-list");
+  const stops = [];
+  if (!list) return stops;
+
+  list.querySelectorAll(":scope > .plan-item").forEach((li) => {
+    if (li.classList.contains("plan-item-hidden")) return;
+    if (li.dataset.memo) return;
+    const addedId = li.dataset.addedId;
+    if (addedId) {
+      const item = additions.find((a) => a.id === addedId);
+      if (item && Array.isArray(item.coords) && item.coords.length === 2) {
+        stops.push({ key: li.dataset.itemKey, time: item.time, name: item.name, coords: item.coords });
+      }
+      return;
+    }
+    const origTime = li.dataset.originalTime || li.querySelector(".plan-time")?.textContent.trim();
+    if (!origTime) return;
+    const key = `${date}/${origTime}`;
+    if (itemHidden[key]) return;
+    const edit = itemEdits[key];
+    let coords;
+    if (edit && "coords" in edit) coords = edit.coords; // 배열 또는 null(제거)
+    else coords = dayMapByTime[origTime] && dayMapByTime[origTime].coords;
+    if (!Array.isArray(coords) || coords.length !== 2) return;
+    const time = (edit && edit.time) || origTime;
+    const nameEl = li.querySelector(".plan-name");
+    const domNameNode = nameEl && [...nameEl.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+    const name = (edit && edit.name) || (dayMapByTime[origTime] && dayMapByTime[origTime].name) ||
+      (domNameNode ? domNameNode.textContent.trim() : "");
+    stops.push({ key, time, name, coords });
+  });
+  return stops;
 }
 
 function rebuildDayMap(date) {
@@ -526,11 +552,13 @@ async function initDayMap(date) {
       markers.forEach((m) => m.info.close());
       info.open({ anchor: marker, map });
     });
-    markers.push({ marker, info, position });
+    markers.push({ key: stop.key, marker, info, position });
     bounds.extend(position);
   });
 
   map.fitBounds(bounds, 50);
+  dayMarkers[date] = { map, items: markers };
+  updateMarkerBadges(date, stops);
 
   const syncBtn = document.createElement("button");
   syncBtn.type = "button";
@@ -565,6 +593,53 @@ async function initDayMap(date) {
     legend.appendChild(li);
   });
   container.parentElement.insertBefore(legend, container.nextSibling);
+}
+
+// 마커가 있는 plan-item 의 plan-name 앞에 글자 배지(A·B·C…) 부여. 클릭 시 지도 마커로 이동.
+function updateMarkerBadges(date, stops) {
+  const panel = document.querySelector(`.tab-panel[data-panel="${date}"]`);
+  if (!panel) return;
+  const letters = "ABCDEFGHIJKLMN".split("");
+  const letterByKey = {};
+  stops.forEach((s, i) => { if (s.key) letterByKey[s.key] = letters[i]; });
+
+  panel.querySelectorAll(".plan-list > .plan-item").forEach((li) => {
+    const key = li.dataset.itemKey;
+    const letter = key && letterByKey[key];
+    const nameEl = li.querySelector(".plan-name");
+    let badge = li.querySelector(".plan-marker-badge");
+    if (letter && nameEl) {
+      li.dataset.hasMarker = "1";
+      if (!badge) {
+        badge = document.createElement("button");
+        badge.type = "button";
+        badge.className = "plan-marker-badge";
+        badge.title = "지도에서 보기";
+        badge.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          focusMarkerByKey(date, li.dataset.itemKey);
+        });
+        nameEl.insertBefore(badge, nameEl.firstChild);
+      }
+      badge.textContent = letter;
+    } else {
+      delete li.dataset.hasMarker;
+      if (badge) badge.remove();
+    }
+  });
+}
+
+function focusMarkerByKey(date, key) {
+  const dm = dayMarkers[date];
+  if (!dm) return;
+  const it = dm.items.find((x) => x.key === key);
+  if (!it) return;
+  dm.items.forEach((x) => x.info.close());
+  dm.map.panTo(it.position);
+  if (dm.map.getZoom() < 14) dm.map.setZoom(15);
+  it.info.open({ anchor: it.marker, map: dm.map });
+  document.getElementById(`day-map-${date}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function whenUnlocked(cb) {

@@ -167,7 +167,8 @@ export default {
           const current = overrides.itemEdits[key] || {};
           if (typeof time === "string") current.time = time;
           if (typeof name === "string") current.name = name;
-          if (coords === null) delete current.coords;
+          // coords: null = 마커 명시적 제거(원본 DAY_MAPS 마커도 숨김), 배열 = 덮어쓰기
+          if (coords === null) current.coords = null;
           else if (Array.isArray(coords) && coords.length === 2) current.coords = coords;
           if (image === null) delete current.image;
           else if (typeof image === "string" && image) current.image = image;

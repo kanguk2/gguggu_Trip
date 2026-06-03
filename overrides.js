@@ -451,7 +451,7 @@
     if (item.coords) li.dataset.coords = `${item.coords[0]},${item.coords[1]}`;
     li.innerHTML = `
       <span class="plan-time">${escapeHtml(item.time)}</span>
-      <span class="plan-name">${escapeHtml(item.name)}${item.coords ? '<span class="plan-coord-badge" title="지도 마커 있음">📍</span>' : ""}</span>
+      <span class="plan-name">${escapeHtml(item.name)}</span>
       <span class="plan-added-badge" aria-hidden="true">＋</span>
     `;
     const noteText = overrides.notes[li.dataset.itemKey];
@@ -904,6 +904,7 @@
     const origName = li.dataset.originalName || name;
     const currentNote = overrides.notes[key] || "";
     const currentCoords = li.dataset.coords || "";
+    const hasMarker = li.dataset.hasMarker === "1" || !!li.dataset.coords;
     const currentImage = li.dataset.image || "";
     let currentLinks = [];
     try { currentLinks = JSON.parse(li.dataset.links || "[]"); } catch {}
@@ -924,9 +925,10 @@
           <input type="text" name="name" value="${escapeHtml(name)}" required>
         </label>
         <label class="edit-field">
-          <span>지도 마커 (선택 — 장소·주소·식당명 입력하면 지도에 마커 표시)</span>
-          <input type="text" name="place" placeholder="예: Sapporo Beer Garden" ${currentCoords ? `value="(현재 좌표 있음 — 새 값 입력 시 갱신)"` : ""}>
+          <span>지도 마커 (선택 — 장소·주소·식당명 입력하면 지도에 마커 표시${hasMarker ? "·갱신" : ""})</span>
+          <input type="text" name="place" placeholder="예: Sapporo Beer Garden">
         </label>
+        ${hasMarker ? `<label class="edit-check-inline"><input type="checkbox" name="removeMarker"> 지도 마커 제거</label>` : ""}
         <label class="edit-field">
           <span>이미지 (선택 — 사진 첨부, 자동 축소됨)</span>
           <input type="file" name="image" accept="image/*">
@@ -1028,12 +1030,12 @@
       const newLinks = linksEditor._read();
       const linksChanged = JSON.stringify(newLinks) !== JSON.stringify(currentLinks);
 
+      const removeMarker = !!form.removeMarker?.checked;
+      const placeQuery = form.place?.value?.trim();
+
       if (isAdded) {
-        const placeQuery = form.place?.value?.trim();
-        if (placeQuery && !placeQuery.startsWith("(현재 좌표")) {
-          const coords = await geocodePlace(placeQuery);
-          coordsUpdate = coords;
-        }
+        if (removeMarker) coordsUpdate = null;
+        else if (placeQuery) coordsUpdate = await geocodePlace(placeQuery);
         const payload = { date, id: li.dataset.addedId };
         if (newTime !== time) payload.time = newTime;
         if (newName !== name) payload.name = newName;
@@ -1048,11 +1050,9 @@
         const editPayload = { key };
         const editedTime = newTime !== origTime ? newTime : "";
         const editedName = newName !== origName ? newName : "";
-        const placeQuery = form.place?.value?.trim();
         let staticCoords = undefined;
-        if (placeQuery && !placeQuery.startsWith("(현재 좌표")) {
-          staticCoords = await geocodePlace(placeQuery);
-        }
+        if (removeMarker) staticCoords = null;
+        else if (placeQuery) staticCoords = await geocodePlace(placeQuery);
         const prev = overrides.itemEdits?.[key] || {};
         const changedTime = editedTime !== (prev.time || "");
         const changedName = editedName !== (prev.name || "");

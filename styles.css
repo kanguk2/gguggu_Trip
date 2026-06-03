@@ -586,6 +586,43 @@ main {
   display: none !important;
 }
 
+/* 마커 글자 배지 (목록 항목 ↔ 지도 마커 연결) */
+.plan-marker-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  margin-right: 0.35rem;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-marker-badge:hover {
+  background: #a5281b;
+}
+
+.edit-check-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #555;
+  margin: -0.1rem 0 0.5rem;
+}
+
+.edit-check-inline input {
+  width: auto;
+}
+
 .plan-item-memo {
   background: #fffdf4;
   border-bottom-color: #ffe082;

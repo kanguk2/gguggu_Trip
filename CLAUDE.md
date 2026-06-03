@@ -148,7 +148,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. `image` (선택)는 항목 아래 전체폭 사진. `links` (선택)는 참고 링크 배열 `[{url, label?}]` — 항목 아래 칩으로 표시. **시간순 자동정렬**: 수동 드래그 순서(`itemOrder[date]`)가 있으면 Worker 가 그 안에 시간순 위치로 끼워넣고, 없으면 페이지가 시간순 배치(insertByTime). `kind: "memo"` 이면 시간·이름 없이 `text`(+선택 `image`) 만 갖는 **메모 항목** — 일정과 같은 리스트에 들어가 드래그로 위치 변경 가능, 지도에는 안 뜸. 이미지 클릭 시 확대(라이트박스).
 - `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목, **원본 시간** 기준) 또는 `<date>/<add-id>` (추가 항목).
 - `checks[id]` — 체크리스트 체크 상태. id 는 `chk-<category>-<item>` 형식 (sapporo.js renderChecklist 가 부여). 일행 간 공유됨.
-- `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords`/`image`/`links` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복.
+- `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords`/`image`/`links` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복. `coords: null` 은 **마커 제거**(원본 DAY_MAPS 마커까지 숨김), 배열은 마커 덮어쓰기, 키 없으면 DAY_MAPS 기본.
 - `itemOrder[date]` — 그 날짜 plan-item 들의 표시 순서 (item-key 배열). 드래그·드롭으로 갱신. 키 없으면 기본 시간순. **이 값이 없을 땐 add 가 건드리지 않아 페이지가 시간순 정렬**, 있으면(드래그 후) Worker `insertKeySorted` 가 시간순 위치에 삽입.
 - `itemHidden[key]` — **정적(원본) 항목 숨김**. key 는 `<date>/<원본HH:MM>`. `true` 면 그 원본 일정을 목록·지도에서 가림(원본 HTML 은 그대로, 복구 가능). 추가 항목은 `deleteItem` 으로 삭제.
 - 이미지(`image`)는 `<date>` 일정 항목에 첨부한 사진의 상대경로. 실제 파일은 Worker `uploadImage` 가 `files/uploads/img-*.<ext>` 로 커밋. 클라이언트가 canvas 로 최대 1280px JPEG 로 축소 후 업로드(리포 비대화 방지).
@@ -179,7 +179,7 @@ GitHub repo (trips/sapporo-overrides.json)
 | `deleteItem` | `date, id` | 추가된 항목 삭제 |
 | `setNote` | `key, note` | 메모 설정 (빈 문자열이면 삭제) |
 | `setCheck` | `key, checked` | 체크리스트 항목 체크/해제 |
-| `setItemEdit` | `key, time?, name?, coords?, image?, links?` | 정적 항목 덮어쓰기. `image: null` 이면 이미지 제거, `links: []` 면 링크 제거. 모든 값 비면 해당 키 제거 (원복) |
+| `setItemEdit` | `key, time?, name?, coords?, image?, links?` | 정적 항목 덮어쓰기. `coords: null` 면 **마커 제거(원본 DAY_MAPS 포함)**, `image: null` 이면 이미지 제거, `links: []` 면 링크 제거. 모든 값 비면 해당 키 제거 (원복) |
 | `setItemHidden` | `key, hidden` | 정적(원본) 항목 숨김/복구. `itemHidden[key]` 설정·삭제. 목록·지도에서 가림 |
 | `setOrder` | `date, order` | `itemOrder[date]` 를 order 배열로 교체 (드래그 결과 저장) |
 | `addCheckItem` | `category, label` | `checklistAdds` 에 사용자 준비물 항목 추가 (해당 카테고리, 없으면 새 카테고리 생성) |
@@ -200,7 +200,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - `applyChecks()` — overrides.checks 와 체크박스 동기화. change 시 Worker setCheck 호출, 실패하면 원복
 - `applyChecklistCustomizations()` — checklistEdits/Hidden/Adds 적용 후 `addChecklistButtons()` 호출
 - `addChecklistButtons()` — 각 준비물 항목에 ✎/✕ 버튼, **각 카테고리 제목 옆에 ＋ 버튼**(그 카테고리에 바로 항목 추가 → `openCheckAddModal(catName)`), 맨 아래 **"+ 새 카테고리 추가"** 버튼(`openCheckCategoryModal` — 카테고리명+첫 항목)
-- `addEditButtons()` — 모든 plan-item 우측에 ✎ 버튼 (정적·추가 공통: 시간·내용·좌표·**이미지**·**참고 링크(여러 개)**·메모 편집). 정적 항목은 **"원본 삭제"**(setItemHidden)·"되돌리기", 추가 항목은 "삭제". 링크·이미지 영역은 항상 항목의 마지막 자식들로 유지
+- `addEditButtons()` — 모든 plan-item 우측에 ✎ 버튼 (정적·추가 공통: 시간·내용·좌표·**이미지**·**참고 링크(여러 개)**·메모 편집). 마커 있는 항목은 모달에 **"지도 마커 제거"** 체크박스(coords:null). 정적 항목은 **"원본 삭제"**(setItemHidden)·"되돌리기", 추가 항목은 "삭제". 링크·이미지 영역은 항상 항목의 마지막 자식들로 유지
 - `setPlanItemLinks(li, links)` / `buildLinksEditor(initial)` — 항목에 참고 링크 칩 렌더, 모달용 링크 추가/삭제 에디터(`_read()` 로 `[{url,label?}]` 반환)
 - `setPlanItemImage(li, src)` — 항목 아래 전체폭 사진. 클릭 시 `openLightbox(src)` 로 확대(어둠 배경 오버레이, 클릭·Esc·✕ 로 닫힘)
 - `setupClamp(el)` / `setupClamps()` — 긴 메모/메모항목 텍스트를 3줄로 접고 넘칠 때만 '더보기/접기' 토글 추가. 숨은 날짜 탭은 측정 불가라 미완료로 두고 **탭 클릭 시 재측정**. `.clamp-text` 가 대상, 토글은 `.clamp-toggle`
@@ -219,7 +219,8 @@ GitHub repo (trips/sapporo-overrides.json)
 
 ### sapporo.js 측 협업 포인트
 
-- `getMergedStops(date)` — `DAY_MAPS[date]` (정적, **`itemHidden` 제외**) + `itemEdits` 중 coords 있는 것 + `additions[date]` 중 coords 있는 것 → 시간순 정렬. initDayMap 이 사용.
+- `getMergedStops(date)` — **마커는 목록 plan-item 과 1:1**. 패널의 `.plan-item` 을 **DOM 순서대로** 훑어 좌표 있는 것만 stop(`{key,time,name,coords}`)으로. 정적 항목 좌표는 `itemEdits[key].coords`(배열=덮어쓰기, `null`=마커 제거) 우선, 없으면 `DAY_MAPS` 원본시간 매칭. 추가 항목은 `additions[id].coords`. 메모·`itemHidden`·좌표없음은 마커 없음. 항목을 삭제·숨김하거나 좌표를 제거하면 마커도 사라짐.
+- `updateMarkerBadges(date, stops)` — 마커 있는 plan-item 의 plan-name 앞에 글자 배지(A·B·C…, 지도와 동일 순서) 부여. 배지 클릭 → `focusMarkerByKey` 로 해당 마커로 이동·InfoWindow. 마커 없으면 배지 제거 + `li.dataset.hasMarker` 토글. initDayMap 끝에서 호출.
 - `rebuildDayMap(date)` — 컨테이너·범례·sync 버튼 제거 → `dayMapBuilt[date]` 리셋 → initDayMap 재호출. `window.TRIP_REBUILD_DAY_MAP` 로 노출.
 - initDayMap 끝부분에서 `.day-map-sync` 버튼을 지도 컨테이너 바로 뒤에 삽입. 클릭 → `window.TRIP_OVERRIDES.sync()`.
 
@@ -347,6 +348,7 @@ const DAY_MAPS = {
 - **AdvancedMarkerElement 사용**: `google.maps.Marker` 는 deprecated → `libraries=marker` 로드 + `mapId: "DEMO_MAP_ID"` 지정 + `AdvancedMarkerElement` + `PinElement` 로 마커 렌더링. 클릭 이벤트는 `gmp-click`, InfoWindow 열 때는 `{ anchor: marker, map }` 형태.
 - **렌더**: 각 날짜 패널의 `<div class="day-map" id="day-map-<date>">` 에 `google.maps.Map` 생성. `getMergedStops(date)` 의 각 stop 을 `AdvancedMarkerElement` + `PinElement` (글리프 `A, B, C…`) 로 추가. `fitBounds` 로 모든 마커 화면에 들어오게 자동 줌.
 - **범례** (`.day-map-legend`): 지도 아래 `<ol>` 자동 생성. `[알파벳] [시간] [장소명]` 한 줄씩. 클릭 시 `map.panTo(position) + zoom 15` + InfoWindow 자동 오픈. Enter/Space 키도 동작.
+- **마커-목록 1:1 + 배지**: 마커는 목록 plan-item 과 1:1 (getMergedStops 가 DOM 순서로 좌표 있는 항목만). 각 마커 letter 가 해당 plan-item 의 `.plan-marker-badge` 로도 표시되고, 배지 클릭 시 그 마커로 이동. 마커는 항목 삭제·숨김·좌표제거로 없앨 수 있음(편집 모달 "지도 마커 제거").
 - **지연 로드**: 탭 클릭 시점에 처음 한 번만 Maps JS API 스크립트 주입 (`loadMapsApi()` 가 Promise 캐시). 이후 다른 날짜 탭은 같은 API 인스턴스 재사용.
 - **좌표**: 도시 추가 시 주요 방문지 좌표 직접 채움 (Google Maps 에서 우클릭으로 추출하거나 위키 등 참고). 정확도는 ±수십 m 면 충분.
 
