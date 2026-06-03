@@ -13,6 +13,7 @@
     if (!overrides.checklistAdds) overrides.checklistAdds = [];
     if (!overrides.checklistEdits) overrides.checklistEdits = {};
     if (!overrides.checklistHidden) overrides.checklistHidden = {};
+    if (!overrides.itemHidden) overrides.itemHidden = {};
   }
 
   // 방금 업로드한 이미지의 dataURI 를 repo 경로로 매핑 — Pages 빌드(~30초) 전까지 즉시 표시용
@@ -354,6 +355,16 @@
       else li.classList.remove("plan-item-overridden");
       setPlanItemLinks(li, (edit && edit.links) || []);
       setPlanItemImage(li, (edit && edit.image) || "");
+    });
+  }
+
+  // 원본(정적) 항목 숨김 — itemHidden[key] 인 정적 plan-item 을 display:none 으로 가림(복구 가능)
+  function applyItemHidden() {
+    const hidden = overrides.itemHidden || {};
+    document.querySelectorAll(".tab-panel[data-panel] .plan-list .plan-item").forEach((li) => {
+      if (li.dataset.addedId) return; // 추가 항목은 삭제(deleteItem)로 처리
+      const key = staticKeyFor(li);
+      li.classList.toggle("plan-item-hidden", !!(key && hidden[key]));
     });
   }
 
@@ -930,7 +941,10 @@
           <textarea name="note" rows="3" placeholder="이 항목에 대한 메모">${escapeHtml(currentNote)}</textarea>
         </label>
         <div class="edit-actions">
-          ${isAdded ? `<button type="button" class="btn btn-secondary edit-delete">삭제</button>` : `<button type="button" class="btn btn-secondary edit-reset" title="원본 시간·내용으로 되돌리기">원본으로 되돌리기</button>`}
+          ${isAdded
+            ? `<button type="button" class="btn btn-secondary edit-delete">삭제</button>`
+            : `<button type="button" class="btn btn-secondary edit-delete" title="이 원본 일정을 목록에서 삭제">원본 삭제</button>
+               <button type="button" class="btn btn-secondary edit-reset" title="원본 시간·내용으로 되돌리기">되돌리기</button>`}
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
           <button type="submit" class="btn">저장</button>
         </div>
@@ -972,6 +986,15 @@
         close();
       });
     } else {
+      modal.querySelector(".edit-delete").addEventListener("click", async () => {
+        if (!confirm("이 원본 일정을 목록에서 삭제하시겠습니까?")) return;
+        const r = await callWorker("setItemHidden", { key, hidden: true });
+        if (!r.error) {
+          applyItemHidden();
+          rebuildCurrentDayMap();
+          close();
+        }
+      });
       modal.querySelector(".edit-reset").addEventListener("click", async () => {
         if (!confirm("이 항목 시간·내용 변경을 모두 되돌리시겠습니까?")) return;
         await callWorker("setItemEdit", { key, time: "", name: "" });
@@ -1280,6 +1303,7 @@
     await fetchOverrides();
     snapshotOriginals();
     applyItemEdits();
+    applyItemHidden();
     applyNotes();
     applyAdditions();
     applyOrder();
@@ -1317,6 +1341,7 @@
     get notes() { return overrides.notes || {}; },
     get checks() { return overrides.checks || {}; },
     get itemEdits() { return overrides.itemEdits || {}; },
+    get itemHidden() { return overrides.itemHidden || {}; },
     sync: syncAll,
   };
 
@@ -1324,6 +1349,7 @@
     snapshotOriginals();
     await fetchOverrides();
     applyItemEdits();
+    applyItemHidden();
     applyNotes();
     applyAdditions();
     applyOrder();

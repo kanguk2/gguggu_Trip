@@ -46,6 +46,7 @@ export default {
         if (!overrides.checklistAdds) overrides.checklistAdds = [];
         if (!overrides.checklistEdits) overrides.checklistEdits = {};
         if (!overrides.checklistHidden) overrides.checklistHidden = {};
+        if (!overrides.itemHidden) overrides.itemHidden = {};
 
         const action = body.action;
         if (action === "addItem") {
@@ -60,8 +61,11 @@ export default {
           if (typeof image === "string" && image) item.image = image;
           if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) item.links = cl; }
           overrides.additions[date].push(item);
-          if (!overrides.itemOrder[date]) overrides.itemOrder[date] = [];
-          overrides.itemOrder[date].unshift(`${date}/${id}`);
+          // 수동 정렬(itemOrder)이 이미 있으면 시간순 위치에 끼워넣음.
+          // 없으면 건드리지 않아 페이지가 시간순으로 자동 정렬(insertByTime).
+          if (overrides.itemOrder[date] && overrides.itemOrder[date].length) {
+            insertKeySorted(overrides, date, `${date}/${id}`, time);
+          }
           await saveOverrides(env, overrides, sha, `Add ${date} ${time} ${name}`);
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
@@ -76,8 +80,10 @@ export default {
           const memo = { id, kind: "memo", text };
           if (typeof image === "string" && image) memo.image = image;
           overrides.additions[date].push(memo);
-          if (!overrides.itemOrder[date]) overrides.itemOrder[date] = [];
-          overrides.itemOrder[date].unshift(`${date}/${id}`);
+          // 수동 정렬이 있으면 메모는 맨 앞에. 없으면 페이지가 끝에 배치.
+          if (overrides.itemOrder[date] && overrides.itemOrder[date].length) {
+            overrides.itemOrder[date].unshift(`${date}/${id}`);
+          }
           await saveOverrides(env, overrides, sha, `Add memo ${date}`);
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
@@ -197,6 +203,15 @@ export default {
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
+        if (action === "setItemHidden") {
+          const { key, hidden } = body;
+          if (!key) return jsonResp({ error: "missing_key" }, 400, corsHeaders);
+          if (hidden) overrides.itemHidden[key] = true;
+          else delete overrides.itemHidden[key];
+          await saveOverrides(env, overrides, sha, `${hidden ? "Hide" : "Show"} original ${key}`);
+          return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
         if (action === "uploadImage") {
           const { filename, dataBase64 } = body;
           if (!dataBase64) return jsonResp({ error: "missing_image" }, 400, corsHeaders);
@@ -230,7 +245,7 @@ export default {
 async function loadOverrides(env) {
   const res = await ghFetch(env, "GET", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${OVERRIDES_PATH}`);
   if (res.status === 404) {
-    return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {}, checklistAdds: [], checklistEdits: {}, checklistHidden: {} };
+    return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {}, checklistAdds: [], checklistEdits: {}, checklistHidden: {}, itemHidden: {} };
   }
   if (!res.ok) {
     throw new Error(`GitHub GET failed: ${res.status} ${await res.text()}`);
@@ -247,6 +262,7 @@ async function loadOverrides(env) {
   if (!parsed.checklistAdds) parsed.checklistAdds = [];
   if (!parsed.checklistEdits) parsed.checklistEdits = {};
   if (!parsed.checklistHidden) parsed.checklistHidden = {};
+  if (!parsed.itemHidden) parsed.itemHidden = {};
   return parsed;
 }
 
@@ -290,6 +306,25 @@ function jsonResp(data, status, extraHeaders) {
     status,
     headers: { "Content-Type": "application/json", ...extraHeaders },
   });
+}
+
+// itemOrder 의 한 key 가 가리키는 항목의 시간(HH:MM) 추출. 메모 등 시간 없으면 null.
+function keyTime(date, key, overrides) {
+  const rest = key.slice(date.length + 1);
+  if (/^\d{2}:\d{2}$/.test(rest)) return rest; // 정적 항목 — key 에 원본 시간이 들어있음
+  const item = (overrides.additions[date] || []).find((i) => `${date}/${i.id}` === key);
+  return item && item.time ? item.time : null;
+}
+
+// 새 key 를 itemOrder[date] 의 시간순 위치에 삽입 (시간 있는 첫 더 늦은 항목 앞).
+function insertKeySorted(overrides, date, newKey, newTime) {
+  const order = overrides.itemOrder[date];
+  let idx = order.length;
+  for (let i = 0; i < order.length; i++) {
+    const t = keyTime(date, order[i], overrides);
+    if (t && t > newTime) { idx = i; break; }
+  }
+  order.splice(idx, 0, newKey);
 }
 
 // 참고 링크 정리 — http(s) URL 만 허용(javascript: 등 차단), 라벨 선택, 최대 10개

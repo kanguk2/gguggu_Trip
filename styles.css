@@ -582,6 +582,10 @@ main {
   background: #dcedc8;
 }
 
+.plan-item-hidden {
+  display: none !important;
+}
+
 .plan-item-memo {
   background: #fffdf4;
   border-bottom-color: #ffe082;

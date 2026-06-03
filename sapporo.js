@@ -444,7 +444,8 @@ function setupTransitGuides() {
 }
 
 function getMergedStops(date) {
-  const base = DAY_MAPS[date] || [];
+  const itemHidden = window.TRIP_OVERRIDES?.itemHidden || {};
+  const base = (DAY_MAPS[date] || []).filter((s) => !itemHidden[`${date}/${s.time}`]);
   const added = window.TRIP_OVERRIDES?.additions?.[date] || [];
   const itemEdits = window.TRIP_OVERRIDES?.itemEdits || {};
   const addedWithCoords = added
