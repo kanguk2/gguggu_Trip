@@ -163,7 +163,7 @@ GitHub repo (trips/sapporo-overrides.json)
 4. 모든 plan-item 우측에 ✎(편집·메모·이미지) 버튼 추가. 항목에 `image` 있으면 아래 전체폭 사진 표시
 5. 각 날짜 패널 맨 아래에 `+ 새 일정 추가` · `+ 메모 추가` 버튼 추가 (메모는 텍스트만 입력, 리스트에 들어가 드래그 가능)
 6. 준비물 탭: 카테고리 제목마다 ＋ 버튼(그 카테고리에 항목 추가), 맨 아래 `+ 새 카테고리 추가` 버튼
-7. SortableJS 로 드래그·드롭 활성화 (0.5초 롱프레스)
+7. SortableJS 로 드래그·드롭 활성화 (0.25초 롱프레스)
 8. 편집 비번은 localStorage(`trip-edit-password-v1`)에 저장, 최초 1회만 입력
 9. 일정 추가/편집 모달에서 사진 첨부 가능 (자동 축소 후 Worker 가 리포에 커밋)
 
@@ -205,7 +205,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - `setPlanItemImage(li, src)` — 항목 아래 전체폭 사진. 클릭 시 `openLightbox(src)` 로 확대(어둠 배경 오버레이, 클릭·Esc·✕ 로 닫힘)
 - `setupClamp(el)` / `setupClamps()` — 긴 메모/메모항목 텍스트를 3줄로 접고 넘칠 때만 '더보기/접기' 토글 추가. 숨은 날짜 탭은 측정 불가라 미완료로 두고 **탭 클릭 시 재측정**. `.clamp-text` 가 대상, 토글은 `.clamp-toggle`
 - `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가"·"+ 메모 추가" 버튼 (`openAddModal`/`openMemoAddModal`). 메모 항목 클릭 시 `addEditButtons` 의 ✎ 가 `openMemoModal`(텍스트 편집·삭제)로 분기
-- `setupDragDrop()` — SortableJS 적용. `delay: 500` (0.5초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복. `.plan-item` 에 `user-select:none` 줘서 롱프레스가 텍스트선택에 가로채이지 않게 함(특히 텍스트뿐인 메모 항목 드래그)
+- `setupDragDrop()` — SortableJS 적용. `delay: 250` (0.25초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복. `.plan-item` 에 `user-select:none` 줘서 롱프레스가 텍스트선택에 가로채이지 않게 함(특히 텍스트뿐인 메모 항목 드래그)
 - `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.
 - `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.
 - `compressImage(file)` / `uploadImageFile(file)` — 파일을 canvas 로 최대 1280px JPEG 축소 → Worker `uploadImage` 로 리포 커밋 → 상대경로 반환. 방금 올린 dataURI 는 `recentImageData` 에 캐시해 Pages 빌드(~30초) 전까지 즉시 표시.
