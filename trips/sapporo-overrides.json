@@ -5,7 +5,12 @@
     "2026-06-06/07:00": "https://smartstore.naver.com/youtourbus/products/2594819058?channel=pwl&n_media=27758&n_query=%EC%9C%A0%ED%88%AC%EC%96%B4%EB%B2%84%EC%8A%A4%EB%B9%84%EC%97%90%EC%9D%B4%ED%88%AC%EC%96%B4&n_rank=1&n_ad_group=grp-a001-01-000000043035655&n_ad=nad-a001-01-000000528498324&n_campaign_type=1&n_ad_group_type=1&n_match=2&NaPm=ct%3Dmpxhjn4e%7Cci%3DER4aeeaf17%2D5ef9%2D11f1%2Da8fa%2D4adacfef5931%7Ctr%3Dsa%7Chk%3D2349eff2c27fe4c321a940e7365162ab306758db%7Cnacn%3DpLzYB0Ayy3D8"
   },
   "checks": {},
-  "itemEdits": {},
+  "itemEdits": {
+    "2026-06-06/07:00": {
+      "name": "JR 삿포로역 북쪽출구 단체버스 정류장 집합 / 7시 10분 출",
+      "image": "./files/uploads/img-mpxhvw9q-mwunz3.jpg"
+    }
+  },
   "itemOrder": {
     "2026-06-05": [
       "2026-06-05/06:30",
