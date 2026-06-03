@@ -1098,6 +1098,81 @@ main {
   color: #33691e;
 }
 
+/* 일정 항목 참고 링크 칩 (전체폭 행) */
+.plan-links {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.plan-link-chip {
+  font-size: 0.8rem;
+  padding: 0.15rem 0.55rem;
+  background: #eef3ff;
+  color: #2c6fbb;
+  border: 1px solid #cfe0f5;
+  border-radius: 999px;
+  text-decoration: none;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-link-chip:hover {
+  background: #dbeafe;
+  border-color: #2c6fbb;
+}
+
+/* 모달 참고 링크 에디터 */
+.edit-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0.4rem;
+}
+
+.edit-link-row {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.edit-link-row .edit-link-label {
+  flex: 0 0 32%;
+  min-width: 0;
+}
+
+.edit-link-row .edit-link-url {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-link-del {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #888;
+  padding: 0.25rem 0.45rem;
+  line-height: 1;
+}
+
+.edit-link-del:hover {
+  background: #fdecea;
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.edit-link-add {
+  align-self: flex-start;
+  font-size: 0.82rem;
+  padding: 0.25rem 0.6rem;
+}
+
 /* 일정 항목 이미지 (전체폭, 맨 아래 행) */
 .plan-image-wrap {
   grid-column: 1 / -1;

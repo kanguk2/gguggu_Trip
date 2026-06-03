@@ -46,6 +46,72 @@
     li.appendChild(wrap); // 항상 마지막 자식으로 (이미지는 항목 맨 아래 전체폭)
   }
 
+  // li(plan-item) 의 참고 링크 칩들을 갱신. 빈 배열이면 제거.
+  function setPlanItemLinks(li, links) {
+    const clean = (links || []).filter((l) => l && l.url);
+    let wrap = li.querySelector(":scope > .plan-links");
+    if (!clean.length) {
+      if (wrap) wrap.remove();
+      delete li.dataset.links;
+      return;
+    }
+    li.dataset.links = JSON.stringify(clean);
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.className = "plan-links";
+    }
+    wrap.innerHTML = "";
+    clean.forEach((l) => {
+      const a = document.createElement("a");
+      a.className = "plan-link-chip";
+      a.href = l.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = "🔗 " + (l.label || linkLabelFromUrl(l.url));
+      wrap.appendChild(a);
+    });
+    li.appendChild(wrap); // 트레일링 영역
+  }
+
+  function linkLabelFromUrl(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ""); }
+    catch { return "링크"; }
+  }
+
+  // 모달용 참고 링크 에디터 (여러 개 추가/삭제). _read() 로 [{url,label?}] 반환.
+  function buildLinksEditor(initial) {
+    const box = document.createElement("div");
+    box.className = "edit-field edit-links";
+    box.innerHTML = `
+      <span>참고 링크 (여러 개 가능)</span>
+      <div class="edit-links-list"></div>
+      <button type="button" class="edit-link-add btn btn-secondary">+ 링크 추가</button>
+    `;
+    const list = box.querySelector(".edit-links-list");
+    const addRow = (label, url) => {
+      const row = document.createElement("div");
+      row.className = "edit-link-row";
+      row.innerHTML = `
+        <input type="text" class="edit-link-label" placeholder="라벨 (선택)" value="${escapeHtml(label || "")}">
+        <input type="url" class="edit-link-url" placeholder="https://..." value="${escapeHtml(url || "")}">
+        <button type="button" class="edit-link-del" title="삭제">✕</button>
+      `;
+      row.querySelector(".edit-link-del").addEventListener("click", () => row.remove());
+      list.appendChild(row);
+    };
+    (initial || []).forEach((l) => addRow(l.label, l.url));
+    box.querySelector(".edit-link-add").addEventListener("click", () => addRow());
+    box._read = () =>
+      [...list.querySelectorAll(".edit-link-row")]
+        .map((r) => ({
+          label: r.querySelector(".edit-link-label").value.trim(),
+          url: r.querySelector(".edit-link-url").value.trim(),
+        }))
+        .filter((l) => /^https?:\/\//i.test(l.url))
+        .map((l) => (l.label ? { url: l.url, label: l.label } : { url: l.url }));
+    return box;
+  }
+
   // 파일 → 최대 1280px JPEG 로 축소 → base64 (data: 접두어 제거). 리포 비대화 방지.
   function compressImage(file) {
     return new Promise((resolve, reject) => {
@@ -256,6 +322,7 @@
       if (firstText) firstText.textContent = newName;
       if (edit && (edit.time || edit.name)) li.classList.add("plan-item-overridden");
       else li.classList.remove("plan-item-overridden");
+      setPlanItemLinks(li, (edit && edit.links) || []);
       setPlanItemImage(li, (edit && edit.image) || "");
     });
   }
@@ -310,6 +377,7 @@
     `;
     const noteText = overrides.notes[li.dataset.itemKey];
     if (noteText) appendNote(li, noteText);
+    if (item.links) setPlanItemLinks(li, item.links);
     if (item.image) setPlanItemImage(li, item.image);
     return li;
   }
@@ -688,6 +756,8 @@
         openEditModal(li);
       });
       li.appendChild(btn);
+      const linksWrap = li.querySelector(":scope > .plan-links");
+      if (linksWrap) li.appendChild(linksWrap);
       const imgWrap = li.querySelector(":scope > .plan-image-wrap");
       if (imgWrap) li.appendChild(imgWrap); // 이미지는 항상 맨 아래 유지
     });
@@ -755,6 +825,8 @@
     const currentNote = overrides.notes[key] || "";
     const currentCoords = li.dataset.coords || "";
     const currentImage = li.dataset.image || "";
+    let currentLinks = [];
+    try { currentLinks = JSON.parse(li.dataset.links || "[]"); } catch {}
     const editable = isAdded || true;
 
     const modal = document.createElement("div");
@@ -783,6 +855,7 @@
           <img class="edit-img-preview" src="${escapeHtml(imgSrcFor(currentImage))}" alt="">
           <button type="button" class="btn btn-secondary edit-img-remove">이미지 제거</button>
         </div>
+        <div class="edit-links-slot"></div>
         <label class="edit-field">
           <span>메모</span>
           <textarea name="note" rows="3" placeholder="이 항목에 대한 메모">${escapeHtml(currentNote)}</textarea>
@@ -797,6 +870,9 @@
     const close = () => modal.remove();
     modal.querySelector(".edit-cancel").addEventListener("click", close);
     modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+    const linksEditor = buildLinksEditor(currentLinks);
+    modal.querySelector(".edit-links-slot").replaceWith(linksEditor);
 
     let removeImage = false;
     const imgCurrent = modal.querySelector(".edit-img-current");
@@ -856,6 +932,10 @@
         imageUpdate = null;
       }
 
+      // 참고 링크: 에디터 값과 현재 값 비교해 변경 시에만 전송
+      const newLinks = linksEditor._read();
+      const linksChanged = JSON.stringify(newLinks) !== JSON.stringify(currentLinks);
+
       if (isAdded) {
         const placeQuery = form.place?.value?.trim();
         if (placeQuery && !placeQuery.startsWith("(현재 좌표")) {
@@ -867,7 +947,8 @@
         if (newName !== name) payload.name = newName;
         if (coordsUpdate !== undefined) payload.coords = coordsUpdate;
         if (imageUpdate !== undefined) payload.image = imageUpdate;
-        if (newTime !== time || newName !== name || coordsUpdate !== undefined || imageUpdate !== undefined) {
+        if (linksChanged) payload.links = newLinks;
+        if (newTime !== time || newName !== name || coordsUpdate !== undefined || imageUpdate !== undefined || linksChanged) {
           await callWorker("updateItem", payload);
           didMapUpdate = true;
         }
@@ -885,11 +966,12 @@
         const changedName = editedName !== (prev.name || "");
         const changedCoords = staticCoords !== undefined;
         const changedImage = imageUpdate !== undefined;
-        if (changedTime || changedName || changedCoords || changedImage) {
+        if (changedTime || changedName || changedCoords || changedImage || linksChanged) {
           if (changedTime) editPayload.time = editedTime;
           if (changedName) editPayload.name = editedName;
           if (changedCoords) editPayload.coords = staticCoords;
           if (changedImage) editPayload.image = imageUpdate;
+          if (linksChanged) editPayload.links = newLinks;
           await callWorker("setItemEdit", editPayload);
           if (changedCoords) didMapUpdate = true;
         }
@@ -932,6 +1014,7 @@
           <span>이미지 (선택 — 사진 첨부, 자동 축소됨)</span>
           <input type="file" name="image" accept="image/*">
         </label>
+        <div class="edit-links-slot"></div>
         <div class="edit-actions">
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
           <button type="submit" class="btn">추가</button>
@@ -941,6 +1024,9 @@
     const close = () => modal.remove();
     modal.querySelector(".edit-cancel").addEventListener("click", close);
     modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+    const linksEditor = buildLinksEditor([]);
+    modal.querySelector(".edit-links-slot").replaceWith(linksEditor);
 
     modal.querySelector("form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -958,6 +1044,8 @@
         const path = await uploadImageFile(imgFile);
         if (path) payload.image = path;
       }
+      const links = linksEditor._read();
+      if (links.length) payload.links = links;
       const result = await callWorker("addItem", payload);
       if (!result.error) {
         applyAdditions();

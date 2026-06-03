@@ -49,7 +49,7 @@ export default {
 
         const action = body.action;
         if (action === "addItem") {
-          const { date, time, name, coords, image } = body;
+          const { date, time, name, coords, image, links } = body;
           if (!date || !time || !name) {
             return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
           }
@@ -58,6 +58,7 @@ export default {
           const item = { id, time, name };
           if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
           if (typeof image === "string" && image) item.image = image;
+          if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) item.links = cl; }
           overrides.additions[date].push(item);
           if (!overrides.itemOrder[date]) overrides.itemOrder[date] = [];
           overrides.itemOrder[date].unshift(`${date}/${id}`);
@@ -80,7 +81,7 @@ export default {
         }
 
         if (action === "updateItem") {
-          const { date, id, time, name, coords, image, text } = body;
+          const { date, id, time, name, coords, image, text, links } = body;
           const list = overrides.additions[date] || [];
           const item = list.find((i) => i.id === id);
           if (!item) return jsonResp({ error: "not_found" }, 404, corsHeaders);
@@ -91,6 +92,7 @@ export default {
           else if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
           if (image === null) delete item.image;
           else if (typeof image === "string" && image) item.image = image;
+          if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) item.links = cl; else delete item.links; }
           await saveOverrides(env, overrides, sha, `Edit ${date} ${item.time} ${item.name}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
@@ -152,7 +154,7 @@ export default {
         }
 
         if (action === "setItemEdit") {
-          const { key, time, name, coords, image } = body;
+          const { key, time, name, coords, image, links } = body;
           if (!key) return jsonResp({ error: "missing_key" }, 400, corsHeaders);
           const current = overrides.itemEdits[key] || {};
           if (typeof time === "string") current.time = time;
@@ -161,6 +163,7 @@ export default {
           else if (Array.isArray(coords) && coords.length === 2) current.coords = coords;
           if (image === null) delete current.image;
           else if (typeof image === "string" && image) current.image = image;
+          if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) current.links = cl; else delete current.links; }
           if (Object.keys(current).length === 0) {
             delete overrides.itemEdits[key];
           } else {
@@ -285,6 +288,19 @@ function jsonResp(data, status, extraHeaders) {
     status,
     headers: { "Content-Type": "application/json", ...extraHeaders },
   });
+}
+
+// 참고 링크 정리 — http(s) URL 만 허용(javascript: 등 차단), 라벨 선택, 최대 10개
+function cleanLinks(links) {
+  if (!Array.isArray(links)) return [];
+  return links
+    .filter((l) => l && typeof l.url === "string" && /^https?:\/\//i.test(l.url.trim()))
+    .slice(0, 10)
+    .map((l) => {
+      const o = { url: l.url.trim() };
+      if (typeof l.label === "string" && l.label.trim()) o.label = l.label.trim().slice(0, 60);
+      return o;
+    });
 }
 
 function encodeUtf8(str) {
