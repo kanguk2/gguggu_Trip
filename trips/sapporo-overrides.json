@@ -1,7 +1,9 @@
 {
   "additions": {},
   "notes": {},
-  "checks": {},
+  "checks": {
+    "chk-1-0": true
+  },
   "itemEdits": {},
   "itemOrder": {
     "2026-06-05": [
