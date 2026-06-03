@@ -1535,6 +1535,37 @@ body.gated > main {
   font-variant-numeric: tabular-nums;
 }
 
+/* 지도 접기/펼치기 토글 */
+.day-map-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  margin: 0 0 0.7rem;
+  background: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.day-map-toggle:hover {
+  background: #ececec;
+  border-color: #cfcfcf;
+}
+
+.day-map-toggle-icon {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.day-map-box.is-collapsed {
+  display: none;
+}
+
 .day-map {
   width: 100%;
   height: 360px;

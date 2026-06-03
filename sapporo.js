@@ -493,14 +493,71 @@ function getMergedStops(date) {
 function rebuildDayMap(date) {
   const container = document.getElementById(`day-map-${date}`);
   if (!container) return;
+  setupMapCollapse(date);
+  // 아직 지도를 빌드한 적 없으면(접힘·지연 상태) 배지만 갱신하고 빌드는 펼칠 때로 미룸
+  if (!dayMapBuilt[date]) {
+    updateMarkerBadges(date, getMergedStops(date));
+    return;
+  }
   container.innerHTML = "";
-  const parent = container.parentElement;
-  parent.querySelectorAll(".day-map-legend, .day-map-sync").forEach((el) => el.remove());
+  const box = container.closest(".day-map-box") || container.parentElement;
+  box.querySelectorAll(".day-map-legend, .day-map-sync").forEach((el) => el.remove());
   delete dayMapBuilt[date];
+  delete dayMarkers[date];
   initDayMap(date);
 }
 
 window.TRIP_REBUILD_DAY_MAP = rebuildDayMap;
+
+// 지도(+범례+동기화)를 접을 수 있게 .day-map-box 로 감싸고 토글 버튼 추가. 기본 접힘.
+function setupMapCollapse(date) {
+  const container = document.getElementById(`day-map-${date}`);
+  if (!container || container.closest(".day-map-box")) return;
+  const box = document.createElement("div");
+  box.className = "day-map-box is-collapsed";
+  container.parentNode.insertBefore(box, container);
+  box.appendChild(container);
+
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "day-map-toggle";
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.innerHTML = `<span class="day-map-toggle-label">🗺️ 지도 보기</span><span class="day-map-toggle-icon">▾</span>`;
+  toggle.addEventListener("click", () => {
+    if (box.classList.contains("is-collapsed")) expandDayMap(date);
+    else collapseDayMap(date);
+  });
+  box.parentNode.insertBefore(toggle, box);
+}
+
+function applyCollapseUI(date, collapsed) {
+  const container = document.getElementById(`day-map-${date}`);
+  const box = container && container.closest(".day-map-box");
+  if (!box) return;
+  box.classList.toggle("is-collapsed", collapsed);
+  const toggle = box.previousElementSibling;
+  if (toggle && toggle.classList.contains("day-map-toggle")) {
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    const label = toggle.querySelector(".day-map-toggle-label");
+    const icon = toggle.querySelector(".day-map-toggle-icon");
+    if (label) label.textContent = collapsed ? "🗺️ 지도 보기" : "🗺️ 지도 숨기기";
+    if (icon) icon.textContent = collapsed ? "▾" : "▴";
+  }
+}
+
+async function expandDayMap(date) {
+  applyCollapseUI(date, false); // 컨테이너를 먼저 보이게 한 뒤 빌드해야 크기가 맞음
+  await initDayMap(date);
+  const dm = dayMarkers[date];
+  if (dm && dm.map) {
+    google.maps.event.trigger(dm.map, "resize");
+    if (dm.bounds) dm.map.fitBounds(dm.bounds, 50);
+  }
+}
+
+function collapseDayMap(date) {
+  applyCollapseUI(date, true);
+}
 
 async function initDayMap(date) {
   if (dayMapBuilt[date]) return;
@@ -557,7 +614,7 @@ async function initDayMap(date) {
   });
 
   map.fitBounds(bounds, 50);
-  dayMarkers[date] = { map, items: markers };
+  dayMarkers[date] = { map, items: markers, bounds };
   updateMarkerBadges(date, stops);
 
   const syncBtn = document.createElement("button");
@@ -630,7 +687,8 @@ function updateMarkerBadges(date, stops) {
   });
 }
 
-function focusMarkerByKey(date, key) {
+async function focusMarkerByKey(date, key) {
+  await expandDayMap(date); // 접혀 있으면 펼치고 빌드까지 보장
   const dm = dayMarkers[date];
   if (!dm) return;
   const it = dm.items.find((x) => x.key === key);
@@ -657,7 +715,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".tab[data-panel]").forEach((tab) => {
     tab.addEventListener("click", () => {
       const key = tab.dataset.panel;
-      if (DAY_MAPS[key]) initDayMap(key);
+      if (DAY_MAPS[key]) {
+        // 지도는 기본 접힘(지연 빌드). 토글/배지로 펼칠 때 빌드. 배지는 지금 갱신.
+        setupMapCollapse(key);
+        updateMarkerBadges(key, getMergedStops(key));
+      }
     });
   });
 });
