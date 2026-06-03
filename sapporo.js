@@ -475,7 +475,8 @@ function getMergedStops(date) {
     }
     const origTime = li.dataset.originalTime || li.querySelector(".plan-time")?.textContent.trim();
     if (!origTime) return;
-    const key = `${date}/${origTime}`;
+    // 항목 고유 키(overrides.js 가 dataset.itemKey/staticKey 에 부여). 중복 시각 구분 위해 시간 직접조합 대신 사용.
+    const key = li.dataset.itemKey || li.dataset.staticKey || `${date}/${origTime}`;
     if (itemHidden[key]) return;
     const edit = itemEdits[key];
     let coords;

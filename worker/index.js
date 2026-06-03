@@ -330,7 +330,8 @@ function jsonResp(data, status, extraHeaders) {
 // itemOrder 의 한 key 가 가리키는 항목의 시간(HH:MM) 추출. 메모 등 시간 없으면 null.
 function keyTime(date, key, overrides) {
   const rest = key.slice(date.length + 1);
-  if (/^\d{2}:\d{2}$/.test(rest)) return rest; // 정적 항목 — key 에 원본 시간이 들어있음
+  const m = rest.match(/^(\d{2}:\d{2})(#\d+)?$/); // 정적 항목 — `HH:MM` 또는 중복 구분 `HH:MM#n`
+  if (m) return m[1];
   const item = (overrides.additions[date] || []).find((i) => `${date}/${i.id}` === key);
   return item && item.time ? item.time : null;
 }

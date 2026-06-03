@@ -146,11 +146,14 @@ GitHub repo (trips/sapporo-overrides.json)
 ```
 
 - `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. `image` (선택)는 항목 아래 전체폭 사진. `links` (선택)는 참고 링크 배열 `[{url, label?}]` — 항목 아래 칩으로 표시. **시간순 자동정렬**: 수동 드래그 순서(`itemOrder[date]`)가 있으면 Worker 가 그 안에 시간순 위치로 끼워넣고, 없으면 페이지가 시간순 배치(insertByTime). `kind: "memo"` 이면 시간·이름 없이 `text`(+선택 `image`) 만 갖는 **메모 항목** — 일정과 같은 리스트에 들어가 드래그로 위치 변경 가능, 지도에는 안 뜸. 이미지 클릭 시 확대(라이트박스).
-- `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목, **원본 시간** 기준) 또는 `<date>/<add-id>` (추가 항목).
+- ⭐ **항목 키 (item-key) — 모든 일정 항목은 고유 키로 식별**. notes/itemEdits/itemHidden/itemOrder 가 전부 이 키를 씀. 종류:
+  - **추가 항목**: `<date>/<add-id>` (`add-xxx`·`memo-xxx`, Worker 가 부여한 진짜 고유 ID).
+  - **정적(원본 HTML) 항목**: `<date>/<원본HH:MM>`. 단 **같은 (날짜+원본시간) 이 여러 개면** 첫 항목만 `<date>/<HH:MM>`(후방호환), 그 다음부터 `<date>/<HH:MM>#1`, `#2` … 로 구분 → **같은 장소·같은 시각을 여러 번 가도 키가 안 겹침**. overrides.js `snapshotOriginals` 가 init 때 1회 계산해 `li.dataset.staticKey`(= `dataset.itemKey`) 에 저장(원본 HTML DOM 순서 기준이라 안정적). 작성자가 HTML 의 `.plan-item` 에 `data-sid="..."` 를 주면 `<date>/<sid>` 를 우선 사용(가장 안정적·권장, 특히 중복 시각). **정적 항목 키는 표시 시간이 아니라 "원본 시간"(snapshot) 기준**이라 시간을 편집해도 키가 안 바뀜.
+- `notes[key]` — 메모. key 는 위 item-key.
 - `checks[id]` — 체크리스트 체크 상태. id 는 `chk-<category>-<item>` 형식 (sapporo.js renderChecklist 가 부여). 일행 간 공유됨.
-- `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords`/`image`/`links` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복. `coords: null` 은 **마커 제거**(원본 DAY_MAPS 마커까지 숨김), 배열은 마커 덮어쓰기, 키 없으면 DAY_MAPS 기본.
-- `itemOrder[date]` — 그 날짜 plan-item 들의 표시 순서 (item-key 배열). 드래그·드롭으로 갱신. 키 없으면 기본 시간순. **이 값이 없을 땐 add 가 건드리지 않아 페이지가 시간순 정렬**, 있으면(드래그 후) Worker `insertKeySorted` 가 시간순 위치에 삽입.
-- `itemHidden[key]` — **정적(원본) 항목 숨김**. key 는 `<date>/<원본HH:MM>`. `true` 면 그 원본 일정을 목록·지도에서 가림(원본 HTML 은 그대로, 복구 가능). 추가 항목은 `deleteItem` 으로 삭제.
+- `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 위 정적 item-key. `time`/`name`/`coords`/`image`/`links`/`transit`/`addr` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복. `coords: null` 은 **마커 제거**(원본 DAY_MAPS 마커까지 숨김), 배열은 마커 덮어쓰기, 키 없으면 DAY_MAPS 기본.
+- `itemOrder[date]` — 그 날짜 plan-item 들의 표시 순서 (item-key 배열). 드래그·드롭으로 갱신. 키 없으면 기본 시간순. **이 값이 없을 땐 add 가 건드리지 않아 페이지가 시간순 정렬**, 있으면(드래그 후) Worker `insertKeySorted`(`keyTime` 가 `HH:MM`·`HH:MM#n` 둘 다 파싱) 가 시간순 위치에 삽입.
+- `itemHidden[key]` — **정적(원본) 항목 숨김**. key 는 위 정적 item-key. `true` 면 그 원본 일정을 목록·지도에서 가림(원본 HTML 은 그대로, 복구 가능). 추가 항목은 `deleteItem` 으로 삭제.
 - 이미지(`image`)는 `<date>` 일정 항목에 첨부한 사진의 상대경로. 실제 파일은 Worker `uploadImage` 가 `files/uploads/img-*.<ext>` 로 커밋. 클라이언트가 canvas 로 최대 1280px JPEG 로 축소 후 업로드(리포 비대화 방지).
 - 링크(`links`)는 `[{url, label?}]` 배열 (최대 10개). Worker `cleanLinks` 가 `http(s)` URL 만 허용(`javascript:` 등 차단). label 없으면 호스트명 표시. 추가·편집 모달의 "참고 링크" 에디터로 여러 개 입력.
 - 이동(`transit`)은 `{ options: [{name, duration?, price?, note?, times?[]}], note? }`. 추가·편집 모달의 "이동(교통) 옵션 추가" 체크 시 입력. 항목 아래 `.plan-transit` 펼침 블록으로 렌더(옵션 카드 + 시간표). **"🔄 시간에 맞춰 동기화"** 버튼이 항목 시각 이후 가장 가까운 출발편을 강조(`.is-next`)·지난 편 흐림(`.is-past`). Worker `cleanTransit` 가 정리. 정적(하드코딩) 이동 항목에도 `enhanceStaticTransit` 가 같은 동기화 버튼 주입.
@@ -195,7 +198,7 @@ GitHub repo (trips/sapporo-overrides.json)
 
 게이트 통과 후 실행되는 주요 함수:
 
-- `snapshotOriginals()` — 정적 plan-item 의 원본 시간·이름을 `data-original-time/name` 에 1회 저장 (itemEdits 적용 전 기준값)
+- `snapshotOriginals()` — 정적 plan-item 의 원본 시간·이름을 `data-original-time/name` 에 1회 저장(itemEdits 적용 전 기준값) + **항목 고유 키 `data-static-key` 부여**(중복 시각은 `#1`,`#2`, `data-sid` 있으면 그것 우선). init·syncAll 첫머리에서 실행. `staticKeyFor(li)` 가 이 키를 반환.
 - `applyItemEdits()` — overrides.itemEdits 로 정적 항목 시간·이름 덮어쓰기 + `.plan-item-overridden` 클래스 (노란 배경) + `image` 있으면 항목 아래 전체폭 사진(`setPlanItemImage`) + `links` 있으면 링크 칩(`setPlanItemLinks`)
 - `applyItemHidden()` — `itemHidden[key]` 인 정적 plan-item 에 `.plan-item-hidden`(display:none) 적용. "원본 삭제"(openEditModal 의 `setItemHidden`)로 토글
 - `applyNotes()` — overrides.notes 의 메모를 plan-item 마다 노란 박스로 표시. 긴 메모는 3줄 클램프(`setupClamps`)
@@ -225,7 +228,7 @@ GitHub repo (trips/sapporo-overrides.json)
 
 ### sapporo.js 측 협업 포인트
 
-- `getMergedStops(date)` — **마커는 목록 plan-item 과 1:1**. 패널의 `.plan-item` 을 **DOM 순서대로** 훑어 좌표 있는 것만 stop(`{key,time,name,coords}`)으로. 정적 항목 좌표는 `itemEdits[key].coords`(배열=덮어쓰기, `null`=마커 제거) 우선, 없으면 `DAY_MAPS` 원본시간 매칭. 추가 항목은 `additions[id].coords`. 메모·`itemHidden`·좌표없음은 마커 없음. 항목을 삭제·숨김하거나 좌표를 제거하면 마커도 사라짐.
+- `getMergedStops(date)` — **마커는 목록 plan-item 과 1:1**. 패널의 `.plan-item` 을 **DOM 순서대로** 훑어 좌표 있는 것만 stop(`{key,time,name,coords}`)으로. key 는 `li.dataset.itemKey`(고유 항목 키) 사용 — itemEdits/itemHidden 도 이 키로 조회(중복 시각 항목도 따로 관리됨). 정적 항목 좌표는 `itemEdits[key].coords`(배열=덮어쓰기, `null`=마커 제거) 우선, 없으면 `DAY_MAPS` 원본시간 매칭. 추가 항목은 `additions[id].coords`. 메모·`itemHidden`·좌표없음은 마커 없음. 항목을 삭제·숨김하거나 좌표를 제거하면 마커도 사라짐.
 - `updateMarkerBadges(date, stops)` — 마커 있는 plan-item 의 우측 **도구모음(`.plan-tools`)** 에 ✎ 편집 버튼 오른쪽으로 글자 배지(A·B·C…, 지도와 동일 순서) 부여. (배지를 plan-name 안에 넣으면 편집 시 이름으로 읽혀 덮어써지므로 도구모음에 둠.) 배지 클릭 → `focusMarkerByKey` 로 해당 마커로 이동·InfoWindow. 마커 없으면 배지 제거 + `li.dataset.hasMarker` 토글. initDayMap 끝에서 호출. `.plan-tools` 는 overrides.js `ensurePlanTools`(window.TRIP_ENSURE_PLAN_TOOLS)가 만들고 ✎ 버튼을 담음.
 - `rebuildDayMap(date)` — 컨테이너·범례·sync 버튼 제거 → `dayMapBuilt[date]` 리셋 → initDayMap 재호출. `window.TRIP_REBUILD_DAY_MAP` 로 노출.
 - initDayMap 끝부분에서 `.day-map-sync` 버튼을 지도 컨테이너 바로 뒤에 삽입. 클릭 → `window.TRIP_OVERRIDES.sync()`.
@@ -384,6 +387,7 @@ const DAY_MAPS = {
 ```
 
 - 장소 마커는 **지도에서만** (`DAY_MAPS` 에 좌표 등록) — 항목별 지도 링크 아이콘 ❌ (예전엔 있었지만 제거됨)
+- **같은 날 시각이 겹치는 항목이 있으면** `data-sid="고유문자열"` 를 줘서 키 충돌을 확실히 피한다(예: `<li class="plan-item" data-sid="d2-jr-arrival">`). 안 주면 overrides.js 가 `HH:MM#1`,`#2` 로 자동 구분하지만, `data-sid` 가 더 안정적(HTML 순서 바뀌어도 키 유지). 시각이 안 겹치면 불필요.
 - 외부 페이지 링크가 필요한 경우만 `<a class="plan-link" href="..." target="_blank" rel="noopener noreferrer">🔗</a>` — 예: JR Hokkaido 시각표 같은 비-지도 링크. 사용자가 업로드한 파일은 `./files/<name>` 상대경로
 - 부제(주소·메모 등)는 `<small class="plan-sub">` 로 plan-name 안에:
   ```html

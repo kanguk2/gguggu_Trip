@@ -473,7 +473,12 @@
     return modal;
   }
 
+  // 정적(원본) 항목의 고유 키. snapshotOriginals 가 1회 계산해 dataset.staticKey 에 저장.
+  // 같은 (날짜+원본시간) 이 여러 개면 첫 항목은 `<date>/<time>`(기존과 동일·후방호환),
+  // 그 다음부터 `<date>/<time>#1`, `#2` … 로 구분 → 같은 장소/시각을 여러 번 가도 키가 안 겹침.
+  // 작성자가 HTML 에 data-sid 를 주면 `<date>/<sid>` 로 우선 사용(가장 안정적).
   function staticKeyFor(li) {
+    if (li.dataset.staticKey) return li.dataset.staticKey;
     const date = li.closest(".tab-panel[data-panel]")?.dataset.panel;
     const origTime = li.dataset.originalTime || li.querySelector(".plan-time")?.textContent.trim();
     if (!date || !origTime) return null;
@@ -481,6 +486,7 @@
   }
 
   function snapshotOriginals() {
+    const seen = {}; // `${date}/${origTime}` → 지금까지 본 개수 (중복 구분용)
     document.querySelectorAll(".tab-panel[data-panel] .plan-list .plan-item").forEach((li) => {
       if (li.dataset.addedId) return;
       if (!li.dataset.originalTime) {
@@ -492,6 +498,20 @@
         if (nm) {
           const first = [...nm.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
           li.dataset.originalName = (first ? first.textContent : nm.textContent).trim();
+        }
+      }
+      if (!li.dataset.staticKey) {
+        const date = li.closest(".tab-panel[data-panel]")?.dataset.panel;
+        const origTime = li.dataset.originalTime;
+        if (date && origTime) {
+          if (li.dataset.sid) {
+            li.dataset.staticKey = `${date}/${li.dataset.sid}`;
+          } else {
+            const base = `${date}/${origTime}`;
+            const n = seen[base] || 0;
+            seen[base] = n + 1;
+            li.dataset.staticKey = n === 0 ? base : `${base}#${n}`;
+          }
         }
       }
     });
