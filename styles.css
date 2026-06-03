@@ -744,6 +744,106 @@ main {
   margin: -0.1rem 0 0.5rem;
 }
 
+/* 장소 검색(찾기) — 입력 + 버튼 줄 / 선택 확인 */
+.place-field-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.place-field-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.place-find-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.7rem;
+}
+
+.place-picked {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #2c6b2c;
+  background: #eef8ee;
+  border: 1px solid #cfe8cf;
+  border-radius: 5px;
+  padding: 0.3rem 0.5rem;
+  line-height: 1.4;
+}
+
+/* 장소 검색 팝업 */
+.place-search-card {
+  max-width: 520px;
+  width: 100%;
+}
+
+.place-search-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.place-search-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.place-search-go {
+  flex-shrink: 0;
+}
+
+.place-search-status {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.4rem;
+  min-height: 1rem;
+}
+
+.place-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.place-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.place-search-item:hover {
+  background: #eef3ff;
+  border-color: #2c6fbb;
+}
+
+.ps-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #222;
+}
+
+.ps-addr {
+  font-size: 0.78rem;
+  color: #777;
+  line-height: 1.4;
+}
+
+.plan-sub-addr::before {
+  content: "📍 ";
+}
+
 .edit-check-inline input {
   width: auto;
 }

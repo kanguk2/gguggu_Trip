@@ -61,6 +61,7 @@ export default {
           if (typeof image === "string" && image) item.image = image;
           if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) item.links = cl; }
           if (body.transit) { const ct = cleanTransit(body.transit); if (ct) item.transit = ct; }
+          if (typeof body.addr === "string" && body.addr.trim()) item.addr = body.addr.trim().slice(0, 200);
           overrides.additions[date].push(item);
           // 수동 정렬(itemOrder)이 이미 있으면 시간순 위치에 끼워넣음.
           // 없으면 건드리지 않아 페이지가 시간순으로 자동 정렬(insertByTime).
@@ -104,6 +105,8 @@ export default {
           if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) item.links = cl; else delete item.links; }
           if (body.transit === null) delete item.transit;
           else if (body.transit) { const ct = cleanTransit(body.transit); if (ct) item.transit = ct; else delete item.transit; }
+          if (body.addr === null || body.addr === "") delete item.addr;
+          else if (typeof body.addr === "string") item.addr = body.addr.trim().slice(0, 200);
           await saveOverrides(env, overrides, sha, `Edit ${date} ${item.time} ${item.name}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
@@ -178,6 +181,8 @@ export default {
           if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) current.links = cl; else delete current.links; }
           if (body.transit === null) delete current.transit;
           else if (body.transit) { const ct = cleanTransit(body.transit); if (ct) current.transit = ct; else delete current.transit; }
+          if (body.addr === null || body.addr === "") delete current.addr;
+          else if (typeof body.addr === "string") current.addr = body.addr.trim().slice(0, 200);
           if (Object.keys(current).length === 0) {
             delete overrides.itemEdits[key];
           } else {

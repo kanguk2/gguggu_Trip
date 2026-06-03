@@ -353,6 +353,8 @@ function loadMapsApi() {
   return mapsApiLoadPromise;
 }
 
+window.TRIP_LOAD_MAPS = loadMapsApi; // overrides.js 의 장소 검색이 Places 로드 보장용
+
 const TRANSIT_GUIDES = {
   "jr-hokkaido": {
     title: "JR 홋카이도 표 구매·이용 가이드",

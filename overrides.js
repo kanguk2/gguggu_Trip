@@ -508,6 +508,7 @@
       if (firstText) firstText.textContent = newName;
       if (edit && (edit.time || edit.name)) li.classList.add("plan-item-overridden");
       else li.classList.remove("plan-item-overridden");
+      setPlanItemAddr(li, (edit && edit.addr) || "");
       setPlanItemLinks(li, (edit && edit.links) || []);
       applyTransit(li, (edit && edit.transit) || null);
       setPlanItemImage(li, (edit && edit.image) || "");
@@ -609,6 +610,7 @@
       <span class="plan-time">${escapeHtml(item.time)}</span>
       <span class="plan-name">${escapeHtml(item.name)}</span>
     `;
+    if (item.addr) setPlanItemAddr(li, item.addr);
     const noteText = overrides.notes[li.dataset.itemKey];
     if (noteText) appendNote(li, noteText);
     if (item.links) setPlanItemLinks(li, item.links);
@@ -1039,6 +1041,90 @@
     });
   }
 
+  // 항목 이름 아래 주소 서브라인 주입/제거
+  function setPlanItemAddr(li, addr) {
+    const nameEl = li.querySelector(".plan-name");
+    if (!nameEl) return;
+    let sub = nameEl.querySelector(":scope > .plan-sub-addr");
+    if (!addr) { if (sub) sub.remove(); return; }
+    if (!sub) {
+      sub = document.createElement("small");
+      sub.className = "plan-sub plan-sub-addr";
+      nameEl.appendChild(sub);
+    }
+    sub.textContent = addr;
+  }
+
+  async function ensureMapsLoaded() {
+    if (window.google?.maps?.places) return true;
+    try { if (window.TRIP_LOAD_MAPS) await window.TRIP_LOAD_MAPS(); } catch {}
+    return !!window.google?.maps?.places;
+  }
+
+  // 구글맵 장소 검색 팝업. 결과 선택 시 onPick({name, address, coords}) 호출.
+  function openPlaceSearch(onPick, initialQuery) {
+    const modal = document.createElement("div");
+    modal.className = "edit-overlay place-search-overlay";
+    modal.innerHTML = `
+      <form class="edit-card place-search-card" autocomplete="off">
+        <h2>장소 검색</h2>
+        <div class="place-search-row">
+          <input type="text" class="place-search-input" placeholder="가게명·주소·키워드 (예: 스스키노 징기스칸)" value="${escapeHtml(initialQuery || "")}">
+          <button type="submit" class="btn place-search-go">검색</button>
+        </div>
+        <div class="place-search-status"></div>
+        <ul class="place-search-results"></ul>
+        <div class="edit-actions">
+          <button type="button" class="btn btn-secondary place-search-cancel">닫기</button>
+        </div>
+      </form>
+    `;
+    const close = () => modal.remove();
+    const input = modal.querySelector(".place-search-input");
+    const status = modal.querySelector(".place-search-status");
+    const results = modal.querySelector(".place-search-results");
+    modal.querySelector(".place-search-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+    const doSearch = async () => {
+      const q = input.value.trim();
+      if (!q) return;
+      results.innerHTML = "";
+      status.textContent = "검색 중…";
+      const ok = await ensureMapsLoaded();
+      if (!ok) { status.textContent = "지도를 불러오지 못했습니다. 잠시 후 다시 시도하세요."; return; }
+      try {
+        const svc = new google.maps.places.PlacesService(document.createElement("div"));
+        svc.textSearch({ query: q }, (res, st) => {
+          if (st !== google.maps.places.PlacesServiceStatus.OK || !res || !res.length) {
+            status.textContent = "검색 결과가 없습니다.";
+            return;
+          }
+          status.textContent = `${Math.min(res.length, 12)}개 결과 — 선택하면 입력됩니다`;
+          res.slice(0, 12).forEach((p) => {
+            const li = document.createElement("li");
+            li.className = "place-search-item";
+            li.innerHTML = `<span class="ps-name">${escapeHtml(p.name || "")}</span><span class="ps-addr">${escapeHtml(p.formatted_address || "")}</span>`;
+            li.addEventListener("click", () => {
+              const loc = p.geometry && p.geometry.location;
+              onPick({
+                name: p.name || "",
+                address: p.formatted_address || "",
+                coords: loc ? [loc.lat(), loc.lng()] : null,
+              });
+              close();
+            });
+            results.appendChild(li);
+          });
+        });
+      } catch { status.textContent = "검색에 실패했습니다."; }
+    };
+    modal.querySelector("form").addEventListener("submit", (e) => { e.preventDefault(); doSearch(); });
+    document.body.appendChild(modal);
+    input.focus();
+    if (initialQuery) doSearch();
+  }
+
   async function geocodePlace(query) {
     if (!query || !window.google?.maps?.places) return null;
     return new Promise((resolve) => {
@@ -1081,11 +1167,15 @@
     let currentLinks = [];
     try { currentLinks = JSON.parse(li.dataset.links || "[]"); } catch {}
     let currentTransit = null;
+    let currentAddr = "";
     if (isAdded) {
       const it = (overrides.additions[date] || []).find((a) => a.id === li.dataset.addedId);
       currentTransit = (it && it.transit) || null;
+      currentAddr = (it && it.addr) || "";
     } else {
-      currentTransit = (overrides.itemEdits[key] && overrides.itemEdits[key].transit) || null;
+      const e = overrides.itemEdits[key];
+      currentTransit = (e && e.transit) || null;
+      currentAddr = (e && e.addr) || "";
     }
     const editable = isAdded || true;
 
@@ -1104,8 +1194,12 @@
           <input type="text" name="name" value="${escapeHtml(name)}" required>
         </label>
         <label class="edit-field">
-          <span>지도 마커 (선택 — 장소·주소·식당명 입력하면 지도에 마커 표시${hasMarker ? "·갱신" : ""})</span>
-          <input type="text" name="place" placeholder="예: Sapporo Beer Garden">
+          <span>지도 마커 (찾기로 검색하거나 직접 입력${hasMarker ? " — 새로 선택 시 갱신" : ""})</span>
+          <div class="place-field-row">
+            <input type="text" name="place" placeholder="예: Sapporo Beer Garden">
+            <button type="button" class="btn btn-secondary place-find-btn">🔍 찾기</button>
+          </div>
+          <div class="place-picked" hidden></div>
         </label>
         ${hasMarker ? `<label class="edit-check-inline"><input type="checkbox" name="removeMarker"> 지도 마커 제거</label>` : ""}
         <label class="edit-field">
@@ -1140,6 +1234,22 @@
     modal.querySelector(".edit-links-slot").replaceWith(linksEditor);
     const transitEditor = buildTransitEditor(currentTransit);
     modal.querySelector(".edit-transit-slot").replaceWith(transitEditor);
+
+    let picked = null;
+    const nameInput = modal.querySelector("input[name=name]");
+    const placeInput = modal.querySelector("input[name=place]");
+    const pickedBox = modal.querySelector(".place-picked");
+    if (currentAddr) { pickedBox.hidden = false; pickedBox.textContent = `현재 주소: ${currentAddr}`; }
+    modal.querySelector(".place-find-btn").addEventListener("click", () => {
+      openPlaceSearch((p) => {
+        picked = p;
+        if (!nameInput.value.trim()) nameInput.value = p.name;
+        placeInput.value = p.name;
+        pickedBox.hidden = false;
+        pickedBox.textContent = `✓ ${p.name}${p.address ? " · " + p.address : ""}`;
+      }, placeInput.value.trim() || nameInput.value.trim());
+    });
+    placeInput.addEventListener("input", () => { picked = null; });
 
     let removeImage = false;
     const imgCurrent = modal.querySelector(".edit-img-current");
@@ -1224,17 +1334,29 @@
       const removeMarker = !!form.removeMarker?.checked;
       const placeQuery = form.place?.value?.trim();
 
+      // 좌표·주소: 검색으로 선택(picked) > 마커 제거 > 직접 입력 지오코딩
+      let addrUpdate = undefined; // undefined=변경없음, null=제거, string=설정
+      if (removeMarker) {
+        coordsUpdate = null;
+        if (currentAddr) addrUpdate = null;
+      } else if (picked && picked.coords) {
+        coordsUpdate = picked.coords;
+        const a = picked.address || "";
+        if (a !== currentAddr) addrUpdate = a || null;
+      } else if (placeQuery) {
+        coordsUpdate = await geocodePlace(placeQuery);
+      }
+
       if (isAdded) {
-        if (removeMarker) coordsUpdate = null;
-        else if (placeQuery) coordsUpdate = await geocodePlace(placeQuery);
         const payload = { date, id: li.dataset.addedId };
         if (newTime !== time) payload.time = newTime;
         if (newName !== name) payload.name = newName;
         if (coordsUpdate !== undefined) payload.coords = coordsUpdate;
+        if (addrUpdate !== undefined) payload.addr = addrUpdate;
         if (imageUpdate !== undefined) payload.image = imageUpdate;
         if (linksChanged) payload.links = newLinks;
         if (transitUpdate !== undefined) payload.transit = transitUpdate;
-        if (newTime !== time || newName !== name || coordsUpdate !== undefined || imageUpdate !== undefined || linksChanged || transitUpdate !== undefined) {
+        if (newTime !== time || newName !== name || coordsUpdate !== undefined || addrUpdate !== undefined || imageUpdate !== undefined || linksChanged || transitUpdate !== undefined) {
           await callWorker("updateItem", payload);
           didMapUpdate = true;
         }
@@ -1242,19 +1364,19 @@
         const editPayload = { key };
         const editedTime = newTime !== origTime ? newTime : "";
         const editedName = newName !== origName ? newName : "";
-        let staticCoords = undefined;
-        if (removeMarker) staticCoords = null;
-        else if (placeQuery) staticCoords = await geocodePlace(placeQuery);
+        const staticCoords = coordsUpdate; // 위에서 결정됨 (undefined/null/배열)
         const prev = overrides.itemEdits?.[key] || {};
         const changedTime = editedTime !== (prev.time || "");
         const changedName = editedName !== (prev.name || "");
         const changedCoords = staticCoords !== undefined;
         const changedImage = imageUpdate !== undefined;
         const changedTransit = transitUpdate !== undefined;
-        if (changedTime || changedName || changedCoords || changedImage || linksChanged || changedTransit) {
+        const changedAddr = addrUpdate !== undefined;
+        if (changedTime || changedName || changedCoords || changedImage || linksChanged || changedTransit || changedAddr) {
           if (changedTime) editPayload.time = editedTime;
           if (changedName) editPayload.name = editedName;
           if (changedCoords) editPayload.coords = staticCoords;
+          if (changedAddr) editPayload.addr = addrUpdate;
           if (changedImage) editPayload.image = imageUpdate;
           if (linksChanged) editPayload.links = newLinks;
           if (changedTransit) editPayload.transit = transitUpdate;
@@ -1293,8 +1415,12 @@
           <input type="text" name="name" required placeholder="예: 카페 휴식">
         </label>
         <label class="edit-field">
-          <span>지도 마커 (선택 — 비우면 지도에 표시 안 됨)</span>
-          <input type="text" name="place" placeholder="예: Cafe Morihiko Sapporo">
+          <span>지도 마커 (찾기로 검색하거나 직접 입력 — 비우면 표시 안 됨)</span>
+          <div class="place-field-row">
+            <input type="text" name="place" placeholder="예: Cafe Morihiko Sapporo">
+            <button type="button" class="btn btn-secondary place-find-btn">🔍 찾기</button>
+          </div>
+          <div class="place-picked" hidden></div>
         </label>
         <label class="edit-field">
           <span>이미지 (선택 — 사진 첨부, 자동 축소됨)</span>
@@ -1317,17 +1443,35 @@
     const transitEditor = buildTransitEditor(null);
     modal.querySelector(".edit-transit-slot").replaceWith(transitEditor);
 
+    let picked = null;
+    const nameInput = modal.querySelector("input[name=name]");
+    const placeInput = modal.querySelector("input[name=place]");
+    const pickedBox = modal.querySelector(".place-picked");
+    modal.querySelector(".place-find-btn").addEventListener("click", () => {
+      openPlaceSearch((p) => {
+        picked = p;
+        if (!nameInput.value.trim()) nameInput.value = p.name;
+        placeInput.value = p.name;
+        pickedBox.hidden = false;
+        pickedBox.textContent = `✓ ${p.name}${p.address ? " · " + p.address : ""}`;
+      }, placeInput.value.trim() || nameInput.value.trim());
+    });
+    placeInput.addEventListener("input", () => { picked = null; pickedBox.hidden = true; });
+
     modal.querySelector("form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const placeQuery = e.target.place.value.trim();
       let coords = null;
-      if (placeQuery) coords = await geocodePlace(placeQuery);
+      let addr = undefined;
+      if (picked && picked.coords) { coords = picked.coords; addr = picked.address || undefined; }
+      else if (placeQuery) coords = await geocodePlace(placeQuery);
       const payload = {
         date,
         time: e.target.time.value,
         name: e.target.name.value,
       };
       if (coords) payload.coords = coords;
+      if (addr) payload.addr = addr;
       const imgFile = e.target.image?.files?.[0];
       if (imgFile) {
         const path = await uploadImageFile(imgFile);
