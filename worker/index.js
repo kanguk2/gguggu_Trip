@@ -60,6 +60,7 @@ export default {
           if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
           if (typeof image === "string" && image) item.image = image;
           if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) item.links = cl; }
+          if (body.transit) { const ct = cleanTransit(body.transit); if (ct) item.transit = ct; }
           overrides.additions[date].push(item);
           // 수동 정렬(itemOrder)이 이미 있으면 시간순 위치에 끼워넣음.
           // 없으면 건드리지 않아 페이지가 시간순으로 자동 정렬(insertByTime).
@@ -101,6 +102,8 @@ export default {
           if (image === null) delete item.image;
           else if (typeof image === "string" && image) item.image = image;
           if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) item.links = cl; else delete item.links; }
+          if (body.transit === null) delete item.transit;
+          else if (body.transit) { const ct = cleanTransit(body.transit); if (ct) item.transit = ct; else delete item.transit; }
           await saveOverrides(env, overrides, sha, `Edit ${date} ${item.time} ${item.name}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
@@ -173,6 +176,8 @@ export default {
           if (image === null) delete current.image;
           else if (typeof image === "string" && image) current.image = image;
           if (Array.isArray(links)) { const cl = cleanLinks(links); if (cl.length) current.links = cl; else delete current.links; }
+          if (body.transit === null) delete current.transit;
+          else if (body.transit) { const ct = cleanTransit(body.transit); if (ct) current.transit = ct; else delete current.transit; }
           if (Object.keys(current).length === 0) {
             delete overrides.itemEdits[key];
           } else {
@@ -326,6 +331,30 @@ function insertKeySorted(overrides, date, newKey, newTime) {
     if (t && t > newTime) { idx = i; break; }
   }
   order.splice(idx, 0, newKey);
+}
+
+// 이동(교통) 옵션 정리 — options:[{name, duration?, price?, note?, times?[]}], note?
+function cleanTransit(t) {
+  if (!t || !Array.isArray(t.options)) return null;
+  const str = (v, n) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : undefined);
+  const options = t.options
+    .filter((o) => o && typeof o.name === "string" && o.name.trim())
+    .slice(0, 10)
+    .map((o) => {
+      const opt = { name: o.name.trim().slice(0, 80) };
+      const d = str(o.duration, 30); if (d) opt.duration = d;
+      const p = str(o.price, 30); if (p) opt.price = p;
+      const n = str(o.note, 200); if (n) opt.note = n;
+      if (Array.isArray(o.times)) {
+        const times = o.times.map((x) => String(x).trim().slice(0, 60)).filter(Boolean).slice(0, 40);
+        if (times.length) opt.times = times;
+      }
+      return opt;
+    });
+  if (!options.length) return null;
+  const out = { options };
+  const note = str(t.note, 200); if (note) out.note = note;
+  return out;
 }
 
 // 참고 링크 정리 — http(s) URL 만 허용(javascript: 등 차단), 라벨 선택, 최대 10개

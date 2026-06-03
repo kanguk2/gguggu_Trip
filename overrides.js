@@ -143,6 +143,161 @@
     return box;
   }
 
+  // ── 이동(교통) 옵션 ─────────────────────────────────────────────
+  function parseDep(s) {
+    const m = String(s).match(/\d{1,2}:\d{2}/);
+    if (!m) return "";
+    const [h, mm] = m[0].split(":");
+    return `${h.padStart(2, "0")}:${mm}`;
+  }
+
+  function renderTransitInner(transit) {
+    const opts = (transit.options || []).map((o) => {
+      const badges = [o.duration, o.price].filter(Boolean)
+        .map((b) => `<span class="badge">${escapeHtml(b)}</span>`).join("");
+      const note = o.note ? `<p class="transit-note">${escapeHtml(o.note)}</p>` : "";
+      const times = (o.times || []).map((t) =>
+        `<li class="transit-time" data-dep="${escapeHtml(parseDep(t))}">${escapeHtml(t)}</li>`).join("");
+      const timesBlock = times ? `<ul class="transit-times">${times}</ul>` : "";
+      return `<li><div class="transit-name">${escapeHtml(o.name)}</div><div class="transit-meta">${badges}</div>${note}${timesBlock}</li>`;
+    }).join("");
+    const note = transit.note ? `<p class="transit-disclaimer">${escapeHtml(transit.note)}</p>` : "";
+    return `<div class="plan-detail"><ul class="transit-options">${opts}</ul>${note}<button type="button" class="transit-sync-btn">🔄 시간에 맞춰 동기화</button></div>`;
+  }
+
+  // 항목 시각(itemTime) 이후 가장 가까운 출발편 강조(.is-next), 지난 건 흐리게(.is-past)
+  function syncTransitTimes(scope, itemTime) {
+    if (!itemTime) return;
+    scope.querySelectorAll(".transit-times").forEach((ul) => {
+      let nextMarked = false;
+      [...ul.querySelectorAll(".transit-time")].forEach((li) => {
+        const dep = li.dataset.dep;
+        li.classList.remove("is-past", "is-next");
+        if (!dep) return;
+        if (dep < itemTime) li.classList.add("is-past");
+        else if (!nextMarked) { li.classList.add("is-next"); nextMarked = true; }
+      });
+    });
+  }
+
+  // plan-item 아래에 이동옵션 펼침(details) 블록 주입/갱신. transit 없으면 제거.
+  function applyTransit(li, transit) {
+    let wrap = li.querySelector(":scope > .plan-transit");
+    if (!transit || !(transit.options || []).length) {
+      if (wrap) wrap.remove();
+      delete li.dataset.transit;
+      return;
+    }
+    li.dataset.transit = "1";
+    const wasOpen = wrap && wrap.open;
+    if (wrap) wrap.remove();
+    wrap = document.createElement("details");
+    wrap.className = "plan-transit";
+    if (wasOpen) wrap.open = true;
+    wrap.innerHTML = `<summary class="plan-transit-summary">🚉 이동 옵션 <span class="plan-transit-icon" aria-hidden="true">▾</span></summary>${renderTransitInner(transit)}`;
+    const itemTime = () => li.querySelector(".plan-time")?.textContent.trim() || "";
+    syncTransitTimes(wrap, itemTime());
+    const syncBtn = wrap.querySelector(".transit-sync-btn");
+    if (syncBtn) syncBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      syncTransitTimes(wrap, itemTime());
+      showToast("이동 옵션을 시간에 맞춰 동기화했습니다", 1500);
+    });
+    li.appendChild(wrap);
+  }
+
+  // 추가/편집 모달용 이동옵션 에디터. _read() → { enabled, transit }
+  function buildTransitEditor(initial) {
+    const box = document.createElement("div");
+    box.className = "edit-field edit-transit";
+    box.innerHTML = `
+      <label class="edit-check-inline"><input type="checkbox" class="transit-enable"> 이동(교통) 옵션 추가</label>
+      <div class="transit-editor" hidden>
+        <div class="transit-opts"></div>
+        <button type="button" class="transit-opt-add btn btn-secondary">+ 이동수단 추가</button>
+      </div>
+    `;
+    const enable = box.querySelector(".transit-enable");
+    const editor = box.querySelector(".transit-editor");
+    const optsBox = box.querySelector(".transit-opts");
+    const addOpt = (o) => {
+      o = o || {};
+      const row = document.createElement("div");
+      row.className = "transit-opt-row";
+      row.innerHTML = `
+        <input type="text" class="t-name" placeholder="수단 (예: JR 쾌속)" value="${escapeHtml(o.name || "")}">
+        <div class="transit-opt-grid">
+          <input type="text" class="t-dur" placeholder="소요 (예: 37분)" value="${escapeHtml(o.duration || "")}">
+          <input type="text" class="t-price" placeholder="요금 (예: ¥640)" value="${escapeHtml(o.price || "")}">
+        </div>
+        <input type="text" class="t-note" placeholder="메모 (선택)" value="${escapeHtml(o.note || "")}">
+        <textarea class="t-times" rows="2" placeholder="시간표 — 한 줄에 하나 (예: 13:00 → 13:37)">${escapeHtml((o.times || []).join("\n"))}</textarea>
+        <button type="button" class="transit-opt-del" title="이 수단 삭제">✕ 수단 삭제</button>
+      `;
+      row.querySelector(".transit-opt-del").addEventListener("click", () => row.remove());
+      optsBox.appendChild(row);
+    };
+    enable.addEventListener("change", () => {
+      editor.hidden = !enable.checked;
+      if (enable.checked && !optsBox.children.length) addOpt();
+    });
+    box.querySelector(".transit-opt-add").addEventListener("click", () => addOpt());
+    if (initial && (initial.options || []).length) {
+      enable.checked = true;
+      editor.hidden = false;
+      initial.options.forEach(addOpt);
+    }
+    box._read = () => {
+      if (!enable.checked) return { enabled: false, transit: null };
+      const options = [...optsBox.querySelectorAll(".transit-opt-row")].map((r) => {
+        const opt = { name: r.querySelector(".t-name").value.trim() };
+        const dur = r.querySelector(".t-dur").value.trim();
+        const price = r.querySelector(".t-price").value.trim();
+        const note = r.querySelector(".t-note").value.trim();
+        const times = r.querySelector(".t-times").value.split("\n").map((s) => s.trim()).filter(Boolean);
+        if (dur) opt.duration = dur;
+        if (price) opt.price = price;
+        if (note) opt.note = note;
+        if (times.length) opt.times = times;
+        return opt;
+      }).filter((o) => o.name);
+      return { enabled: true, transit: options.length ? { options } : null };
+    };
+    return box;
+  }
+
+  // 정적(하드코딩) 이동 항목에도 동기화 버튼 주입 + 출발시각 파싱 + 자동 동기화
+  function enhanceStaticTransit() {
+    document.querySelectorAll(".plan-item-expandable").forEach((li) => {
+      const detail = li.querySelector(".plan-detail");
+      if (!detail) return;
+      const timesLists = detail.querySelectorAll(".transit-times");
+      if (!timesLists.length) return;
+      timesLists.forEach((ul) => {
+        ul.querySelectorAll("li").forEach((row) => {
+          if (!row.classList.contains("transit-time")) row.classList.add("transit-time");
+          if (!row.dataset.dep) row.dataset.dep = parseDep(row.textContent);
+        });
+      });
+      const itemTime = () => li.querySelector(".plan-time")?.textContent.trim() || "";
+      if (!detail.querySelector(".transit-sync-btn")) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "transit-sync-btn";
+        btn.textContent = "🔄 시간에 맞춰 동기화";
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          syncTransitTimes(detail, itemTime());
+          showToast("이동 옵션을 시간에 맞춰 동기화했습니다", 1500);
+        });
+        detail.appendChild(btn);
+      }
+      syncTransitTimes(detail, itemTime());
+    });
+  }
+
   // 파일 → 최대 1280px JPEG 로 축소 → base64 (data: 접두어 제거). 리포 비대화 방지.
   function compressImage(file) {
     return new Promise((resolve, reject) => {
@@ -354,6 +509,7 @@
       if (edit && (edit.time || edit.name)) li.classList.add("plan-item-overridden");
       else li.classList.remove("plan-item-overridden");
       setPlanItemLinks(li, (edit && edit.links) || []);
+      applyTransit(li, (edit && edit.transit) || null);
       setPlanItemImage(li, (edit && edit.image) || "");
     });
   }
@@ -456,6 +612,7 @@
     const noteText = overrides.notes[li.dataset.itemKey];
     if (noteText) appendNote(li, noteText);
     if (item.links) setPlanItemLinks(li, item.links);
+    if (item.transit) applyTransit(li, item.transit);
     if (item.image) setPlanItemImage(li, item.image);
     return li;
   }
@@ -522,7 +679,7 @@
         delay: 250,
         delayOnTouchOnly: false,
         touchStartThreshold: 8,
-        filter: ".plan-edit-btn, .plan-toggle-icon, .plan-link, .plan-link-chip, .plan-thumb, .clamp-toggle, button, a, input, textarea",
+        filter: ".plan-edit-btn, .plan-toggle-icon, .plan-link, .plan-link-chip, .plan-thumb, .clamp-toggle, summary, .plan-transit, button, a, input, textarea",
         preventOnFilter: false,
         ghostClass: "plan-item-ghost",
         chosenClass: "plan-item-chosen",
@@ -848,6 +1005,8 @@
         openEditModal(li);
       });
       tools.insertBefore(btn, tools.firstChild); // 편집 버튼은 도구모음 왼쪽, 마커 배지는 그 오른쪽
+      const transitWrap = li.querySelector(":scope > .plan-transit");
+      if (transitWrap) li.appendChild(transitWrap);
       const linksWrap = li.querySelector(":scope > .plan-links");
       if (linksWrap) li.appendChild(linksWrap);
       const imgWrap = li.querySelector(":scope > .plan-image-wrap");
@@ -921,6 +1080,13 @@
     const currentImage = li.dataset.image || "";
     let currentLinks = [];
     try { currentLinks = JSON.parse(li.dataset.links || "[]"); } catch {}
+    let currentTransit = null;
+    if (isAdded) {
+      const it = (overrides.additions[date] || []).find((a) => a.id === li.dataset.addedId);
+      currentTransit = (it && it.transit) || null;
+    } else {
+      currentTransit = (overrides.itemEdits[key] && overrides.itemEdits[key].transit) || null;
+    }
     const editable = isAdded || true;
 
     const modal = document.createElement("div");
@@ -951,6 +1117,7 @@
           <button type="button" class="btn btn-secondary edit-img-remove">이미지 제거</button>
         </div>
         <div class="edit-links-slot"></div>
+        <div class="edit-transit-slot"></div>
         <label class="edit-field">
           <span>메모</span>
           <textarea name="note" rows="3" placeholder="이 항목에 대한 메모">${escapeHtml(currentNote)}</textarea>
@@ -971,6 +1138,8 @@
 
     const linksEditor = buildLinksEditor(currentLinks);
     modal.querySelector(".edit-links-slot").replaceWith(linksEditor);
+    const transitEditor = buildTransitEditor(currentTransit);
+    modal.querySelector(".edit-transit-slot").replaceWith(transitEditor);
 
     let removeImage = false;
     const imgCurrent = modal.querySelector(".edit-img-current");
@@ -1043,6 +1212,15 @@
       const newLinks = linksEditor._read();
       const linksChanged = JSON.stringify(newLinks) !== JSON.stringify(currentLinks);
 
+      // 이동 옵션: 켜져 있으면 변경 시 전송, 껐는데 기존에 있었으면 제거(null)
+      const tr = transitEditor._read();
+      let transitUpdate = undefined; // undefined=변경없음, null=제거, object=설정
+      if (tr.enabled && tr.transit) {
+        if (JSON.stringify(tr.transit) !== JSON.stringify(currentTransit)) transitUpdate = tr.transit;
+      } else if (!tr.enabled && currentTransit) {
+        transitUpdate = null;
+      }
+
       const removeMarker = !!form.removeMarker?.checked;
       const placeQuery = form.place?.value?.trim();
 
@@ -1055,7 +1233,8 @@
         if (coordsUpdate !== undefined) payload.coords = coordsUpdate;
         if (imageUpdate !== undefined) payload.image = imageUpdate;
         if (linksChanged) payload.links = newLinks;
-        if (newTime !== time || newName !== name || coordsUpdate !== undefined || imageUpdate !== undefined || linksChanged) {
+        if (transitUpdate !== undefined) payload.transit = transitUpdate;
+        if (newTime !== time || newName !== name || coordsUpdate !== undefined || imageUpdate !== undefined || linksChanged || transitUpdate !== undefined) {
           await callWorker("updateItem", payload);
           didMapUpdate = true;
         }
@@ -1071,12 +1250,14 @@
         const changedName = editedName !== (prev.name || "");
         const changedCoords = staticCoords !== undefined;
         const changedImage = imageUpdate !== undefined;
-        if (changedTime || changedName || changedCoords || changedImage || linksChanged) {
+        const changedTransit = transitUpdate !== undefined;
+        if (changedTime || changedName || changedCoords || changedImage || linksChanged || changedTransit) {
           if (changedTime) editPayload.time = editedTime;
           if (changedName) editPayload.name = editedName;
           if (changedCoords) editPayload.coords = staticCoords;
           if (changedImage) editPayload.image = imageUpdate;
           if (linksChanged) editPayload.links = newLinks;
+          if (changedTransit) editPayload.transit = transitUpdate;
           await callWorker("setItemEdit", editPayload);
           if (changedCoords) didMapUpdate = true;
         }
@@ -1120,6 +1301,7 @@
           <input type="file" name="image" accept="image/*">
         </label>
         <div class="edit-links-slot"></div>
+        <div class="edit-transit-slot"></div>
         <div class="edit-actions">
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
           <button type="submit" class="btn">추가</button>
@@ -1132,6 +1314,8 @@
 
     const linksEditor = buildLinksEditor([]);
     modal.querySelector(".edit-links-slot").replaceWith(linksEditor);
+    const transitEditor = buildTransitEditor(null);
+    modal.querySelector(".edit-transit-slot").replaceWith(transitEditor);
 
     modal.querySelector("form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1151,6 +1335,8 @@
       }
       const links = linksEditor._read();
       if (links.length) payload.links = links;
+      const tr = transitEditor._read();
+      if (tr.transit) payload.transit = tr.transit;
       const result = await callWorker("addItem", payload);
       if (!result.error) {
         applyAdditions();
@@ -1323,6 +1509,7 @@
     applyChecklistCustomizations();
     applyChecks();
     addEditButtons();
+    enhanceStaticTransit();
     setupDragDrop();
     rebuildCurrentDayMap();
     showToast("동기화 완료", 1500);
@@ -1370,6 +1557,7 @@
     applyChecks();
     addEditButtons();
     addAddNewButtons();
+    enhanceStaticTransit();
     setupDragDrop();
     // checklist re-renders async after maps etc.; re-apply if it fires later
     document.addEventListener("checklist:rendered", () => {

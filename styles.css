@@ -226,6 +226,123 @@ main {
   margin: 0.5rem 0 0;
 }
 
+/* 사용자 추가 이동 옵션 (plan-item 아래 펼침 블록) */
+.plan-transit {
+  grid-column: 1 / -1;
+  margin-top: 0.45rem;
+  border: 1px solid #d9e2f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f4f7fc;
+}
+
+.plan-transit-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2c4f8a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-transit-summary::-webkit-details-marker { display: none; }
+
+.plan-transit[open] .plan-transit-icon { transform: rotate(180deg); }
+
+.plan-transit-icon {
+  color: #6f8bbd;
+  transition: transform 0.15s;
+}
+
+.plan-transit > .plan-detail {
+  border-top: 1px solid #d9e2f0;
+  background: #fff;
+}
+
+/* 시간 동기화 버튼 + 강조 */
+.transit-sync-btn {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.8rem;
+  background: #eef3ff;
+  color: #2c6fbb;
+  border: 1px solid #cfe0f5;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.transit-sync-btn:hover {
+  background: #dbeafe;
+  border-color: #2c6fbb;
+}
+
+.transit-time.is-past {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.transit-time.is-next {
+  border-color: #2c6fbb;
+  background: #eef3ff;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px #2c6fbb inset;
+}
+
+/* 이동옵션 에디터 (추가/편집 모달) */
+.transit-editor {
+  margin-top: 0.4rem;
+  padding: 0.6rem;
+  border: 1px dashed #cfe0f5;
+  border-radius: 6px;
+  background: #f8fafe;
+}
+
+.transit-opt-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+}
+
+.transit-opt-grid {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.transit-opt-grid input {
+  flex: 1;
+  min-width: 0;
+}
+
+.transit-opt-del {
+  align-self: flex-end;
+  background: transparent;
+  border: 1px solid #e0c0c0;
+  border-radius: 4px;
+  color: #c0392b;
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.transit-opt-del:hover {
+  background: #fdecea;
+}
+
+.transit-opt-add {
+  font-size: 0.82rem;
+  padding: 0.3rem 0.7rem;
+}
+
 .transit-guide-btn {
   display: inline-block;
   margin-top: 0.7rem;
