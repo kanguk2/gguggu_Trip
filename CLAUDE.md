@@ -121,7 +121,8 @@ GitHub repo (trips/sapporo-overrides.json)
 {
   "additions": {
     "2026-06-05": [
-      { "id": "add-abc123", "time": "20:30", "name": "카페 휴식", "coords": [43.0635, 141.3520], "image": "./files/uploads/img-xxx.jpg" }
+      { "id": "add-abc123", "time": "20:30", "name": "카페 휴식", "coords": [43.0635, 141.3520], "image": "./files/uploads/img-xxx.jpg" },
+      { "id": "memo-def456", "kind": "memo", "text": "환전소 위치 확인" }
     ]
   },
   "notes": {
@@ -141,7 +142,7 @@ GitHub repo (trips/sapporo-overrides.json)
 }
 ```
 
-- `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. `image` (선택)는 항목 아래 전체폭 사진. 새로 추가하면 Worker 가 `itemOrder[date]` 맨 앞에 넣어서 **목록 최상단**에 뜬다.
+- `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. `image` (선택)는 항목 아래 전체폭 사진. 새로 추가하면 Worker 가 `itemOrder[date]` 맨 앞에 넣어서 **목록 최상단**에 뜬다. `kind: "memo"` 이면 시간·이름 없이 `text` 만 갖는 **메모 항목** — 일정과 같은 리스트에 들어가 드래그로 위치 변경 가능, 지도에는 안 뜸.
 - `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목, **원본 시간** 기준) 또는 `<date>/<add-id>` (추가 항목).
 - `checks[id]` — 체크리스트 체크 상태. id 는 `chk-<category>-<item>` 형식 (sapporo.js renderChecklist 가 부여). 일행 간 공유됨.
 - `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords`/`image` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복.
@@ -155,7 +156,7 @@ GitHub repo (trips/sapporo-overrides.json)
 2. 정적 plan-item 의 원본 시간·이름을 `data-original-*` 에 스냅샷 → `itemEdits` 덮어쓰기 적용 (노란 배경 이탤릭) → `data-item-key` 설정 + 메모 있으면 노란 박스
 3. `additions` 항목들을 해당 날짜 패널의 plan-list 에 삽입 (초록 배경) → `itemOrder` 로 재정렬
 4. 모든 plan-item 우측에 ✎(편집·메모·이미지) 버튼 추가. 항목에 `image` 있으면 아래 전체폭 사진 표시
-5. 각 날짜 패널 맨 아래에 `+ 새 일정 추가` 버튼 추가
+5. 각 날짜 패널 맨 아래에 `+ 새 일정 추가` · `+ 메모 추가` 버튼 추가 (메모는 텍스트만 입력, 리스트에 들어가 드래그 가능)
 6. 준비물 탭: 카테고리 제목마다 ＋ 버튼(그 카테고리에 항목 추가), 맨 아래 `+ 새 카테고리 추가` 버튼
 7. SortableJS 로 드래그·드롭 활성화 (0.5초 롱프레스)
 8. 편집 비번은 localStorage(`trip-edit-password-v1`)에 저장, 최초 1회만 입력
@@ -168,7 +169,8 @@ GitHub repo (trips/sapporo-overrides.json)
 | action | payload | 동작 |
 |---|---|---|
 | `addItem` | `date, time, name, coords?, image?` | `additions[date]` 에 새 항목 추가 + `itemOrder[date]` 맨 앞에 삽입 (최상단 표시). coords 는 `[lat, lng]`, image 는 상대경로 |
-| `updateItem` | `date, id, time?, name?, coords?, image?` | 추가된 항목 수정. `coords: null`/`image: null` 명시하면 좌표·이미지 제거 |
+| `addMemo` | `date, text` | `additions[date]` 에 `{kind:"memo", text}` 메모 항목 추가 + `itemOrder[date]` 맨 앞에 삽입 |
+| `updateItem` | `date, id, time?, name?, coords?, image?, text?` | 추가된 항목/메모 수정. `coords: null`/`image: null` 명시하면 좌표·이미지 제거. 메모는 `text` 로 갱신 |
 | `deleteItem` | `date, id` | 추가된 항목 삭제 |
 | `setNote` | `key, note` | 메모 설정 (빈 문자열이면 삭제) |
 | `setCheck` | `key, checked` | 체크리스트 항목 체크/해제 |
@@ -186,13 +188,13 @@ GitHub repo (trips/sapporo-overrides.json)
 - `snapshotOriginals()` — 정적 plan-item 의 원본 시간·이름을 `data-original-time/name` 에 1회 저장 (itemEdits 적용 전 기준값)
 - `applyItemEdits()` — overrides.itemEdits 로 정적 항목 시간·이름 덮어쓰기 + `.plan-item-overridden` 클래스 (노란 배경) + `image` 있으면 항목 아래 전체폭 사진(`setPlanItemImage`)
 - `applyNotes()` — overrides.notes 의 메모를 plan-item 마다 노란 박스로 표시
-- `applyAdditions()` — overrides.additions 의 새 일정을 plan-list 에 삽입 (초록 배경). `image` 있으면 사진도 렌더
+- `applyAdditions()` — overrides.additions 의 새 일정을 plan-list 에 삽입 (초록 배경). `image` 있으면 사진도 렌더. `kind:"memo"` 항목은 `renderMemoItem()` 으로 📝 메모 스타일(노란 배경, 시간 없음)로 렌더
 - `applyOrder()` — overrides.itemOrder 로 plan-item 들 재정렬 (키 없는 항목은 뒤로)
 - `applyChecks()` — overrides.checks 와 체크박스 동기화. change 시 Worker setCheck 호출, 실패하면 원복
 - `applyChecklistCustomizations()` — checklistEdits/Hidden/Adds 적용 후 `addChecklistButtons()` 호출
 - `addChecklistButtons()` — 각 준비물 항목에 ✎/✕ 버튼, **각 카테고리 제목 옆에 ＋ 버튼**(그 카테고리에 바로 항목 추가 → `openCheckAddModal(catName)`), 맨 아래 **"+ 새 카테고리 추가"** 버튼(`openCheckCategoryModal` — 카테고리명+첫 항목)
 - `addEditButtons()` — 모든 plan-item 우측에 ✎ 버튼 (정적·추가 공통: 시간·내용·좌표·**이미지**·메모 편집). 이미지 영역은 항상 항목의 마지막 자식으로 유지
-- `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가" 버튼
+- `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가"·"+ 메모 추가" 버튼 (`openAddModal`/`openMemoAddModal`). 메모 항목 클릭 시 `addEditButtons` 의 ✎ 가 `openMemoModal`(텍스트 편집·삭제)로 분기
 - `setupDragDrop()` — SortableJS 적용. `delay: 500` (0.5초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복
 - `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.
 - `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.

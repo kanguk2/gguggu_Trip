@@ -65,11 +65,26 @@ export default {
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
 
+        if (action === "addMemo") {
+          const { date, text } = body;
+          if (!date || !text) {
+            return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
+          }
+          if (!overrides.additions[date]) overrides.additions[date] = [];
+          const id = "memo-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
+          overrides.additions[date].push({ id, kind: "memo", text });
+          if (!overrides.itemOrder[date]) overrides.itemOrder[date] = [];
+          overrides.itemOrder[date].unshift(`${date}/${id}`);
+          await saveOverrides(env, overrides, sha, `Add memo ${date}`);
+          return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
+        }
+
         if (action === "updateItem") {
-          const { date, id, time, name, coords, image } = body;
+          const { date, id, time, name, coords, image, text } = body;
           const list = overrides.additions[date] || [];
           const item = list.find((i) => i.id === id);
           if (!item) return jsonResp({ error: "not_found" }, 404, corsHeaders);
+          if (typeof text === "string") item.text = text;
           if (time) item.time = time;
           if (name) item.name = name;
           if (coords === null) delete item.coords;

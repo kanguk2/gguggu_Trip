@@ -297,6 +297,7 @@
   }
 
   function renderAddedItem(date, item) {
+    if (item.kind === "memo") return renderMemoItem(date, item);
     const li = document.createElement("li");
     li.className = "plan-item plan-item-added";
     li.dataset.addedId = item.id;
@@ -313,8 +314,23 @@
     return li;
   }
 
+  function renderMemoItem(date, item) {
+    const li = document.createElement("li");
+    li.className = "plan-item plan-item-memo";
+    li.dataset.addedId = item.id;
+    li.dataset.memo = "1";
+    li.dataset.itemKey = `${date}/${item.id}`;
+    li.innerHTML = `
+      <span class="plan-memo-icon" aria-hidden="true">📝</span>
+      <span class="plan-memo-text">${escapeHtml(item.text)}</span>
+    `;
+    return li;
+  }
+
   function insertByTime(list, li) {
-    const time = li.querySelector(".plan-time").textContent.trim();
+    const timeEl = li.querySelector(".plan-time");
+    if (!timeEl) { list.appendChild(li); return; } // 메모 등 시간 없는 항목은 끝에 (순서는 applyOrder 가 정함)
+    const time = timeEl.textContent.trim();
     const siblings = [...list.querySelectorAll(":scope > .plan-item")];
     const next = siblings.find((s) => {
       const t = s.querySelector(".plan-time")?.textContent.trim();
@@ -679,13 +695,26 @@
 
   function addAddNewButtons() {
     document.querySelectorAll(".tab-panel[data-panel] .plan-list").forEach((list) => {
-      if (list.parentElement.querySelector(".plan-add-btn")) return;
-      const btn = document.createElement("button");
-      btn.className = "plan-add-btn";
-      btn.type = "button";
-      btn.textContent = "+ 새 일정 추가";
-      btn.addEventListener("click", () => openAddModal(list.closest(".tab-panel").dataset.panel));
-      list.after(btn);
+      if (list.parentElement.querySelector(".plan-add-row")) return;
+      const date = list.closest(".tab-panel").dataset.panel;
+      const row = document.createElement("div");
+      row.className = "plan-add-row";
+
+      const addBtn = document.createElement("button");
+      addBtn.className = "plan-add-btn";
+      addBtn.type = "button";
+      addBtn.textContent = "+ 새 일정 추가";
+      addBtn.addEventListener("click", () => openAddModal(date));
+
+      const memoBtn = document.createElement("button");
+      memoBtn.className = "plan-add-btn plan-add-memo-btn";
+      memoBtn.type = "button";
+      memoBtn.textContent = "+ 메모 추가";
+      memoBtn.addEventListener("click", () => openMemoAddModal(date));
+
+      row.appendChild(addBtn);
+      row.appendChild(memoBtn);
+      list.after(row);
     });
   }
 
@@ -714,6 +743,7 @@
   }
 
   function openEditModal(li) {
+    if (li.dataset.memo) return openMemoModal(li);
     const isAdded = !!li.dataset.addedId;
     const date = li.closest(".tab-panel[data-panel]").dataset.panel;
     const key = li.dataset.itemKey;
@@ -939,6 +969,91 @@
       }
     });
 
+    document.body.appendChild(modal);
+  }
+
+  // 메모 추가 — 일정처럼 리스트에 들어가고 드래그로 위치 변경 가능, 텍스트만 입력
+  function openMemoAddModal(date) {
+    const modal = document.createElement("div");
+    modal.className = "edit-overlay";
+    modal.innerHTML = `
+      <form class="edit-card" autocomplete="off">
+        <h2>${escapeHtml(date)} 메모 추가</h2>
+        <label class="edit-field">
+          <span>메모 내용</span>
+          <textarea name="text" rows="3" required placeholder="예: 우산 챙기기 / 환전소 위치 확인" autofocus></textarea>
+        </label>
+        <div class="edit-actions">
+          <button type="button" class="btn btn-secondary edit-cancel">취소</button>
+          <button type="submit" class="btn">추가</button>
+        </div>
+      </form>
+    `;
+    const close = () => modal.remove();
+    modal.querySelector(".edit-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+    modal.querySelector("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = e.target.text.value.trim();
+      if (!text) return;
+      const result = await callWorker("addMemo", { date, text });
+      if (!result.error) {
+        applyAdditions();
+        applyOrder();
+        addEditButtons();
+        setupDragDrop();
+        close();
+      }
+    });
+    document.body.appendChild(modal);
+  }
+
+  // 메모 편집/삭제
+  function openMemoModal(li) {
+    const date = li.closest(".tab-panel[data-panel]").dataset.panel;
+    const id = li.dataset.addedId;
+    const cur = li.querySelector(".plan-memo-text")?.textContent || "";
+    const modal = document.createElement("div");
+    modal.className = "edit-overlay";
+    modal.innerHTML = `
+      <form class="edit-card" autocomplete="off">
+        <h2>메모 편집</h2>
+        <label class="edit-field">
+          <span>메모 내용</span>
+          <textarea name="text" rows="3" required autofocus>${escapeHtml(cur)}</textarea>
+        </label>
+        <div class="edit-actions">
+          <button type="button" class="btn btn-secondary edit-delete">삭제</button>
+          <button type="button" class="btn btn-secondary edit-cancel">취소</button>
+          <button type="submit" class="btn">저장</button>
+        </div>
+      </form>
+    `;
+    const close = () => modal.remove();
+    modal.querySelector(".edit-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+    modal.querySelector(".edit-delete").addEventListener("click", async () => {
+      if (!confirm("이 메모를 삭제하시겠습니까?")) return;
+      const r = await callWorker("deleteItem", { date, id });
+      if (!r.error) {
+        applyAdditions();
+        applyOrder();
+        addEditButtons();
+        close();
+      }
+    });
+    modal.querySelector("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = e.target.text.value.trim();
+      if (!text || text === cur) { close(); return; }
+      const r = await callWorker("updateItem", { date, id, text });
+      if (!r.error) {
+        applyAdditions();
+        applyOrder();
+        addEditButtons();
+      }
+      close();
+    });
     document.body.appendChild(modal);
   }
 
