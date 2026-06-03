@@ -4,7 +4,12 @@
       {
         "id": "add-mpxil4jd-a1yi",
         "time": "14:45",
-        "name": "팜도미타"
+        "name": "팜도미타",
+        "coords": [
+          43.4182493,
+          142.4280407
+        ],
+        "addr": "15 Kisenkita, Nakafurano, Sorachi District, Hokkaido 071-0704"
       }
     ],
     "2026-06-05": [
