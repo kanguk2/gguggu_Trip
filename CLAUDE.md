@@ -21,6 +21,7 @@ styles.css          모든 페이지가 공유하는 단일 스타일시트
 script.js           index.html의 공용 스크립트 (현재 비어있음)
 robots.txt          모든 크롤러 차단
 files/              여행 관련 첨부 파일 (PDF·이미지 등). 비식별 처리 필수
+  uploads/          일정 항목에 첨부한 사진 (Worker uploadImage 가 자동 커밋, img-*.jpg)
 trips/              도시별 동적 데이터 (overrides JSON)
   sapporo-overrides.json   사용자가 추가한 일정 + 메모 (Worker 가 갱신)
 worker/             Cloudflare Worker 백엔드 소스
@@ -120,7 +121,7 @@ GitHub repo (trips/sapporo-overrides.json)
 {
   "additions": {
     "2026-06-05": [
-      { "id": "add-abc123", "time": "20:30", "name": "카페 휴식", "coords": [43.0635, 141.3520] }
+      { "id": "add-abc123", "time": "20:30", "name": "카페 휴식", "coords": [43.0635, 141.3520], "image": "./files/uploads/img-xxx.jpg" }
     ]
   },
   "notes": {
@@ -132,7 +133,7 @@ GitHub repo (trips/sapporo-overrides.json)
     "chk-2-3": true
   },
   "itemEdits": {
-    "2026-06-05/19:00": { "time": "19:30", "name": "저녁 (변경)", "coords": [43.05, 141.35] }
+    "2026-06-05/19:00": { "time": "19:30", "name": "저녁 (변경)", "coords": [43.05, 141.35], "image": "./files/uploads/img-yyy.jpg" }
   },
   "itemOrder": {
     "2026-06-05": ["2026-06-05/add-abc123", "2026-06-05/06:30", "2026-06-05/09:20"]
@@ -140,11 +141,12 @@ GitHub repo (trips/sapporo-overrides.json)
 }
 ```
 
-- `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. 새로 추가하면 Worker 가 `itemOrder[date]` 맨 앞에 넣어서 **목록 최상단**에 뜬다.
+- `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. `image` (선택)는 항목 아래 전체폭 사진. 새로 추가하면 Worker 가 `itemOrder[date]` 맨 앞에 넣어서 **목록 최상단**에 뜬다.
 - `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목, **원본 시간** 기준) 또는 `<date>/<add-id>` (추가 항목).
 - `checks[id]` — 체크리스트 체크 상태. id 는 `chk-<category>-<item>` 형식 (sapporo.js renderChecklist 가 부여). 일행 간 공유됨.
-- `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복.
+- `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords`/`image` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복.
 - `itemOrder[date]` — 그 날짜 plan-item 들의 표시 순서 (item-key 배열). 드래그·드롭으로 갱신. 키 없으면 기본 시간순.
+- 이미지(`image`)는 `<date>` 일정 항목에 첨부한 사진의 상대경로. 실제 파일은 Worker `uploadImage` 가 `files/uploads/img-*.<ext>` 로 커밋. 클라이언트가 canvas 로 최대 1280px JPEG 로 축소 후 업로드(리포 비대화 방지).
 
 ### overrides.js 동작
 
@@ -152,10 +154,12 @@ GitHub repo (trips/sapporo-overrides.json)
 1. `WORKER_URL/overrides` GET → JSON 받음
 2. 정적 plan-item 의 원본 시간·이름을 `data-original-*` 에 스냅샷 → `itemEdits` 덮어쓰기 적용 (노란 배경 이탤릭) → `data-item-key` 설정 + 메모 있으면 노란 박스
 3. `additions` 항목들을 해당 날짜 패널의 plan-list 에 삽입 (초록 배경) → `itemOrder` 로 재정렬
-4. 모든 plan-item 우측에 ✎(편집·메모) 버튼 추가
+4. 모든 plan-item 우측에 ✎(편집·메모·이미지) 버튼 추가. 항목에 `image` 있으면 아래 전체폭 사진 표시
 5. 각 날짜 패널 맨 아래에 `+ 새 일정 추가` 버튼 추가
-6. SortableJS 로 드래그·드롭 활성화 (0.5초 롱프레스)
-7. 편집 비번은 localStorage(`trip-edit-password-v1`)에 저장, 최초 1회만 입력
+6. 준비물 탭: 카테고리 제목마다 ＋ 버튼(그 카테고리에 항목 추가), 맨 아래 `+ 새 카테고리 추가` 버튼
+7. SortableJS 로 드래그·드롭 활성화 (0.5초 롱프레스)
+8. 편집 비번은 localStorage(`trip-edit-password-v1`)에 저장, 최초 1회만 입력
+9. 일정 추가/편집 모달에서 사진 첨부 가능 (자동 축소 후 Worker 가 리포에 커밋)
 
 ### Worker API
 
@@ -163,29 +167,36 @@ GitHub repo (trips/sapporo-overrides.json)
 
 | action | payload | 동작 |
 |---|---|---|
-| `addItem` | `date, time, name, coords?` | `additions[date]` 에 새 항목 추가 + `itemOrder[date]` 맨 앞에 삽입 (최상단 표시). coords 는 `[lat, lng]` |
-| `updateItem` | `date, id, time?, name?, coords?` | 추가된 항목 수정. `coords: null` 명시하면 좌표 제거 |
+| `addItem` | `date, time, name, coords?, image?` | `additions[date]` 에 새 항목 추가 + `itemOrder[date]` 맨 앞에 삽입 (최상단 표시). coords 는 `[lat, lng]`, image 는 상대경로 |
+| `updateItem` | `date, id, time?, name?, coords?, image?` | 추가된 항목 수정. `coords: null`/`image: null` 명시하면 좌표·이미지 제거 |
 | `deleteItem` | `date, id` | 추가된 항목 삭제 |
 | `setNote` | `key, note` | 메모 설정 (빈 문자열이면 삭제) |
 | `setCheck` | `key, checked` | 체크리스트 항목 체크/해제 |
-| `setItemEdit` | `key, time?, name?, coords?` | 정적 항목 덮어쓰기. 모든 값 비면 해당 키 제거 (원복) |
+| `setItemEdit` | `key, time?, name?, coords?, image?` | 정적 항목 덮어쓰기. `image: null` 이면 이미지 제거. 모든 값 비면 해당 키 제거 (원복) |
 | `setOrder` | `date, order` | `itemOrder[date]` 를 order 배열로 교체 (드래그 결과 저장) |
+| `addCheckItem` | `category, label` | `checklistAdds` 에 사용자 준비물 항목 추가 (해당 카테고리, 없으면 새 카테고리 생성) |
+| `editCheckItem` | `id, label` | 준비물 항목 내용 수정 (추가 항목은 직접, 정적 항목은 `checklistEdits[id]`) |
+| `deleteCheckItem` | `id` | 준비물 항목 삭제 (추가 항목 제거 / 정적 항목은 `checklistHidden[id]`) |
+| `uploadImage` | `filename, dataBase64` | 이미지를 `files/uploads/img-*.<ext>` 로 커밋 후 상대경로 반환 (overrides JSON 은 안 건드림). 이후 addItem/updateItem/setItemEdit 의 `image` 로 연결 |
 
 ### overrides.js 페이지 측 동작
 
 게이트 통과 후 실행되는 주요 함수:
 
 - `snapshotOriginals()` — 정적 plan-item 의 원본 시간·이름을 `data-original-time/name` 에 1회 저장 (itemEdits 적용 전 기준값)
-- `applyItemEdits()` — overrides.itemEdits 로 정적 항목 시간·이름 덮어쓰기 + `.plan-item-overridden` 클래스 (노란 배경)
+- `applyItemEdits()` — overrides.itemEdits 로 정적 항목 시간·이름 덮어쓰기 + `.plan-item-overridden` 클래스 (노란 배경) + `image` 있으면 항목 아래 전체폭 사진(`setPlanItemImage`)
 - `applyNotes()` — overrides.notes 의 메모를 plan-item 마다 노란 박스로 표시
-- `applyAdditions()` — overrides.additions 의 새 일정을 plan-list 에 삽입 (초록 배경)
+- `applyAdditions()` — overrides.additions 의 새 일정을 plan-list 에 삽입 (초록 배경). `image` 있으면 사진도 렌더
 - `applyOrder()` — overrides.itemOrder 로 plan-item 들 재정렬 (키 없는 항목은 뒤로)
 - `applyChecks()` — overrides.checks 와 체크박스 동기화. change 시 Worker setCheck 호출, 실패하면 원복
-- `addEditButtons()` — 모든 plan-item 우측에 ✎ 버튼 (정적·추가 공통: 시간·내용·좌표·메모 편집)
+- `applyChecklistCustomizations()` — checklistEdits/Hidden/Adds 적용 후 `addChecklistButtons()` 호출
+- `addChecklistButtons()` — 각 준비물 항목에 ✎/✕ 버튼, **각 카테고리 제목 옆에 ＋ 버튼**(그 카테고리에 바로 항목 추가 → `openCheckAddModal(catName)`), 맨 아래 **"+ 새 카테고리 추가"** 버튼(`openCheckCategoryModal` — 카테고리명+첫 항목)
+- `addEditButtons()` — 모든 plan-item 우측에 ✎ 버튼 (정적·추가 공통: 시간·내용·좌표·**이미지**·메모 편집). 이미지 영역은 항상 항목의 마지막 자식으로 유지
 - `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가" 버튼
 - `setupDragDrop()` — SortableJS 적용. `delay: 500` (0.5초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복
 - `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.
 - `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.
+- `compressImage(file)` / `uploadImageFile(file)` — 파일을 canvas 로 최대 1280px JPEG 축소 → Worker `uploadImage` 로 리포 커밋 → 상대경로 반환. 방금 올린 dataURI 는 `recentImageData` 에 캐시해 Pages 빌드(~30초) 전까지 즉시 표시.
 
 ### 동시성 가드 (저장 중 편집 차단)
 

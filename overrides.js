@@ -15,6 +15,81 @@
     if (!overrides.checklistHidden) overrides.checklistHidden = {};
   }
 
+  // 방금 업로드한 이미지의 dataURI 를 repo 경로로 매핑 — Pages 빌드(~30초) 전까지 즉시 표시용
+  const recentImageData = {};
+
+  function imgSrcFor(path) {
+    return recentImageData[path] || path;
+  }
+
+  // li(plan-item) 의 전체폭 이미지 영역을 src 로 갱신. src 비면 제거.
+  function setPlanItemImage(li, src) {
+    let wrap = li.querySelector(":scope > .plan-image-wrap");
+    if (!src) {
+      if (wrap) wrap.remove();
+      delete li.dataset.image;
+      return;
+    }
+    li.dataset.image = src;
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.className = "plan-image-wrap";
+      const img = document.createElement("img");
+      img.className = "plan-thumb";
+      img.loading = "lazy";
+      img.alt = "일정 이미지";
+      wrap.appendChild(img);
+    }
+    const img = wrap.querySelector("img");
+    const realSrc = imgSrcFor(src);
+    if (img.getAttribute("src") !== realSrc) img.src = realSrc;
+    li.appendChild(wrap); // 항상 마지막 자식으로 (이미지는 항목 맨 아래 전체폭)
+  }
+
+  // 파일 → 최대 1280px JPEG 로 축소 → base64 (data: 접두어 제거). 리포 비대화 방지.
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("read_failed"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("decode_failed"));
+        img.onload = () => {
+          const MAX = 1280;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            const r = Math.min(MAX / width, MAX / height);
+            width = Math.round(width * r);
+            height = Math.round(height * r);
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          resolve({ dataUrl, dataBase64: dataUrl.split(",")[1], filename: "photo.jpg" });
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 파일 업로드 → Worker 가 리포에 커밋 → 상대경로 반환. 즉시표시용 dataUrl 도 캐시.
+  async function uploadImageFile(file) {
+    let compressed;
+    try {
+      compressed = await compressImage(file);
+    } catch {
+      showToast("이미지를 읽지 못했습니다", 2000);
+      return null;
+    }
+    const r = await callWorker("uploadImage", { filename: compressed.filename, dataBase64: compressed.dataBase64 });
+    if (r.error || !r.path) return null;
+    recentImageData[r.path] = compressed.dataUrl;
+    return r.path;
+  }
+
   async function fetchOverrides() {
     try {
       const res = await fetch(`${WORKER_URL}/overrides`, { cache: "no-store" });
@@ -181,6 +256,7 @@
       if (firstText) firstText.textContent = newName;
       if (edit && (edit.time || edit.name)) li.classList.add("plan-item-overridden");
       else li.classList.remove("plan-item-overridden");
+      setPlanItemImage(li, (edit && edit.image) || "");
     });
   }
 
@@ -233,6 +309,7 @@
     `;
     const noteText = overrides.notes[li.dataset.itemKey];
     if (noteText) appendNote(li, noteText);
+    if (item.image) setPlanItemImage(li, item.image);
     return li;
   }
 
@@ -414,13 +491,32 @@
       li.appendChild(tools);
     });
 
+    // 카테고리별 + 버튼 (제목 옆) — 해당 카테고리에 바로 항목 추가
+    document.querySelectorAll("#checklist-root .checklist-category").forEach((section) => {
+      const h = section.querySelector("h3");
+      if (!h || h.querySelector(".check-cat-add-btn")) return;
+      const catName = section.dataset.catName;
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "check-cat-add-btn";
+      addBtn.title = `${catName}에 항목 추가`;
+      addBtn.textContent = "＋";
+      addBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openCheckAddModal(catName);
+      });
+      h.appendChild(addBtn);
+    });
+
+    // 하단 버튼 — 새 카테고리 추가
     const root = document.getElementById("checklist-root");
     if (root && !root.querySelector(".check-add-btn")) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "check-add-btn plan-add-btn";
-      btn.textContent = "+ 준비물 항목 추가";
-      btn.addEventListener("click", () => openCheckAddModal());
+      btn.textContent = "+ 새 카테고리 추가";
+      btn.addEventListener("click", () => openCheckCategoryModal());
       root.appendChild(btn);
     }
   }
@@ -457,26 +553,18 @@
     document.body.appendChild(modal);
   }
 
-  function openCheckAddModal() {
-    const cats = [...document.querySelectorAll("#checklist-root .checklist-category")]
-      .map((s) => s.dataset.catName).filter(Boolean);
-    const options = cats.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  // 특정 카테고리에 항목 추가 (제목 옆 + 버튼에서 호출, presetCategory 필수)
+  function openCheckAddModal(presetCategory) {
+    const category = presetCategory || "추가 항목";
     const modal = document.createElement("div");
     modal.className = "edit-overlay";
     modal.innerHTML = `
       <form class="edit-card" autocomplete="off">
         <h2>준비물 항목 추가</h2>
-        <label class="edit-field">
-          <span>카테고리</span>
-          <select name="category">${options}<option value="__custom__">+ 새 카테고리…</option></select>
-        </label>
-        <label class="edit-field check-newcat" hidden>
-          <span>새 카테고리 이름</span>
-          <input type="text" name="newcat" placeholder="예: 아기용품">
-        </label>
+        <p class="edit-page-info">카테고리 <code>${escapeHtml(category)}</code></p>
         <label class="edit-field">
           <span>항목 내용</span>
-          <input type="text" name="label" required placeholder="예: 보조배터리 2개">
+          <input type="text" name="label" required placeholder="예: 보조배터리 2개" autofocus>
         </label>
         <div class="edit-actions">
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
@@ -485,19 +573,49 @@
       </form>
     `;
     const close = () => modal.remove();
-    const sel = modal.querySelector("select[name=category]");
-    const newcatField = modal.querySelector(".check-newcat");
-    sel.addEventListener("change", () => {
-      newcatField.hidden = sel.value !== "__custom__";
-    });
     modal.querySelector(".edit-cancel").addEventListener("click", close);
     modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
     modal.querySelector("form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const label = e.target.label.value.trim();
       if (!label) return;
-      let category = sel.value;
-      if (category === "__custom__") category = e.target.newcat.value.trim() || "추가 항목";
+      const r = await callWorker("addCheckItem", { category, label });
+      if (!r.error) { applyChecklistCustomizations(); applyChecks(); updateChecklistSummary(); }
+      close();
+    });
+    document.body.appendChild(modal);
+  }
+
+  // 새 카테고리 추가 (하단 버튼) — 카테고리명 + 첫 항목. 항목 1개는 있어야 카테고리가 생성됨.
+  function openCheckCategoryModal() {
+    const modal = document.createElement("div");
+    modal.className = "edit-overlay";
+    modal.innerHTML = `
+      <form class="edit-card" autocomplete="off">
+        <h2>새 카테고리 추가</h2>
+        <p class="edit-page-info"><small>카테고리는 첫 항목과 함께 생성됩니다.</small></p>
+        <label class="edit-field">
+          <span>카테고리 이름</span>
+          <input type="text" name="category" required placeholder="예: 아기용품" autofocus>
+        </label>
+        <label class="edit-field">
+          <span>첫 항목 내용</span>
+          <input type="text" name="label" required placeholder="예: 기저귀 10개">
+        </label>
+        <div class="edit-actions">
+          <button type="button" class="btn btn-secondary edit-cancel">취소</button>
+          <button type="submit" class="btn">추가</button>
+        </div>
+      </form>
+    `;
+    const close = () => modal.remove();
+    modal.querySelector(".edit-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+    modal.querySelector("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const category = e.target.category.value.trim();
+      const label = e.target.label.value.trim();
+      if (!category || !label) return;
       const r = await callWorker("addCheckItem", { category, label });
       if (!r.error) { applyChecklistCustomizations(); applyChecks(); updateChecklistSummary(); }
       close();
@@ -554,6 +672,8 @@
         openEditModal(li);
       });
       li.appendChild(btn);
+      const imgWrap = li.querySelector(":scope > .plan-image-wrap");
+      if (imgWrap) li.appendChild(imgWrap); // 이미지는 항상 맨 아래 유지
     });
   }
 
@@ -604,6 +724,7 @@
     const origName = li.dataset.originalName || name;
     const currentNote = overrides.notes[key] || "";
     const currentCoords = li.dataset.coords || "";
+    const currentImage = li.dataset.image || "";
     const editable = isAdded || true;
 
     const modal = document.createElement("div");
@@ -625,6 +746,14 @@
           <input type="text" name="place" placeholder="예: Sapporo Beer Garden" ${currentCoords ? `value="(현재 좌표 있음 — 새 값 입력 시 갱신)"` : ""}>
         </label>
         <label class="edit-field">
+          <span>이미지 (선택 — 사진 첨부, 자동 축소됨)</span>
+          <input type="file" name="image" accept="image/*">
+        </label>
+        <div class="edit-img-current"${currentImage ? "" : " hidden"}>
+          <img class="edit-img-preview" src="${escapeHtml(imgSrcFor(currentImage))}" alt="">
+          <button type="button" class="btn btn-secondary edit-img-remove">이미지 제거</button>
+        </div>
+        <label class="edit-field">
           <span>메모</span>
           <textarea name="note" rows="3" placeholder="이 항목에 대한 메모">${escapeHtml(currentNote)}</textarea>
         </label>
@@ -638,6 +767,24 @@
     const close = () => modal.remove();
     modal.querySelector(".edit-cancel").addEventListener("click", close);
     modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+    let removeImage = false;
+    const imgCurrent = modal.querySelector(".edit-img-current");
+    const imgPreview = modal.querySelector(".edit-img-preview");
+    const fileInput = modal.querySelector("input[name=image]");
+    modal.querySelector(".edit-img-remove").addEventListener("click", () => {
+      removeImage = true;
+      if (fileInput) fileInput.value = "";
+      imgCurrent.hidden = true;
+    });
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files?.[0];
+      if (f) {
+        removeImage = false;
+        imgPreview.src = URL.createObjectURL(f);
+        imgCurrent.hidden = false;
+      }
+    });
 
     if (isAdded) {
       modal.querySelector(".edit-delete").addEventListener("click", async () => {
@@ -669,6 +816,16 @@
       let coordsUpdate = undefined;
       let didMapUpdate = false;
 
+      // 이미지: 새 파일 업로드 / 제거 / 변경없음
+      let imageUpdate = undefined; // undefined=변경없음, null=제거, string=새 경로
+      const imgFile = form.image?.files?.[0];
+      if (imgFile) {
+        const path = await uploadImageFile(imgFile);
+        if (path) imageUpdate = path;
+      } else if (removeImage && currentImage) {
+        imageUpdate = null;
+      }
+
       if (isAdded) {
         const placeQuery = form.place?.value?.trim();
         if (placeQuery && !placeQuery.startsWith("(현재 좌표")) {
@@ -679,7 +836,8 @@
         if (newTime !== time) payload.time = newTime;
         if (newName !== name) payload.name = newName;
         if (coordsUpdate !== undefined) payload.coords = coordsUpdate;
-        if (newTime !== time || newName !== name || coordsUpdate !== undefined) {
+        if (imageUpdate !== undefined) payload.image = imageUpdate;
+        if (newTime !== time || newName !== name || coordsUpdate !== undefined || imageUpdate !== undefined) {
           await callWorker("updateItem", payload);
           didMapUpdate = true;
         }
@@ -696,10 +854,12 @@
         const changedTime = editedTime !== (prev.time || "");
         const changedName = editedName !== (prev.name || "");
         const changedCoords = staticCoords !== undefined;
-        if (changedTime || changedName || changedCoords) {
+        const changedImage = imageUpdate !== undefined;
+        if (changedTime || changedName || changedCoords || changedImage) {
           if (changedTime) editPayload.time = editedTime;
           if (changedName) editPayload.name = editedName;
           if (changedCoords) editPayload.coords = staticCoords;
+          if (changedImage) editPayload.image = imageUpdate;
           await callWorker("setItemEdit", editPayload);
           if (changedCoords) didMapUpdate = true;
         }
@@ -738,6 +898,10 @@
           <span>지도 마커 (선택 — 비우면 지도에 표시 안 됨)</span>
           <input type="text" name="place" placeholder="예: Cafe Morihiko Sapporo">
         </label>
+        <label class="edit-field">
+          <span>이미지 (선택 — 사진 첨부, 자동 축소됨)</span>
+          <input type="file" name="image" accept="image/*">
+        </label>
         <div class="edit-actions">
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
           <button type="submit" class="btn">추가</button>
@@ -759,6 +923,11 @@
         name: e.target.name.value,
       };
       if (coords) payload.coords = coords;
+      const imgFile = e.target.image?.files?.[0];
+      if (imgFile) {
+        const path = await uploadImageFile(imgFile);
+        if (path) payload.image = path;
+      }
       const result = await callWorker("addItem", payload);
       if (!result.error) {
         applyAdditions();

@@ -1031,6 +1031,62 @@ main {
   font-size: 0.7rem;
 }
 
+.checklist-category h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.check-cat-add-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid #cdd9c0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0.1rem 0.4rem;
+  color: #689f38;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.check-cat-add-btn:hover {
+  background: #f1f8e9;
+  border-color: #689f38;
+  color: #33691e;
+}
+
+/* 일정 항목 이미지 (전체폭, 맨 아래 행) */
+.plan-image-wrap {
+  grid-column: 1 / -1;
+  margin-top: 0.45rem;
+}
+
+.plan-thumb {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 8px;
+  border: 1px solid #e3e3e3;
+}
+
+/* 편집 모달 내 현재 이미지 미리보기 */
+.edit-img-current {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0.6rem;
+}
+
+.edit-img-preview {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 6px;
+  border: 1px solid #e3e3e3;
+}
+
 body.gated > main {
   visibility: hidden;
 }

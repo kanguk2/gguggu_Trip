@@ -49,7 +49,7 @@ export default {
 
         const action = body.action;
         if (action === "addItem") {
-          const { date, time, name, coords } = body;
+          const { date, time, name, coords, image } = body;
           if (!date || !time || !name) {
             return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
           }
@@ -57,6 +57,7 @@ export default {
           const id = "add-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
           const item = { id, time, name };
           if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
+          if (typeof image === "string" && image) item.image = image;
           overrides.additions[date].push(item);
           if (!overrides.itemOrder[date]) overrides.itemOrder[date] = [];
           overrides.itemOrder[date].unshift(`${date}/${id}`);
@@ -65,7 +66,7 @@ export default {
         }
 
         if (action === "updateItem") {
-          const { date, id, time, name, coords } = body;
+          const { date, id, time, name, coords, image } = body;
           const list = overrides.additions[date] || [];
           const item = list.find((i) => i.id === id);
           if (!item) return jsonResp({ error: "not_found" }, 404, corsHeaders);
@@ -73,6 +74,8 @@ export default {
           if (name) item.name = name;
           if (coords === null) delete item.coords;
           else if (Array.isArray(coords) && coords.length === 2) item.coords = coords;
+          if (image === null) delete item.image;
+          else if (typeof image === "string" && image) item.image = image;
           await saveOverrides(env, overrides, sha, `Edit ${date} ${item.time} ${item.name}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
@@ -134,13 +137,15 @@ export default {
         }
 
         if (action === "setItemEdit") {
-          const { key, time, name, coords } = body;
+          const { key, time, name, coords, image } = body;
           if (!key) return jsonResp({ error: "missing_key" }, 400, corsHeaders);
           const current = overrides.itemEdits[key] || {};
           if (typeof time === "string") current.time = time;
           if (typeof name === "string") current.name = name;
           if (coords === null) delete current.coords;
           else if (Array.isArray(coords) && coords.length === 2) current.coords = coords;
+          if (image === null) delete current.image;
+          else if (typeof image === "string" && image) current.image = image;
           if (Object.keys(current).length === 0) {
             delete overrides.itemEdits[key];
           } else {
@@ -170,6 +175,26 @@ export default {
           }
           await saveOverrides(env, overrides, sha, `Note on ${key}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "uploadImage") {
+          const { filename, dataBase64 } = body;
+          if (!dataBase64) return jsonResp({ error: "missing_image" }, 400, corsHeaders);
+          let ext = "jpg";
+          if (typeof filename === "string" && filename.includes(".")) {
+            const e = filename.split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "");
+            if (["jpg", "jpeg", "png", "gif", "webp"].includes(e)) ext = e === "jpeg" ? "jpg" : e;
+          }
+          const imgId = "img-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+          const path = `files/uploads/${imgId}.${ext}`;
+          const res = await ghFetch(env, "PUT", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
+            message: `Upload image ${path}`,
+            content: dataBase64,
+          });
+          if (!res.ok) {
+            return jsonResp({ error: "upload_failed", message: await res.text() }, 500, corsHeaders);
+          }
+          return jsonResp({ ok: true, path: `./${path}` }, 200, corsHeaders);
         }
 
         return jsonResp({ error: "unknown_action", action }, 400, corsHeaders);
