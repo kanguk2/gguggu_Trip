@@ -828,6 +828,22 @@ main {
   border-color: #2c6fbb;
 }
 
+.place-search-item.is-selected {
+  background: #e3f0ff;
+  border-color: #2c6fbb;
+  box-shadow: 0 0 0 1px #2c6fbb inset;
+}
+
+.place-search-map {
+  width: 100%;
+  height: 220px;
+  margin: 0.5rem 0 0.2rem;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
 .ps-name {
   font-weight: 600;
   font-size: 0.9rem;

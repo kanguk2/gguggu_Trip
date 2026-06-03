@@ -1061,7 +1061,7 @@
     return !!window.google?.maps?.places;
   }
 
-  // 구글맵 장소 검색 팝업. 결과 선택 시 onPick({name, address, coords}) 호출.
+  // 구글맵 장소 검색 팝업. 결과를 선택하면 미니 지도에 위치를 보여주고, 확인 후 onPick 호출.
   function openPlaceSearch(onPick, initialQuery) {
     const modal = document.createElement("div");
     modal.className = "edit-overlay place-search-overlay";
@@ -1074,8 +1074,10 @@
         </div>
         <div class="place-search-status"></div>
         <ul class="place-search-results"></ul>
+        <div class="place-search-map" hidden></div>
         <div class="edit-actions">
           <button type="button" class="btn btn-secondary place-search-cancel">닫기</button>
+          <button type="button" class="btn place-search-confirm" disabled>✓ 이 장소 등록</button>
         </div>
       </form>
     `;
@@ -1083,13 +1085,55 @@
     const input = modal.querySelector(".place-search-input");
     const status = modal.querySelector(".place-search-status");
     const results = modal.querySelector(".place-search-results");
+    const mapEl = modal.querySelector(".place-search-map");
+    const confirmBtn = modal.querySelector(".place-search-confirm");
     modal.querySelector(".place-search-cancel").addEventListener("click", close);
     modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+    let selected = null;       // { name, address, coords }
+    let miniMap = null, miniMarker = null, markerLib = null;
+
+    async function ensureMiniMap() {
+      if (miniMap) return miniMap;
+      mapEl.hidden = false;
+      markerLib = await google.maps.importLibrary("marker");
+      miniMap = new google.maps.Map(mapEl, {
+        zoom: 15,
+        center: { lat: 43.0618, lng: 141.3545 },
+        mapId: "DEMO_MAP_ID",
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+      return miniMap;
+    }
+
+    async function showOnMap(p) {
+      const loc = p.geometry && p.geometry.location;
+      if (!loc) return;
+      await ensureMiniMap();
+      const pos = { lat: loc.lat(), lng: loc.lng() };
+      google.maps.event.trigger(miniMap, "resize");
+      miniMap.setCenter(pos);
+      miniMap.setZoom(16);
+      if (miniMarker) miniMarker.map = null;
+      const pin = new markerLib.PinElement({ background: "#c0392b", borderColor: "#fff", glyphColor: "#fff" });
+      miniMarker = new markerLib.AdvancedMarkerElement({ position: pos, map: miniMap, content: pin.element, title: p.name || "" });
+    }
+
+    const pick = () => {
+      if (!selected) return;
+      onPick(selected);
+      close();
+    };
+    confirmBtn.addEventListener("click", pick);
 
     const doSearch = async () => {
       const q = input.value.trim();
       if (!q) return;
       results.innerHTML = "";
+      selected = null;
+      confirmBtn.disabled = true;
       status.textContent = "검색 중…";
       const ok = await ensureMapsLoaded();
       if (!ok) { status.textContent = "지도를 불러오지 못했습니다. 잠시 후 다시 시도하세요."; return; }
@@ -1100,20 +1144,20 @@
             status.textContent = "검색 결과가 없습니다.";
             return;
           }
-          status.textContent = `${Math.min(res.length, 12)}개 결과 — 선택하면 입력됩니다`;
+          status.textContent = `${Math.min(res.length, 12)}개 결과 — 선택하면 지도에 위치가 표시됩니다`;
           res.slice(0, 12).forEach((p) => {
+            const loc = p.geometry && p.geometry.location;
             const li = document.createElement("li");
             li.className = "place-search-item";
             li.innerHTML = `<span class="ps-name">${escapeHtml(p.name || "")}</span><span class="ps-addr">${escapeHtml(p.formatted_address || "")}</span>`;
             li.addEventListener("click", () => {
-              const loc = p.geometry && p.geometry.location;
-              onPick({
-                name: p.name || "",
-                address: p.formatted_address || "",
-                coords: loc ? [loc.lat(), loc.lng()] : null,
-              });
-              close();
+              results.querySelectorAll(".place-search-item").forEach((el) => el.classList.remove("is-selected"));
+              li.classList.add("is-selected");
+              selected = { name: p.name || "", address: p.formatted_address || "", coords: loc ? [loc.lat(), loc.lng()] : null };
+              confirmBtn.disabled = !selected.coords;
+              showOnMap(p);
             });
+            li.addEventListener("dblclick", () => { if (loc) { selected = { name: p.name || "", address: p.formatted_address || "", coords: [loc.lat(), loc.lng()] }; pick(); } });
             results.appendChild(li);
           });
         });
