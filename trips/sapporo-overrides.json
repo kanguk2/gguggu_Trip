@@ -171,5 +171,7 @@
     "chk-0-0": "여권 (필요 시 사본도)"
   },
   "checklistHidden": {},
-  "itemHidden": {}
+  "itemHidden": {
+    "2026-06-07/19:00": true
+  }
 }
