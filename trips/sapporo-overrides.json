@@ -19,7 +19,13 @@
       "2026-06-05/21:00"
     ]
   },
-  "checklistAdds": [],
+  "checklistAdds": [
+    {
+      "id": "cadd-mpxegvr7-johd",
+      "category": "의류",
+      "label": "선글라스"
+    }
+  ],
   "checklistEdits": {
     "chk-0-0": "여권 (필요 시 사본도)"
   },
