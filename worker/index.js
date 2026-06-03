@@ -67,13 +67,15 @@ export default {
         }
 
         if (action === "addMemo") {
-          const { date, text } = body;
+          const { date, text, image } = body;
           if (!date || !text) {
             return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
           }
           if (!overrides.additions[date]) overrides.additions[date] = [];
           const id = "memo-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
-          overrides.additions[date].push({ id, kind: "memo", text });
+          const memo = { id, kind: "memo", text };
+          if (typeof image === "string" && image) memo.image = image;
+          overrides.additions[date].push(memo);
           if (!overrides.itemOrder[date]) overrides.itemOrder[date] = [];
           overrides.itemOrder[date].unshift(`${date}/${id}`);
           await saveOverrides(env, overrides, sha, `Add memo ${date}`);

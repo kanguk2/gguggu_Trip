@@ -460,6 +460,7 @@
       <span class="plan-memo-icon" aria-hidden="true">📝</span>
       <span class="plan-memo-body"><span class="plan-memo-text clamp-text">${escapeHtml(item.text)}</span></span>
     `;
+    if (item.image) setPlanItemImage(li, item.image);
     return li;
   }
 
@@ -1139,6 +1140,10 @@
           <span>메모 내용</span>
           <textarea name="text" rows="3" required placeholder="예: 우산 챙기기 / 환전소 위치 확인" autofocus></textarea>
         </label>
+        <label class="edit-field">
+          <span>이미지 (선택 — 사진 첨부, 자동 축소됨)</span>
+          <input type="file" name="image" accept="image/*">
+        </label>
         <div class="edit-actions">
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
           <button type="submit" class="btn">추가</button>
@@ -1152,7 +1157,13 @@
       e.preventDefault();
       const text = e.target.text.value.trim();
       if (!text) return;
-      const result = await callWorker("addMemo", { date, text });
+      const payload = { date, text };
+      const imgFile = e.target.image?.files?.[0];
+      if (imgFile) {
+        const path = await uploadImageFile(imgFile);
+        if (path) payload.image = path;
+      }
+      const result = await callWorker("addMemo", payload);
       if (!result.error) {
         applyAdditions();
         applyOrder();
@@ -1164,11 +1175,12 @@
     document.body.appendChild(modal);
   }
 
-  // 메모 편집/삭제
+  // 메모 편집/삭제 (텍스트 + 이미지)
   function openMemoModal(li) {
     const date = li.closest(".tab-panel[data-panel]").dataset.panel;
     const id = li.dataset.addedId;
     const cur = li.querySelector(".plan-memo-text")?.textContent || "";
+    const currentImage = li.dataset.image || "";
     const modal = document.createElement("div");
     modal.className = "edit-overlay";
     modal.innerHTML = `
@@ -1178,6 +1190,14 @@
           <span>메모 내용</span>
           <textarea name="text" rows="3" required autofocus>${escapeHtml(cur)}</textarea>
         </label>
+        <label class="edit-field">
+          <span>이미지 (선택 — 사진 첨부, 자동 축소됨)</span>
+          <input type="file" name="image" accept="image/*">
+        </label>
+        <div class="edit-img-current"${currentImage ? "" : " hidden"}>
+          <img class="edit-img-preview" src="${escapeHtml(imgSrcFor(currentImage))}" alt="">
+          <button type="button" class="btn btn-secondary edit-img-remove">이미지 제거</button>
+        </div>
         <div class="edit-actions">
           <button type="button" class="btn btn-secondary edit-delete">삭제</button>
           <button type="button" class="btn btn-secondary edit-cancel">취소</button>
@@ -1188,6 +1208,21 @@
     const close = () => modal.remove();
     modal.querySelector(".edit-cancel").addEventListener("click", close);
     modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+    let removeImage = false;
+    const imgCurrent = modal.querySelector(".edit-img-current");
+    const imgPreview = modal.querySelector(".edit-img-preview");
+    const fileInput = modal.querySelector("input[name=image]");
+    modal.querySelector(".edit-img-remove").addEventListener("click", () => {
+      removeImage = true;
+      fileInput.value = "";
+      imgCurrent.hidden = true;
+    });
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files?.[0];
+      if (f) { removeImage = false; imgPreview.src = URL.createObjectURL(f); imgCurrent.hidden = false; }
+    });
+
     modal.querySelector(".edit-delete").addEventListener("click", async () => {
       if (!confirm("이 메모를 삭제하시겠습니까?")) return;
       const r = await callWorker("deleteItem", { date, id });
@@ -1201,12 +1236,28 @@
     modal.querySelector("form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const text = e.target.text.value.trim();
-      if (!text || text === cur) { close(); return; }
-      const r = await callWorker("updateItem", { date, id, text });
-      if (!r.error) {
-        applyAdditions();
-        applyOrder();
-        addEditButtons();
+      if (!text) return;
+
+      let imageUpdate = undefined; // undefined=변경없음, null=제거, string=새 경로
+      const imgFile = e.target.image?.files?.[0];
+      if (imgFile) {
+        const path = await uploadImageFile(imgFile);
+        if (path) imageUpdate = path;
+      } else if (removeImage && currentImage) {
+        imageUpdate = null;
+      }
+
+      const changedText = text !== cur;
+      if (changedText || imageUpdate !== undefined) {
+        const payload = { date, id };
+        if (changedText) payload.text = text;
+        if (imageUpdate !== undefined) payload.image = imageUpdate;
+        const r = await callWorker("updateItem", payload);
+        if (!r.error) {
+          applyAdditions();
+          applyOrder();
+          addEditButtons();
+        }
       }
       close();
     });

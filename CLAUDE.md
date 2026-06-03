@@ -142,7 +142,7 @@ GitHub repo (trips/sapporo-overrides.json)
 }
 ```
 
-- `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. `image` (선택)는 항목 아래 전체폭 사진. `links` (선택)는 참고 링크 배열 `[{url, label?}]` — 항목 아래 칩으로 표시. 새로 추가하면 Worker 가 `itemOrder[date]` 맨 앞에 넣어서 **목록 최상단**에 뜬다. `kind: "memo"` 이면 시간·이름 없이 `text` 만 갖는 **메모 항목** — 일정과 같은 리스트에 들어가 드래그로 위치 변경 가능, 지도에는 안 뜸.
+- `additions[date]` — 사용자가 추가한 일정. `coords` (선택)가 있으면 지도 마커도 표시. `image` (선택)는 항목 아래 전체폭 사진. `links` (선택)는 참고 링크 배열 `[{url, label?}]` — 항목 아래 칩으로 표시. 새로 추가하면 Worker 가 `itemOrder[date]` 맨 앞에 넣어서 **목록 최상단**에 뜬다. `kind: "memo"` 이면 시간·이름 없이 `text`(+선택 `image`) 만 갖는 **메모 항목** — 일정과 같은 리스트에 들어가 드래그로 위치 변경 가능, 지도에는 안 뜸. 이미지 클릭 시 확대(라이트박스).
 - `notes[key]` — 메모. key 는 `<date>/<HH:MM>` (정적 항목, **원본 시간** 기준) 또는 `<date>/<add-id>` (추가 항목).
 - `checks[id]` — 체크리스트 체크 상태. id 는 `chk-<category>-<item>` 형식 (sapporo.js renderChecklist 가 부여). 일행 간 공유됨.
 - `itemEdits[key]` — **정적(원본 HTML) 항목의 덮어쓰기**. key 는 `<date>/<원본HH:MM>`. `time`/`name`/`coords`/`image`/`links` 부분 적용. 원본 HTML 은 그대로 두고 표시값만 바꿈. 비우면 원복.
@@ -170,7 +170,7 @@ GitHub repo (trips/sapporo-overrides.json)
 | action | payload | 동작 |
 |---|---|---|
 | `addItem` | `date, time, name, coords?, image?, links?` | `additions[date]` 에 새 항목 추가 + `itemOrder[date]` 맨 앞에 삽입 (최상단 표시). coords 는 `[lat, lng]`, image 는 상대경로, links 는 `[{url, label?}]` |
-| `addMemo` | `date, text` | `additions[date]` 에 `{kind:"memo", text}` 메모 항목 추가 + `itemOrder[date]` 맨 앞에 삽입 |
+| `addMemo` | `date, text, image?` | `additions[date]` 에 `{kind:"memo", text}` 메모 항목 추가 + `itemOrder[date]` 맨 앞에 삽입. image 첨부 가능 (편집은 updateItem) |
 | `updateItem` | `date, id, time?, name?, coords?, image?, text?, links?` | 추가된 항목/메모 수정. `coords: null`/`image: null` 명시하면 좌표·이미지 제거. `links: []` 면 링크 제거. 메모는 `text` 로 갱신 |
 | `deleteItem` | `date, id` | 추가된 항목 삭제 |
 | `setNote` | `key, note` | 메모 설정 (빈 문자열이면 삭제) |
@@ -199,7 +199,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - `setPlanItemImage(li, src)` — 항목 아래 전체폭 사진. 클릭 시 `openLightbox(src)` 로 확대(어둠 배경 오버레이, 클릭·Esc·✕ 로 닫힘)
 - `setupClamp(el)` / `setupClamps()` — 긴 메모/메모항목 텍스트를 3줄로 접고 넘칠 때만 '더보기/접기' 토글 추가. 숨은 날짜 탭은 측정 불가라 미완료로 두고 **탭 클릭 시 재측정**. `.clamp-text` 가 대상, 토글은 `.clamp-toggle`
 - `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가"·"+ 메모 추가" 버튼 (`openAddModal`/`openMemoAddModal`). 메모 항목 클릭 시 `addEditButtons` 의 ✎ 가 `openMemoModal`(텍스트 편집·삭제)로 분기
-- `setupDragDrop()` — SortableJS 적용. `delay: 500` (0.5초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복
+- `setupDragDrop()` — SortableJS 적용. `delay: 500` (0.5초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복. `.plan-item` 에 `user-select:none` 줘서 롱프레스가 텍스트선택에 가로채이지 않게 함(특히 텍스트뿐인 메모 항목 드래그)
 - `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.
 - `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.
 - `compressImage(file)` / `uploadImageFile(file)` — 파일을 canvas 로 최대 1280px JPEG 축소 → Worker `uploadImage` 로 리포 커밋 → 상대경로 반환. 방금 올린 dataURI 는 `recentImageData` 에 캐시해 Pages 빌드(~30초) 전까지 즉시 표시.
