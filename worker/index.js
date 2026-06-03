@@ -43,6 +43,9 @@ export default {
         if (!overrides.checks) overrides.checks = {};
         if (!overrides.itemEdits) overrides.itemEdits = {};
         if (!overrides.itemOrder) overrides.itemOrder = {};
+        if (!overrides.checklistAdds) overrides.checklistAdds = [];
+        if (!overrides.checklistEdits) overrides.checklistEdits = {};
+        if (!overrides.checklistHidden) overrides.checklistHidden = {};
 
         const action = body.action;
         if (action === "addItem") {
@@ -90,6 +93,43 @@ export default {
           }
           overrides.itemOrder[date] = order;
           await saveOverrides(env, overrides, sha, `Reorder ${date}`);
+          return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "addCheckItem") {
+          const { category, label } = body;
+          if (!label) return jsonResp({ error: "missing_label" }, 400, corsHeaders);
+          const id = "cadd-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
+          overrides.checklistAdds.push({ id, category: category || "추가 항목", label });
+          await saveOverrides(env, overrides, sha, `Add check item ${label}`);
+          return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "editCheckItem") {
+          const { id, label } = body;
+          if (!id || !label) return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
+          const custom = overrides.checklistAdds.find((c) => c.id === id);
+          if (custom) {
+            custom.label = label;
+          } else {
+            overrides.checklistEdits[id] = label;
+          }
+          await saveOverrides(env, overrides, sha, `Edit check item ${id}`);
+          return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "deleteCheckItem") {
+          const { id } = body;
+          if (!id) return jsonResp({ error: "missing_id" }, 400, corsHeaders);
+          const idx = overrides.checklistAdds.findIndex((c) => c.id === id);
+          if (idx >= 0) {
+            overrides.checklistAdds.splice(idx, 1);
+          } else {
+            overrides.checklistHidden[id] = true;
+            delete overrides.checklistEdits[id];
+          }
+          delete overrides.checks[id];
+          await saveOverrides(env, overrides, sha, `Delete check item ${id}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -145,7 +185,7 @@ export default {
 async function loadOverrides(env) {
   const res = await ghFetch(env, "GET", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${OVERRIDES_PATH}`);
   if (res.status === 404) {
-    return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {} };
+    return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {}, checklistAdds: [], checklistEdits: {}, checklistHidden: {} };
   }
   if (!res.ok) {
     throw new Error(`GitHub GET failed: ${res.status} ${await res.text()}`);
@@ -159,6 +199,9 @@ async function loadOverrides(env) {
   if (!parsed.checks) parsed.checks = {};
   if (!parsed.itemEdits) parsed.itemEdits = {};
   if (!parsed.itemOrder) parsed.itemOrder = {};
+  if (!parsed.checklistAdds) parsed.checklistAdds = [];
+  if (!parsed.checklistEdits) parsed.checklistEdits = {};
+  if (!parsed.checklistHidden) parsed.checklistHidden = {};
   return parsed;
 }
 

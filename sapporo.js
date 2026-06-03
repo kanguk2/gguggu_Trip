@@ -213,6 +213,8 @@ function renderChecklist() {
   CHECKLIST.forEach((cat, ci) => {
     const section = document.createElement("section");
     section.className = "checklist-category";
+    section.dataset.catIndex = ci;
+    section.dataset.catName = cat.category;
 
     const heading = document.createElement("h3");
     heading.textContent = cat.category;
@@ -223,35 +225,7 @@ function renderChecklist() {
 
     cat.items.forEach((label, ii) => {
       const id = `chk-${ci}-${ii}`;
-      const li = document.createElement("li");
-      li.className = "checklist-item";
-
-      const wrap = document.createElement("label");
-      wrap.htmlFor = id;
-
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.id = id;
-      cb.checked = !!checks[id];
-      if (cb.checked) li.classList.add("is-checked");
-
-      cb.addEventListener("change", () => {
-        const current = loadChecks();
-        if (cb.checked) current[id] = true;
-        else delete current[id];
-        saveChecks(current);
-        li.classList.toggle("is-checked", cb.checked);
-        updateSummary();
-      });
-
-      const span = document.createElement("span");
-      span.className = "checklist-label";
-      span.textContent = label;
-
-      wrap.appendChild(cb);
-      wrap.appendChild(span);
-      li.appendChild(wrap);
-      list.appendChild(li);
+      list.appendChild(buildChecklistItem(id, label, checks, updateSummary, false));
     });
 
     section.appendChild(list);
@@ -259,7 +233,44 @@ function renderChecklist() {
   });
 
   updateSummary();
+  document.dispatchEvent(new CustomEvent("checklist:rendered"));
 }
+
+function buildChecklistItem(id, label, checks, updateSummary, isCustom) {
+  const li = document.createElement("li");
+  li.className = "checklist-item";
+  li.dataset.checkId = id;
+  if (isCustom) li.dataset.custom = "1";
+
+  const wrap = document.createElement("label");
+  wrap.htmlFor = id;
+
+  const cb = document.createElement("input");
+  cb.type = "checkbox";
+  cb.id = id;
+  cb.checked = !!checks[id];
+  if (cb.checked) li.classList.add("is-checked");
+
+  cb.addEventListener("change", () => {
+    const current = loadChecks();
+    if (cb.checked) current[id] = true;
+    else delete current[id];
+    saveChecks(current);
+    li.classList.toggle("is-checked", cb.checked);
+    updateSummary();
+  });
+
+  const span = document.createElement("span");
+  span.className = "checklist-label";
+  span.textContent = label;
+
+  wrap.appendChild(cb);
+  wrap.appendChild(span);
+  li.appendChild(wrap);
+  return li;
+}
+
+window.TRIP_BUILD_CHECK_ITEM = buildChecklistItem;
 
 function renderFlight(root, data) {
   const segmentsHtml = data.segments

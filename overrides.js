@@ -4,17 +4,26 @@
 
   let overrides = { additions: {}, notes: {}, checks: {}, itemEdits: {} };
 
+  function normalizeOverrides() {
+    if (!overrides.additions) overrides.additions = {};
+    if (!overrides.notes) overrides.notes = {};
+    if (!overrides.checks) overrides.checks = {};
+    if (!overrides.itemEdits) overrides.itemEdits = {};
+    if (!overrides.itemOrder) overrides.itemOrder = {};
+    if (!overrides.checklistAdds) overrides.checklistAdds = [];
+    if (!overrides.checklistEdits) overrides.checklistEdits = {};
+    if (!overrides.checklistHidden) overrides.checklistHidden = {};
+  }
+
   async function fetchOverrides() {
     try {
       const res = await fetch(`${WORKER_URL}/overrides`, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       overrides = await res.json();
-      if (!overrides.additions) overrides.additions = {};
-      if (!overrides.notes) overrides.notes = {};
-      if (!overrides.checks) overrides.checks = {};
-      if (!overrides.itemEdits) overrides.itemEdits = {};
+      normalizeOverrides();
     } catch (e) {
       console.warn("[overrides] fetch failed, using empty", e);
+      normalizeOverrides();
     }
   }
 
@@ -71,11 +80,7 @@
       setStoredPassword(password);
       if (data.overrides) {
         overrides = data.overrides;
-        if (!overrides.additions) overrides.additions = {};
-        if (!overrides.notes) overrides.notes = {};
-        if (!overrides.checks) overrides.checks = {};
-        if (!overrides.itemEdits) overrides.itemEdits = {};
-        if (!overrides.itemOrder) overrides.itemOrder = {};
+        normalizeOverrides();
       }
       return data;
     } finally {
@@ -302,6 +307,202 @@
         },
       });
     });
+  }
+
+  function applyChecklistCustomizations() {
+    const root = document.getElementById("checklist-root");
+    if (!root) return;
+    const edits = overrides.checklistEdits || {};
+    const hidden = overrides.checklistHidden || {};
+    const adds = overrides.checklistAdds || [];
+
+    // 1. static label edits + hidden removal
+    root.querySelectorAll(".checklist-item").forEach((li) => {
+      const id = li.dataset.checkId;
+      if (!id) return;
+      if (li.dataset.custom) return;
+      if (hidden[id]) { li.remove(); return; }
+      if (edits[id]) {
+        const span = li.querySelector(".checklist-label");
+        if (span) span.textContent = edits[id];
+      }
+    });
+
+    // 2. remove previously-rendered custom items (re-render fresh)
+    root.querySelectorAll(".checklist-item[data-custom]").forEach((el) => el.remove());
+    root.querySelectorAll(".checklist-custom-section").forEach((el) => el.remove());
+
+    // 3. add custom items grouped by category
+    const checks = overrides.checks || {};
+    const noop = () => updateChecklistSummary();
+    const byCat = {};
+    adds.forEach((it) => {
+      (byCat[it.category] = byCat[it.category] || []).push(it);
+    });
+
+    Object.entries(byCat).forEach(([catName, items]) => {
+      let section = [...root.querySelectorAll(".checklist-category")]
+        .find((s) => s.dataset.catName === catName);
+      let list;
+      if (section) {
+        list = section.querySelector(".checklist-items");
+      } else {
+        section = document.createElement("section");
+        section.className = "checklist-category checklist-custom-section";
+        section.dataset.catName = catName;
+        const h = document.createElement("h3");
+        h.textContent = catName;
+        section.appendChild(h);
+        list = document.createElement("ul");
+        list.className = "checklist-items";
+        section.appendChild(list);
+        root.appendChild(section);
+      }
+      items.forEach((it) => {
+        if (window.TRIP_BUILD_CHECK_ITEM) {
+          const li = window.TRIP_BUILD_CHECK_ITEM(it.id, it.label, checks, noop, true);
+          list.appendChild(li);
+        }
+      });
+    });
+
+    addChecklistButtons();
+  }
+
+  function updateChecklistSummary() {
+    const summary = document.querySelector(".checklist-summary");
+    if (!summary) return;
+    const done = document.querySelectorAll(".checklist-item.is-checked").length;
+    const total = document.querySelectorAll(".checklist-item").length;
+    summary.textContent = `${done} / ${total} 완료`;
+  }
+
+  function addChecklistButtons() {
+    document.querySelectorAll("#checklist-root .checklist-item").forEach((li) => {
+      if (li.querySelector(".check-edit-btn")) return;
+      const id = li.dataset.checkId;
+      if (!id) return;
+      const tools = document.createElement("span");
+      tools.className = "check-tools";
+
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "check-edit-btn";
+      editBtn.title = "수정";
+      editBtn.textContent = "✎";
+      editBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openCheckEditModal(li);
+      });
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "check-del-btn";
+      delBtn.title = "삭제";
+      delBtn.textContent = "✕";
+      delBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!confirm("이 항목을 삭제하시겠습니까?")) return;
+        const r = await callWorker("deleteCheckItem", { id });
+        if (!r.error) { applyChecklistCustomizations(); applyChecks(); updateChecklistSummary(); }
+      });
+
+      tools.appendChild(editBtn);
+      tools.appendChild(delBtn);
+      li.appendChild(tools);
+    });
+
+    const root = document.getElementById("checklist-root");
+    if (root && !root.querySelector(".check-add-btn")) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "check-add-btn plan-add-btn";
+      btn.textContent = "+ 준비물 항목 추가";
+      btn.addEventListener("click", () => openCheckAddModal());
+      root.appendChild(btn);
+    }
+  }
+
+  function openCheckEditModal(li) {
+    const id = li.dataset.checkId;
+    const cur = li.querySelector(".checklist-label")?.textContent || "";
+    const modal = document.createElement("div");
+    modal.className = "edit-overlay";
+    modal.innerHTML = `
+      <form class="edit-card" autocomplete="off">
+        <h2>준비물 항목 수정</h2>
+        <label class="edit-field">
+          <span>항목 내용</span>
+          <input type="text" name="label" value="${escapeHtml(cur)}" required>
+        </label>
+        <div class="edit-actions">
+          <button type="button" class="btn btn-secondary edit-cancel">취소</button>
+          <button type="submit" class="btn">저장</button>
+        </div>
+      </form>
+    `;
+    const close = () => modal.remove();
+    modal.querySelector(".edit-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+    modal.querySelector("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const label = e.target.label.value.trim();
+      if (!label || label === cur) { close(); return; }
+      const r = await callWorker("editCheckItem", { id, label });
+      if (!r.error) { applyChecklistCustomizations(); applyChecks(); }
+      close();
+    });
+    document.body.appendChild(modal);
+  }
+
+  function openCheckAddModal() {
+    const cats = [...document.querySelectorAll("#checklist-root .checklist-category")]
+      .map((s) => s.dataset.catName).filter(Boolean);
+    const options = cats.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    const modal = document.createElement("div");
+    modal.className = "edit-overlay";
+    modal.innerHTML = `
+      <form class="edit-card" autocomplete="off">
+        <h2>준비물 항목 추가</h2>
+        <label class="edit-field">
+          <span>카테고리</span>
+          <select name="category">${options}<option value="__custom__">+ 새 카테고리…</option></select>
+        </label>
+        <label class="edit-field check-newcat" hidden>
+          <span>새 카테고리 이름</span>
+          <input type="text" name="newcat" placeholder="예: 아기용품">
+        </label>
+        <label class="edit-field">
+          <span>항목 내용</span>
+          <input type="text" name="label" required placeholder="예: 보조배터리 2개">
+        </label>
+        <div class="edit-actions">
+          <button type="button" class="btn btn-secondary edit-cancel">취소</button>
+          <button type="submit" class="btn">추가</button>
+        </div>
+      </form>
+    `;
+    const close = () => modal.remove();
+    const sel = modal.querySelector("select[name=category]");
+    const newcatField = modal.querySelector(".check-newcat");
+    sel.addEventListener("change", () => {
+      newcatField.hidden = sel.value !== "__custom__";
+    });
+    modal.querySelector(".edit-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+    modal.querySelector("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const label = e.target.label.value.trim();
+      if (!label) return;
+      let category = sel.value;
+      if (category === "__custom__") category = e.target.newcat.value.trim() || "추가 항목";
+      const r = await callWorker("addCheckItem", { category, label });
+      if (!r.error) { applyChecklistCustomizations(); applyChecks(); updateChecklistSummary(); }
+      close();
+    });
+    document.body.appendChild(modal);
   }
 
   function applyChecks() {
@@ -591,6 +792,7 @@
     applyNotes();
     applyAdditions();
     applyOrder();
+    applyChecklistCustomizations();
     applyChecks();
     addEditButtons();
     setupDragDrop();
@@ -634,10 +836,16 @@
     applyNotes();
     applyAdditions();
     applyOrder();
+    applyChecklistCustomizations();
     applyChecks();
     addEditButtons();
     addAddNewButtons();
     setupDragDrop();
+    // checklist re-renders async after maps etc.; re-apply if it fires later
+    document.addEventListener("checklist:rendered", () => {
+      applyChecklistCustomizations();
+      applyChecks();
+    });
   }
 
   function whenUnlocked(cb) {
