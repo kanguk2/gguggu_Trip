@@ -11,6 +11,12 @@ const REPO_NAME = "gguggu_Trip";
 const OVERRIDES_PATH = "trips/sapporo-overrides.json";
 const ALLOWED_ORIGINS = ["https://kanguk2.github.io"];
 
+// 도시 슬러그 → overrides 경로. 안전하게 [a-z0-9-] 만 허용, 없으면 sapporo 기본.
+function overridesPath(city) {
+  const slug = (typeof city === "string" ? city : "").toLowerCase().replace(/[^a-z0-9-]/g, "");
+  return `trips/${slug || "sapporo"}-overrides.json`;
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
@@ -24,7 +30,7 @@ export default {
 
     try {
       if (request.method === "GET" && url.pathname === "/overrides") {
-        const data = await loadOverrides(env);
+        const data = await loadOverrides(env, overridesPath(url.searchParams.get("city")));
         delete data._sha;
         return jsonResp(data, 200, corsHeaders);
       }
@@ -35,9 +41,11 @@ export default {
           return jsonResp({ error: "invalid_password" }, 401, corsHeaders);
         }
 
-        const overrides = await loadOverrides(env);
+        const path = overridesPath(body.city);
+        const overrides = await loadOverrides(env, path);
         const sha = overrides._sha;
         delete overrides._sha;
+        const save = (message) => saveOverrides(env, overrides, sha, message, path);
         if (!overrides.additions) overrides.additions = {};
         if (!overrides.notes) overrides.notes = {};
         if (!overrides.checks) overrides.checks = {};
@@ -68,7 +76,7 @@ export default {
           if (overrides.itemOrder[date] && overrides.itemOrder[date].length) {
             insertKeySorted(overrides, date, `${date}/${id}`, time);
           }
-          await saveOverrides(env, overrides, sha, `Add ${date} ${time} ${name}`);
+          await save(`Add ${date} ${time} ${name}`);
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
 
@@ -86,7 +94,7 @@ export default {
           if (overrides.itemOrder[date] && overrides.itemOrder[date].length) {
             overrides.itemOrder[date].unshift(`${date}/${id}`);
           }
-          await saveOverrides(env, overrides, sha, `Add memo ${date}`);
+          await save(`Add memo ${date}`);
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
 
@@ -107,7 +115,7 @@ export default {
           else if (body.transit) { const ct = cleanTransit(body.transit); if (ct) item.transit = ct; else delete item.transit; }
           if (body.addr === null || body.addr === "") delete item.addr;
           else if (typeof body.addr === "string") item.addr = body.addr.trim().slice(0, 200);
-          await saveOverrides(env, overrides, sha, `Edit ${date} ${item.time} ${item.name}`);
+          await save(`Edit ${date} ${item.time} ${item.name}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -116,7 +124,7 @@ export default {
           if (!key) return jsonResp({ error: "missing_key" }, 400, corsHeaders);
           if (checked) overrides.checks[key] = true;
           else delete overrides.checks[key];
-          await saveOverrides(env, overrides, sha, `${checked ? "Check" : "Uncheck"} ${key}`);
+          await save(`${checked ? "Check" : "Uncheck"} ${key}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -126,7 +134,7 @@ export default {
             return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
           }
           overrides.itemOrder[date] = order;
-          await saveOverrides(env, overrides, sha, `Reorder ${date}`);
+          await save(`Reorder ${date}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -135,7 +143,7 @@ export default {
           if (!label) return jsonResp({ error: "missing_label" }, 400, corsHeaders);
           const id = "cadd-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
           overrides.checklistAdds.push({ id, category: category || "추가 항목", label });
-          await saveOverrides(env, overrides, sha, `Add check item ${label}`);
+          await save(`Add check item ${label}`);
           return jsonResp({ ok: true, id, overrides }, 200, corsHeaders);
         }
 
@@ -148,7 +156,7 @@ export default {
           } else {
             overrides.checklistEdits[id] = label;
           }
-          await saveOverrides(env, overrides, sha, `Edit check item ${id}`);
+          await save(`Edit check item ${id}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -163,7 +171,7 @@ export default {
             delete overrides.checklistEdits[id];
           }
           delete overrides.checks[id];
-          await saveOverrides(env, overrides, sha, `Delete check item ${id}`);
+          await save(`Delete check item ${id}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -188,7 +196,7 @@ export default {
           } else {
             overrides.itemEdits[key] = current;
           }
-          await saveOverrides(env, overrides, sha, `Edit static ${key}`);
+          await save(`Edit static ${key}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -198,7 +206,7 @@ export default {
           const removed = list.find((i) => i.id === id);
           if (!removed) return jsonResp({ error: "not_found" }, 404, corsHeaders);
           overrides.additions[date] = list.filter((i) => i.id !== id);
-          await saveOverrides(env, overrides, sha, `Remove ${date} ${removed.time} ${removed.name}`);
+          await save(`Remove ${date} ${removed.time} ${removed.name}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -210,7 +218,7 @@ export default {
           } else {
             delete overrides.notes[key];
           }
-          await saveOverrides(env, overrides, sha, `Note on ${key}`);
+          await save(`Note on ${key}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -219,7 +227,7 @@ export default {
           if (!key) return jsonResp({ error: "missing_key" }, 400, corsHeaders);
           if (hidden) overrides.itemHidden[key] = true;
           else delete overrides.itemHidden[key];
-          await saveOverrides(env, overrides, sha, `${hidden ? "Hide" : "Show"} original ${key}`);
+          await save(`${hidden ? "Hide" : "Show"} original ${key}`);
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
@@ -253,8 +261,8 @@ export default {
   },
 };
 
-async function loadOverrides(env) {
-  const res = await ghFetch(env, "GET", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${OVERRIDES_PATH}`);
+async function loadOverrides(env, path = OVERRIDES_PATH) {
+  const res = await ghFetch(env, "GET", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`);
   if (res.status === 404) {
     return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {}, checklistAdds: [], checklistEdits: {}, checklistHidden: {}, itemHidden: {} };
   }
@@ -277,11 +285,11 @@ async function loadOverrides(env) {
   return parsed;
 }
 
-async function saveOverrides(env, overrides, sha, message) {
+async function saveOverrides(env, overrides, sha, message, path = OVERRIDES_PATH) {
   const content = btoa(encodeUtf8(JSON.stringify(overrides, null, 2)));
   const body = { message, content };
   if (sha) body.sha = sha;
-  const res = await ghFetch(env, "PUT", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${OVERRIDES_PATH}`, body);
+  const res = await ghFetch(env, "PUT", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, body);
   if (!res.ok) {
     throw new Error(`GitHub PUT failed: ${res.status} ${await res.text()}`);
   }

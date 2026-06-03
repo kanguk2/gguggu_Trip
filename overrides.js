@@ -2,6 +2,13 @@
   const WORKER_URL = "https://gguggutrip.tches0606.workers.dev";
   const PASSWORD_STORAGE_KEY = "trip-edit-password-v1";
 
+  // 도시 슬러그 — 페이지 파일명에서 자동 추출(sapporo.html → "sapporo"). 새 도시는 별도 설정 불필요.
+  // 명시하려면 페이지에서 window.TRIP_CITY 를 지정해도 됨.
+  const CITY = (window.TRIP_CITY ||
+    (location.pathname.split("/").pop() || "").replace(/\.html$/i, "") ||
+    "sapporo").toLowerCase().replace(/[^a-z0-9-]/g, "") || "sapporo";
+  const CHECK_STORAGE_KEY = `${CITY}-checklist-checks-v1`;
+
   let overrides = { additions: {}, notes: {}, checks: {}, itemEdits: {} };
 
   function normalizeOverrides() {
@@ -344,7 +351,7 @@
 
   async function fetchOverrides() {
     try {
-      const res = await fetch(`${WORKER_URL}/overrides`, { cache: "no-store" });
+      const res = await fetch(`${WORKER_URL}/overrides?city=${encodeURIComponent(CITY)}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       overrides = await res.json();
       normalizeOverrides();
@@ -390,7 +397,7 @@
       const res = await fetch(`${WORKER_URL}/edit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, password, ...payload }),
+        body: JSON.stringify({ action, password, city: CITY, ...payload }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) {
@@ -954,10 +961,10 @@
         cb.checked = shouldCheck;
         cb.closest(".checklist-item")?.classList.toggle("is-checked", shouldCheck);
         try {
-          const local = JSON.parse(localStorage.getItem("sapporo-checklist-checks-v1") || "{}");
+          const local = JSON.parse(localStorage.getItem(CHECK_STORAGE_KEY) || "{}");
           if (shouldCheck) local[id] = true;
           else delete local[id];
-          localStorage.setItem("sapporo-checklist-checks-v1", JSON.stringify(local));
+          localStorage.setItem(CHECK_STORAGE_KEY, JSON.stringify(local));
         } catch {}
         const summary = document.querySelector(".checklist-summary");
         if (summary) {

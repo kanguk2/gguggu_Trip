@@ -171,7 +171,9 @@ GitHub repo (trips/sapporo-overrides.json)
 
 ### Worker API
 
-`POST /edit` — body: `{ password, action, ...payload }`
+`GET /overrides?city=<slug>` · `POST /edit` — body: `{ password, action, city, ...payload }`
+
+**멀티 도시**: `city` 슬러그(생략 시 `sapporo`)로 `overridesPath()` 가 `trips/<city>-overrides.json` 을 선택. 같은 Worker 가 모든 도시 처리 — overrides.js 가 페이지 파일명에서 슬러그를 자동 추출해 전송. `city` 는 `[a-z0-9-]` 만 허용(경로 보호).
 
 | action | payload | 동작 |
 |---|---|---|
@@ -260,12 +262,23 @@ GitHub Fine-grained PAT 는 최대 1년 유효. 만료 임박 시:
 2. Cloudflare Worker Settings → Secrets → `GITHUB_TOKEN` 삭제 → 새 토큰으로 다시 등록 → Deploy
 3. 새 토큰 권한은 기존과 동일 (`kanguk2/gguggu_Trip` Contents: Read and write)
 
-### 새 도시 페이지에 적용하려면
+### 새 도시 페이지에 적용하려면 (overrides 전체 기능 = 메모·이미지·링크·이동옵션·장소검색·마커·체크리스트 공유)
 
-- `trips/<city>-overrides.json` 빈 `{}` 로 생성·커밋
-- `<city>.html` `<head>` 에 `<script src="./overrides.js" defer></script>` 추가
-- overrides.js 의 `OVERRIDES_PATH` 가 도시명 포함하도록 Worker 코드 수정 (또는 URL 파라미터로 도시 식별)
-  - 단순화: 도시마다 별도 Worker 운영해도 됨 (Cloudflare 무료 플랜은 100개 Worker 가능)
+**도시는 자동 인식된다.** overrides.js 가 페이지 파일명에서 슬러그를 뽑아(`osaka.html` → `osaka`) Worker 에 `?city=osaka` / `body.city` 로 보내고, Worker `overridesPath()` 가 `trips/osaka-overrides.json` 을 읽고/커밋한다. **Worker 코드 수정 불필요** — 같은 Worker 가 모든 도시 처리.
+
+새 도시 `<city>.html` 에 아래만 있으면 위 기능이 그대로 동작한다:
+
+1. `<head>` 에 **두 스크립트** (순서 중요 — SortableJS 가 overrides.js 보다 먼저):
+   ```html
+   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
+   <script src="./overrides.js" defer></script>
+   ```
+2. `<city>.js` 의 `CHECKLIST_STORAGE_KEY` 를 반드시 **`<slug>-checklist-checks-v1`** 로 (overrides.js 가 `${city}-checklist-checks-v1` 로 공유 동기화하므로 슬러그가 일치해야 함).
+3. 지도 마커·장소검색이 동작하려면 `<city>.js` 에 `loadMapsApi` 가 있고(sapporo.js 복사) `window.TRIP_LOAD_MAPS` 로 노출돼야 함. `getMergedStops`/`updateMarkerBadges`/`focusMarkerByKey` 도 sapporo.js 에서 복사.
+4. `trips/<city>-overrides.json` 은 **미리 안 만들어도 됨** — Worker 가 첫 편집 때 자동 생성(404 → 빈 객체 → PUT). 미리 만들려면 `{}` 로 커밋.
+5. CORS: Worker 는 `https://kanguk2.github.io` Origin 만 허용하므로 같은 Pages 도메인이면 그대로 됨.
+
+> 즉 새 도시는 **HTML 에 스크립트 2개 + 체크리스트 키 슬러그만 맞추면** 삿포로와 동일하게 모든 협업/편집 기능이 붙는다. Worker·overrides.js 는 손대지 않는다.
 
 ## 도시 페이지 구조 (`sapporo.html` 이 기준)
 
@@ -456,15 +469,17 @@ const DAY_MAPS = {
 - 각 날짜 패널의 `data-panel`, `<h2>Day N · 설명</h2>`, `<div class="day-map" id="day-map-YYYY-MM-DD">`, `.plan-item` 목록
 - 항공권·체크리스트 패널의 컨테이너 div 는 그대로
 - 날씨 detail 링크 URL (AccuWeather 등 도시별 상세 페이지)
+- **`<head>` 의 SortableJS CDN + `./overrides.js` 두 스크립트는 그대로 둔다** (협업·편집 기능). 도시는 파일명으로 자동 인식되므로 추가 설정 없음 → 메모·이미지·링크·이동옵션·장소검색(찾기)·마커·체크리스트 공유가 삿포로와 동일하게 동작. 자세한 건 위 "새 도시 페이지에 적용하려면" 참고.
 
 ### 4. `<slug>.js` 생성
 `sapporo.js` 복사 → 상단 상수 교체:
 - `TRIP_DATES`
 - 좌표 객체
-- `CHECKLIST_STORAGE_KEY` (도시별 고유 키)
+- `CHECKLIST_STORAGE_KEY` — 반드시 **`<slug>-checklist-checks-v1`** (overrides.js 의 공유 동기화 키와 일치해야 체크 공유됨)
 - `loadWeather` 의 `timezone` 파라미터
 - `CHECKLIST` (도시·계절 맞춰 조정)
 - `DAY_MAPS` (날짜별 stop 좌표)
+- 지도/마커/장소검색 함수(`loadMapsApi`+`window.TRIP_LOAD_MAPS`, `getMergedStops`, `initDayMap`, `updateMarkerBadges`, `focusMarkerByKey`, `rebuildDayMap`)는 sapporo.js 에서 **그대로 복사**
 
 `renderFlight` 의 텍스트가 페이지마다 다른 항공편이 있다면 secret.js 의 payload 키도 도시별 (`flight_osaka` 등)로 분리하고 `decryptPayload("flight_osaka")` 호출.
 
