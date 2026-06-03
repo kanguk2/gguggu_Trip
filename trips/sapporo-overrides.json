@@ -33,7 +33,8 @@
     },
     "2026-06-06/12:30": {
       "time": "11:45",
-      "name": "비에이역"
+      "name": "비에이역",
+      "image": "./files/uploads/img-mpxibas8-rltchg.jpg"
     },
     "2026-06-06/14:00": {
       "time": "13:15"
