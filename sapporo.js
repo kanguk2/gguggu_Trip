@@ -612,7 +612,8 @@ async function initDayMap(date) {
   container.parentElement.insertBefore(legendToggle, legend);
 }
 
-// 마커가 있는 plan-item 의 plan-name 앞에 글자 배지(A·B·C…) 부여. 클릭 시 지도 마커로 이동.
+// 마커가 있는 plan-item 의 우측 도구모음(.plan-tools)에 글자 배지(A·B·C…)를 ✎ 버튼 오른쪽으로 추가.
+// 배지를 plan-name 안에 넣으면 편집 시 이름으로 읽혀 덮어써지므로 도구모음에 둠.
 function updateMarkerBadges(date, stops) {
   const panel = document.querySelector(`.tab-panel[data-panel="${date}"]`);
   if (!panel) return;
@@ -623,9 +624,8 @@ function updateMarkerBadges(date, stops) {
   panel.querySelectorAll(".plan-list > .plan-item").forEach((li) => {
     const key = li.dataset.itemKey;
     const letter = key && letterByKey[key];
-    const nameEl = li.querySelector(".plan-name");
     let badge = li.querySelector(".plan-marker-badge");
-    if (letter && nameEl) {
+    if (letter) {
       li.dataset.hasMarker = "1";
       if (!badge) {
         badge = document.createElement("button");
@@ -637,8 +637,11 @@ function updateMarkerBadges(date, stops) {
           e.stopPropagation();
           focusMarkerByKey(date, li.dataset.itemKey);
         });
-        nameEl.insertBefore(badge, nameEl.firstChild);
       }
+      const tools = window.TRIP_ENSURE_PLAN_TOOLS
+        ? window.TRIP_ENSURE_PLAN_TOOLS(li)
+        : (li.querySelector(":scope > .plan-tools") || li);
+      tools.appendChild(badge); // ✎ 버튼 오른쪽(도구모음 끝)
       badge.textContent = letter;
     } else {
       delete li.dataset.hasMarker;

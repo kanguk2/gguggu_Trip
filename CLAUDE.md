@@ -220,7 +220,7 @@ GitHub repo (trips/sapporo-overrides.json)
 ### sapporo.js 측 협업 포인트
 
 - `getMergedStops(date)` — **마커는 목록 plan-item 과 1:1**. 패널의 `.plan-item` 을 **DOM 순서대로** 훑어 좌표 있는 것만 stop(`{key,time,name,coords}`)으로. 정적 항목 좌표는 `itemEdits[key].coords`(배열=덮어쓰기, `null`=마커 제거) 우선, 없으면 `DAY_MAPS` 원본시간 매칭. 추가 항목은 `additions[id].coords`. 메모·`itemHidden`·좌표없음은 마커 없음. 항목을 삭제·숨김하거나 좌표를 제거하면 마커도 사라짐.
-- `updateMarkerBadges(date, stops)` — 마커 있는 plan-item 의 plan-name 앞에 글자 배지(A·B·C…, 지도와 동일 순서) 부여. 배지 클릭 → `focusMarkerByKey` 로 해당 마커로 이동·InfoWindow. 마커 없으면 배지 제거 + `li.dataset.hasMarker` 토글. initDayMap 끝에서 호출.
+- `updateMarkerBadges(date, stops)` — 마커 있는 plan-item 의 우측 **도구모음(`.plan-tools`)** 에 ✎ 편집 버튼 오른쪽으로 글자 배지(A·B·C…, 지도와 동일 순서) 부여. (배지를 plan-name 안에 넣으면 편집 시 이름으로 읽혀 덮어써지므로 도구모음에 둠.) 배지 클릭 → `focusMarkerByKey` 로 해당 마커로 이동·InfoWindow. 마커 없으면 배지 제거 + `li.dataset.hasMarker` 토글. initDayMap 끝에서 호출. `.plan-tools` 는 overrides.js `ensurePlanTools`(window.TRIP_ENSURE_PLAN_TOOLS)가 만들고 ✎ 버튼을 담음.
 - `rebuildDayMap(date)` — 컨테이너·범례·sync 버튼 제거 → `dayMapBuilt[date]` 리셋 → initDayMap 재호출. `window.TRIP_REBUILD_DAY_MAP` 로 노출.
 - initDayMap 끝부분에서 `.day-map-sync` 버튼을 지도 컨테이너 바로 뒤에 삽입. 클릭 → `window.TRIP_OVERRIDES.sync()`.
 

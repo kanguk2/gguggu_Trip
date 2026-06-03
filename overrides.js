@@ -452,7 +452,6 @@
     li.innerHTML = `
       <span class="plan-time">${escapeHtml(item.time)}</span>
       <span class="plan-name">${escapeHtml(item.name)}</span>
-      <span class="plan-added-badge" aria-hidden="true">＋</span>
     `;
     const noteText = overrides.notes[li.dataset.itemKey];
     if (noteText) appendNote(li, noteText);
@@ -823,9 +822,22 @@
     });
   }
 
+  // plan-item 우측 도구모음 (✎ 편집 + 마커 배지). col3 에 배치, 마커 배지는 sapporo.js 가 여기에 추가.
+  function ensurePlanTools(li) {
+    let tools = li.querySelector(":scope > .plan-tools");
+    if (!tools) {
+      tools = document.createElement("span");
+      tools.className = "plan-tools";
+      li.appendChild(tools);
+    }
+    return tools;
+  }
+  window.TRIP_ENSURE_PLAN_TOOLS = ensurePlanTools;
+
   function addEditButtons() {
     document.querySelectorAll(".tab-panel[data-panel] .plan-list .plan-item").forEach((li) => {
       if (li.querySelector(".plan-edit-btn")) return;
+      const tools = ensurePlanTools(li);
       const btn = document.createElement("button");
       btn.className = "plan-edit-btn";
       btn.type = "button";
@@ -835,7 +847,7 @@
         e.stopPropagation();
         openEditModal(li);
       });
-      li.appendChild(btn);
+      tools.insertBefore(btn, tools.firstChild); // 편집 버튼은 도구모음 왼쪽, 마커 배지는 그 오른쪽
       const linksWrap = li.querySelector(":scope > .plan-links");
       if (linksWrap) li.appendChild(linksWrap);
       const imgWrap = li.querySelector(":scope > .plan-image-wrap");
@@ -899,7 +911,8 @@
     const key = li.dataset.itemKey;
     const time = li.querySelector(".plan-time").textContent.trim();
     const nameRaw = li.querySelector(".plan-name");
-    const name = (nameRaw ? nameRaw.firstChild?.textContent : "").trim();
+    const nameNode = nameRaw && [...nameRaw.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+    const name = (nameNode ? nameNode.textContent : "").trim();
     const origTime = li.dataset.originalTime || time;
     const origName = li.dataset.originalName || name;
     const currentNote = overrides.notes[key] || "";

@@ -586,6 +586,15 @@ main {
   display: none !important;
 }
 
+/* plan-item 우측 도구모음 (✎ 편집 + 마커 배지) */
+.plan-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-self: end;
+  align-self: center;
+}
+
 /* 마커 글자 배지 (목록 항목 ↔ 지도 마커 연결) */
 .plan-marker-badge {
   display: inline-flex;
@@ -594,7 +603,6 @@ main {
   min-width: 1.25rem;
   height: 1.25rem;
   padding: 0 0.3rem;
-  margin-right: 0.35rem;
   background: #c0392b;
   color: #fff;
   border: none;
