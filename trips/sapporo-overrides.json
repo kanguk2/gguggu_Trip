@@ -43,7 +43,8 @@
   "checks": {
     "chk-0-4": true,
     "chk-0-3": true,
-    "chk-0-0": true
+    "chk-0-0": true,
+    "chk-0-1": true
   },
   "itemEdits": {
     "2026-06-06/07:00": {
