@@ -396,6 +396,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-05",
       "id": "exp-mq0s66xx-wubc"
+    },
+    {
+      "label": "돈키호테",
+      "amount": 1667,
+      "currency": "JPY",
+      "category": "쇼핑",
+      "payer": "꾸꾸",
+      "date": "2026-06-05",
+      "id": "exp-mq0xuyhb-sx5f"
     }
   ]
 }
