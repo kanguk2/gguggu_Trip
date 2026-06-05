@@ -366,6 +366,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-05",
       "id": "exp-mq0s4juw-gf5t"
+    },
+    {
+      "label": "숙박세",
+      "amount": 1800,
+      "currency": "JPY",
+      "category": "숙박",
+      "payer": "꾸꾸",
+      "date": "2026-06-05",
+      "id": "exp-mq0s4xhp-y5pi"
     }
   ]
 }
