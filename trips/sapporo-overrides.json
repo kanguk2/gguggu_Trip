@@ -356,5 +356,16 @@
   "checklistHidden": {},
   "itemHidden": {
     "2026-06-07/19:00": true
-  }
+  },
+  "expenses": [
+    {
+      "label": "점심 가라쿠",
+      "amount": 5160,
+      "currency": "JPY",
+      "category": "식비",
+      "payer": "꾸꾸",
+      "date": "2026-06-05",
+      "id": "exp-mq0s4juw-gf5t"
+    }
+  ]
 }
