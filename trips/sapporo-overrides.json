@@ -375,6 +375,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-05",
       "id": "exp-mq0s4xhp-y5pi"
+    },
+    {
+      "label": "카페",
+      "amount": 710,
+      "currency": "JPY",
+      "category": "카페",
+      "payer": "꾸꾸",
+      "date": "2026-06-05",
+      "id": "exp-mq0s5ec6-qj39"
     }
   ]
 }
