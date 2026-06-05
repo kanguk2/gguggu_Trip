@@ -55,6 +55,7 @@ export default {
         if (!overrides.checklistEdits) overrides.checklistEdits = {};
         if (!overrides.checklistHidden) overrides.checklistHidden = {};
         if (!overrides.itemHidden) overrides.itemHidden = {};
+        if (!overrides.expenses) overrides.expenses = [];
 
         const action = body.action;
         if (action === "addItem") {
@@ -231,6 +232,36 @@ export default {
           return jsonResp({ ok: true, overrides }, 200, corsHeaders);
         }
 
+        if (action === "addExpense") {
+          const ex = cleanExpense(body);
+          if (!ex) return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
+          ex.id = "exp-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
+          overrides.expenses.push(ex);
+          await save(`Add expense ${ex.label}`);
+          return jsonResp({ ok: true, id: ex.id, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "updateExpense") {
+          const { id } = body;
+          const idx = (overrides.expenses || []).findIndex((x) => x.id === id);
+          if (idx < 0) return jsonResp({ error: "not_found" }, 404, corsHeaders);
+          const merged = cleanExpense({ ...overrides.expenses[idx], ...body });
+          if (!merged) return jsonResp({ error: "missing_fields" }, 400, corsHeaders);
+          merged.id = id;
+          overrides.expenses[idx] = merged;
+          await save(`Edit expense ${merged.label}`);
+          return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
+        if (action === "deleteExpense") {
+          const { id } = body;
+          const idx = (overrides.expenses || []).findIndex((x) => x.id === id);
+          if (idx < 0) return jsonResp({ error: "not_found" }, 404, corsHeaders);
+          const removed = overrides.expenses.splice(idx, 1)[0];
+          await save(`Delete expense ${removed.label}`);
+          return jsonResp({ ok: true, overrides }, 200, corsHeaders);
+        }
+
         if (action === "uploadImage") {
           const { filename, dataBase64 } = body;
           if (!dataBase64) return jsonResp({ error: "missing_image" }, 400, corsHeaders);
@@ -264,7 +295,7 @@ export default {
 async function loadOverrides(env, path = OVERRIDES_PATH) {
   const res = await ghFetch(env, "GET", `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`);
   if (res.status === 404) {
-    return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {}, checklistAdds: [], checklistEdits: {}, checklistHidden: {}, itemHidden: {} };
+    return { additions: {}, notes: {}, checks: {}, itemEdits: {}, itemOrder: {}, checklistAdds: [], checklistEdits: {}, checklistHidden: {}, itemHidden: {}, expenses: [] };
   }
   if (!res.ok) {
     throw new Error(`GitHub GET failed: ${res.status} ${await res.text()}`);
@@ -282,6 +313,7 @@ async function loadOverrides(env, path = OVERRIDES_PATH) {
   if (!parsed.checklistEdits) parsed.checklistEdits = {};
   if (!parsed.checklistHidden) parsed.checklistHidden = {};
   if (!parsed.itemHidden) parsed.itemHidden = {};
+  if (!parsed.expenses) parsed.expenses = [];
   return parsed;
 }
 
@@ -345,6 +377,24 @@ function insertKeySorted(overrides, date, newKey, newTime) {
     if (t && t > newTime) { idx = i; break; }
   }
   order.splice(idx, 0, newKey);
+}
+
+// 가계부 항목 정리 — label(필수)·amount·currency·category?·payer?·image?·note?·date?
+function cleanExpense(e) {
+  if (!e) return null;
+  const str = (v, n) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : undefined);
+  const label = str(e.label, 120);
+  if (!label) return null;
+  const out = { label };
+  const amt = Number(e.amount);
+  out.amount = Number.isFinite(amt) ? amt : 0;
+  out.currency = (str(e.currency, 8) || "JPY").toUpperCase();
+  const cat = str(e.category, 40); if (cat) out.category = cat;
+  const payer = str(e.payer, 40); if (payer) out.payer = payer;
+  const img = str(e.image, 300); if (img) out.image = img;
+  const note = str(e.note, 300); if (note) out.note = note;
+  const date = str(e.date, 10); if (date) out.date = date;
+  return out;
 }
 
 // 이동(교통) 옵션 정리 — options:[{name, duration?, price?, note?, times?[]}], note?

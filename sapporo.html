@@ -25,7 +25,7 @@
       <a class="weather-detail-link" href="https://www.accuweather.com/ko/jp/sapporo-shi/2129907/daily-weather-forecast/2129907" target="_blank" rel="noopener noreferrer">세부 날씨 보기 →</a>
     </p>
 
-    <nav class="tabs tabs-6" role="tablist" aria-label="섹션 선택">
+    <nav class="tabs tabs-7" role="tablist" aria-label="섹션 선택">
       <button class="tab is-active" role="tab" aria-selected="true" data-panel="checklist">
         <span class="tab-date">준비물</span><span class="tab-dow">체크리스트</span>
       </button>
@@ -43,6 +43,9 @@
       </button>
       <button class="tab" role="tab" aria-selected="false" data-panel="2026-06-08">
         <span class="tab-date">6/8</span><span class="tab-dow">월</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="expenses">
+        <span class="tab-date">가계부</span><span class="tab-dow">지출</span>
       </button>
     </nav>
 
@@ -426,6 +429,12 @@
           <span class="plan-name">인천국제공항 T1 도착</span>
         </li>
       </ol>
+    </section>
+
+    <section class="tab-panel" role="tabpanel" data-panel="expenses" hidden>
+      <h2>가계부</h2>
+      <p class="panel-desc">지출을 기록하고 영수증 사진을 첨부할 수 있어요. 일행과 실시간 공유됩니다.</p>
+      <div id="expense-root"></div>
     </section>
 
     <p class="page-nav">

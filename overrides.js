@@ -21,6 +21,7 @@
     if (!overrides.checklistEdits) overrides.checklistEdits = {};
     if (!overrides.checklistHidden) overrides.checklistHidden = {};
     if (!overrides.itemHidden) overrides.itemHidden = {};
+    if (!overrides.expenses) overrides.expenses = [];
   }
 
   // 방금 업로드한 이미지의 dataURI 를 repo 경로로 매핑 — Pages 빌드(~30초) 전까지 즉시 표시용
@@ -1701,6 +1702,189 @@
     document.body.appendChild(modal);
   }
 
+  // ── 가계부 (expenses) ─────────────────────────────────────────────
+  const CURRENCIES = ["JPY", "KRW", "USD", "EUR"];
+  const CURRENCY_SYMBOL = { JPY: "¥", KRW: "₩", USD: "$", EUR: "€" };
+
+  function formatMoney(amount, currency) {
+    const n = Number(amount) || 0;
+    const sym = CURRENCY_SYMBOL[currency] || "";
+    const digits = currency === "KRW" || currency === "JPY" ? 0 : 2;
+    const num = n.toLocaleString("en-US", { maximumFractionDigits: digits });
+    return sym ? `${sym}${num}` : `${num} ${currency || ""}`.trim();
+  }
+
+  function renderExpenses() {
+    const root = document.getElementById("expense-root");
+    if (!root) return;
+    root.innerHTML = "";
+    const expenses = overrides.expenses || [];
+
+    const totals = {};
+    expenses.forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + (Number(e.amount) || 0); });
+    const summary = document.createElement("div");
+    summary.className = "expense-summary";
+    const totalText = Object.keys(totals).length
+      ? Object.entries(totals).map(([c, v]) => formatMoney(v, c)).join("  ·  ")
+      : "지출 없음";
+    summary.innerHTML = `<span class="expense-total-label">합계</span><span class="expense-total-val">${escapeHtml(totalText)}</span><span class="expense-count">${expenses.length}건</span>`;
+    root.appendChild(summary);
+
+    const list = document.createElement("ul");
+    list.className = "expense-list";
+    expenses.forEach((e) => list.appendChild(renderExpenseItem(e)));
+    root.appendChild(list);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "plan-add-btn expense-add-btn";
+    addBtn.textContent = "+ 지출 추가";
+    addBtn.addEventListener("click", () => openExpenseModal(null));
+    root.appendChild(addBtn);
+  }
+
+  function renderExpenseItem(e) {
+    const li = document.createElement("li");
+    li.className = "expense-item";
+    li.dataset.expId = e.id;
+    const meta = [e.category, e.payer].filter(Boolean)
+      .map((x) => `<span class="expense-badge">${escapeHtml(x)}</span>`).join("");
+    li.innerHTML = `
+      <div class="expense-main">
+        <div class="expense-label">${escapeHtml(e.label)}${e.note ? `<small class="expense-note">${escapeHtml(e.note)}</small>` : ""}</div>
+        <div class="expense-meta">${meta}${e.date ? `<span class="expense-date">${escapeHtml(e.date)}</span>` : ""}</div>
+      </div>
+      <div class="expense-amount">${escapeHtml(formatMoney(e.amount, e.currency))}</div>
+      <button type="button" class="plan-edit-btn expense-edit-btn" title="편집">✎</button>
+    `;
+    if (e.image) {
+      const wrap = document.createElement("div");
+      wrap.className = "expense-image-wrap";
+      const img = document.createElement("img");
+      img.className = "expense-thumb";
+      img.loading = "lazy";
+      img.alt = "영수증";
+      img.title = "클릭하면 확대";
+      img.src = imgSrcFor(e.image);
+      img.addEventListener("click", () => openLightbox(img.src));
+      wrap.appendChild(img);
+      li.appendChild(wrap);
+    }
+    li.querySelector(".expense-edit-btn").addEventListener("click", () => openExpenseModal(e));
+    return li;
+  }
+
+  function openExpenseModal(e) {
+    const isEdit = !!e;
+    const cur = e || { currency: "JPY" };
+    const currentImage = cur.image || "";
+    const opts = CURRENCIES.map((c) => `<option value="${c}"${(cur.currency || "JPY") === c ? " selected" : ""}>${c}</option>`).join("");
+    const modal = document.createElement("div");
+    modal.className = "edit-overlay";
+    modal.innerHTML = `
+      <form class="edit-card" autocomplete="off">
+        <h2>${isEdit ? "지출 편집" : "지출 추가"}</h2>
+        <label class="edit-field">
+          <span>내용</span>
+          <input type="text" name="label" required placeholder="예: 점심 라멘" value="${escapeHtml(cur.label || "")}" autofocus>
+        </label>
+        <div class="expense-amount-row">
+          <label class="edit-field">
+            <span>금액</span>
+            <input type="number" name="amount" step="any" min="0" required placeholder="0" value="${cur.amount != null ? escapeHtml(String(cur.amount)) : ""}">
+          </label>
+          <label class="edit-field">
+            <span>통화</span>
+            <select name="currency">${opts}</select>
+          </label>
+        </div>
+        <div class="expense-amount-row">
+          <label class="edit-field">
+            <span>분류 (선택)</span>
+            <input type="text" name="category" placeholder="예: 식비" value="${escapeHtml(cur.category || "")}">
+          </label>
+          <label class="edit-field">
+            <span>결제자 (선택)</span>
+            <input type="text" name="payer" placeholder="예: 강욱" value="${escapeHtml(cur.payer || "")}">
+          </label>
+        </div>
+        <label class="edit-field">
+          <span>날짜 (선택)</span>
+          <input type="date" name="date" value="${escapeHtml(cur.date || "")}">
+        </label>
+        <label class="edit-field">
+          <span>영수증 사진 (선택 — 자동 축소됨)</span>
+          <input type="file" name="image" accept="image/*">
+        </label>
+        <div class="edit-img-current"${currentImage ? "" : " hidden"}>
+          <img class="edit-img-preview" src="${escapeHtml(imgSrcFor(currentImage))}" alt="">
+          <button type="button" class="btn btn-secondary edit-img-remove">사진 제거</button>
+        </div>
+        <label class="edit-field">
+          <span>메모 (선택)</span>
+          <textarea name="note" rows="2" placeholder="비고">${escapeHtml(cur.note || "")}</textarea>
+        </label>
+        <div class="edit-actions">
+          ${isEdit ? `<button type="button" class="btn btn-secondary edit-delete">삭제</button>` : ""}
+          <button type="button" class="btn btn-secondary edit-cancel">취소</button>
+          <button type="submit" class="btn">${isEdit ? "저장" : "추가"}</button>
+        </div>
+      </form>
+    `;
+    const close = () => modal.remove();
+    modal.querySelector(".edit-cancel").addEventListener("click", close);
+    modal.addEventListener("click", (ev) => { if (ev.target === modal) close(); });
+
+    let removeImage = false;
+    const imgCurrent = modal.querySelector(".edit-img-current");
+    const imgPreview = modal.querySelector(".edit-img-preview");
+    const fileInput = modal.querySelector("input[name=image]");
+    modal.querySelector(".edit-img-remove").addEventListener("click", () => {
+      removeImage = true; fileInput.value = ""; imgCurrent.hidden = true;
+    });
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files?.[0];
+      if (f) { removeImage = false; imgPreview.src = URL.createObjectURL(f); imgCurrent.hidden = false; }
+    });
+
+    if (isEdit) {
+      modal.querySelector(".edit-delete").addEventListener("click", async () => {
+        if (!confirm("이 지출을 삭제하시겠습니까?")) return;
+        const r = await callWorker("deleteExpense", { id: cur.id });
+        if (!r.error) { renderExpenses(); close(); }
+      });
+    }
+
+    modal.querySelector("form").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const form = ev.target;
+      const label = form.label.value.trim();
+      if (!label) return;
+      const payload = {
+        label,
+        amount: form.amount.value,
+        currency: form.currency.value,
+        category: form.category.value.trim(),
+        payer: form.payer.value.trim(),
+        date: form.date.value,
+        note: form.note.value.trim(),
+      };
+      const imgFile = form.image?.files?.[0];
+      if (imgFile) {
+        const path = await uploadImageFile(imgFile);
+        if (path) payload.image = path;
+      } else if (removeImage && currentImage) {
+        payload.image = null;
+      }
+      let r;
+      if (isEdit) r = await callWorker("updateExpense", { id: cur.id, ...payload });
+      else r = await callWorker("addExpense", payload);
+      if (!r.error) { renderExpenses(); close(); }
+    });
+
+    document.body.appendChild(modal);
+  }
+
   function activeDate() {
     const active = document.querySelector(".tab-panel.is-active[data-panel]");
     const panel = active?.dataset.panel;
@@ -1725,6 +1909,7 @@
     applyChecks();
     addEditButtons();
     enhanceStaticTransit();
+    renderExpenses();
     setupDragDrop();
     rebuildCurrentDayMap();
     showToast("동기화 완료", 1500);
@@ -1773,6 +1958,7 @@
     addEditButtons();
     addAddNewButtons();
     enhanceStaticTransit();
+    renderExpenses();
     setupDragDrop();
     // checklist re-renders async after maps etc.; re-apply if it fires later
     document.addEventListener("checklist:rendered", () => {

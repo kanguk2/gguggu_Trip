@@ -141,7 +141,10 @@ GitHub repo (trips/sapporo-overrides.json)
   },
   "itemHidden": {
     "2026-06-05/13:00": true
-  }
+  },
+  "expenses": [
+    { "id": "exp-xxx", "label": "점심 라멘", "amount": 1200, "currency": "JPY", "category": "식비", "payer": "강욱", "image": "./files/uploads/img-zzz.jpg", "note": "", "date": "2026-06-05" }
+  ]
 }
 ```
 
@@ -158,6 +161,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - 링크(`links`)는 `[{url, label?}]` 배열 (최대 10개). Worker `cleanLinks` 가 `http(s)` URL 만 허용(`javascript:` 등 차단). label 없으면 호스트명 표시. 추가·편집 모달의 "참고 링크" 에디터로 여러 개 입력.
 - 이동(`transit`)은 `{ options: [{name, duration?, price?, note?, times?[]}], note? }`. 추가·편집 모달의 "이동(교통) 옵션 추가" 체크 시 입력. 항목 아래 `.plan-transit` 펼침 블록으로 렌더(옵션 카드 + 시간표). **"🔄 시간에 맞춰 동기화"** 버튼이 항목 시각 이후 가장 가까운 출발편을 강조(`.is-next`)·지난 편 흐림(`.is-past`). Worker `cleanTransit` 가 정리. 정적(하드코딩) 이동 항목에도 `enhanceStaticTransit` 가 같은 동기화 버튼 주입.
 - 주소(`addr`)는 장소의 주소 문자열. 추가·편집 모달의 **"🔍 찾기"**(구글맵 장소 검색 팝업, Places `textSearch`)로 결과 선택 시 장소명→이름·`coords`·`addr` 자동 기입. 항목 이름 아래 `.plan-sub-addr`(📍) 서브라인으로 표시. `addr: ""`/`null` 로 제거.
+- `expenses` — **가계부**(날짜에 종속 안 됨, 전역 배열). 각 항목 `{id, label, amount(숫자), currency(JPY/KRW/USD/EUR), category?, payer?, image?, note?, date?}`. `expenses` 탭(`#expense-root`)에서 `renderExpenses` 가 통화별 합계 + 목록 + "+ 지출 추가" 렌더. 영수증 사진(`image`) 첨부 가능(uploadImage 재사용, 클릭 시 라이트박스). Worker `addExpense`/`updateExpense`/`deleteExpense` + `cleanExpense` 로 정리. 일행 간 공유.
 
 ### overrides.js 동작
 
@@ -192,7 +196,10 @@ GitHub repo (trips/sapporo-overrides.json)
 | `addCheckItem` | `category, label` | `checklistAdds` 에 사용자 준비물 항목 추가 (해당 카테고리, 없으면 새 카테고리 생성) |
 | `editCheckItem` | `id, label` | 준비물 항목 내용 수정 (추가 항목은 직접, 정적 항목은 `checklistEdits[id]`) |
 | `deleteCheckItem` | `id` | 준비물 항목 삭제 (추가 항목 제거 / 정적 항목은 `checklistHidden[id]`) |
-| `uploadImage` | `filename, dataBase64` | 이미지를 `files/uploads/img-*.<ext>` 로 커밋 후 상대경로 반환 (overrides JSON 은 안 건드림). 이후 addItem/updateItem/setItemEdit 의 `image` 로 연결 |
+| `uploadImage` | `filename, dataBase64` | 이미지를 `files/uploads/img-*.<ext>` 로 커밋 후 상대경로 반환 (overrides JSON 은 안 건드림). 이후 addItem/updateItem/setItemEdit/expense 의 `image` 로 연결 |
+| `addExpense` | `label, amount, currency?, category?, payer?, image?, note?, date?` | `expenses` 에 지출 항목 추가 (cleanExpense 정리, currency 기본 JPY) |
+| `updateExpense` | `id, ...fields` | 지출 항목 수정 (기존+전달값 머지 후 cleanExpense). `image: null` 로 사진 제거 |
+| `deleteExpense` | `id` | 지출 항목 삭제 |
 
 ### overrides.js 페이지 측 동작
 
@@ -215,6 +222,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - `setupClamp(el)` / `setupClamps()` — 긴 메모/메모항목 텍스트를 3줄로 접고 넘칠 때만 '더보기/접기' 토글 추가. 숨은 날짜 탭은 측정 불가라 미완료로 두고 **탭 클릭 시 재측정**. `.clamp-text` 가 대상, 토글은 `.clamp-toggle`
 - `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가"·"+ 메모 추가" 버튼 (`openAddModal`/`openMemoAddModal`). 메모 항목 클릭 시 `addEditButtons` 의 ✎ 가 `openMemoModal`(텍스트 편집·삭제)로 분기
 - `setupDragDrop()` — SortableJS 적용. `delay: 250` (0.25초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복. `.plan-item` 에 `user-select:none` 줘서 롱프레스가 텍스트선택에 가로채이지 않게 함(특히 텍스트뿐인 메모 항목 드래그)
+- `renderExpenses()` / `renderExpenseItem(e)` / `openExpenseModal(e)` — 가계부 탭(`#expense-root`) 렌더: 통화별 합계 + 지출 목록(영수증 썸네일·✎ 편집) + "+ 지출 추가". 모달에서 내용·금액·통화·분류·결제자·날짜·메모·영수증 사진 입력. add/update/deleteExpense 호출. init·syncAll 에서 호출.
 - `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.
 - `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.
 - `compressImage(file)` / `uploadImageFile(file)` — 파일을 canvas 로 최대 1280px JPEG 축소 → Worker `uploadImage` 로 리포 커밋 → 상대경로 반환. 방금 올린 dataURI 는 `recentImageData` 에 캐시해 Pages 빌드(~30초) 전까지 즉시 표시.
@@ -297,12 +305,18 @@ GitHub Fine-grained PAT 는 최대 1년 유효. 만료 임박 시:
   </p>
 
   <!-- 탭 바 -->
-  <nav class="tabs tabs-N" role="tablist">  <!-- N = 2 + 여행일수 -->
+  <nav class="tabs tabs-N" role="tablist">  <!-- N = 3 + 여행일수 (준비물·항공권·가계부 + 날짜들) -->
     <button class="tab is-active" data-panel="checklist">준비물</button>
     <button class="tab" data-panel="flight">항공권</button>
     <button class="tab" data-panel="YYYY-MM-DD">M/D · 요일</button>
     ...
+    <button class="tab" data-panel="expenses">가계부</button>
   </nav>
+
+  <!-- 패널: 가계부 (날짜 패널들 뒤) -->
+  <section class="tab-panel" data-panel="expenses" hidden>
+    <h2>가계부</h2><div id="expense-root"></div>
+  </section>
 
   <!-- 패널: 준비물 (기본 활성) -->
   <section class="tab-panel is-active" data-panel="checklist">
@@ -324,7 +338,7 @@ GitHub Fine-grained PAT 는 최대 1년 유효. 만료 임박 시:
 <script src="./<city>.js"></script>
 ```
 
-`.tabs-N` 클래스는 탭 개수에 맞춰 — 현재 styles.css 에 `.tabs-4 / 5 / 6` 정의되어 있음. 더 필요하면 `grid-template-columns: repeat(N, 1fr)` 한 줄 추가.
+`.tabs-N` 클래스는 탭 개수에 맞춰 — 현재 styles.css 에 `.tabs-4 / 5 / 6 / 7` 정의되어 있음. 더 필요하면 `grid-template-columns: repeat(N, 1fr)` 한 줄 추가. (삿포로는 준비물·항공권·**가계부** + 4일 = 7탭 → `tabs-7`)
 
 ## 도시 페이지 JS (`<city>.js`)
 
@@ -468,7 +482,7 @@ const DAY_MAPS = {
 `sapporo.html` 복사 → 다음만 교체:
 - `<title>` · `<h1>` · `.trip-period`
 - `<script src="./<slug>.js">` 마지막 줄
-- `.tabs-N` 클래스 (N = 2 + 여행일수)
+- `.tabs-N` 클래스 (N = 3 + 여행일수 — 준비물·항공권·가계부 + 날짜들). 가계부 탭 버튼(`data-panel="expenses"`)과 패널(`<div id="expense-root">`)도 포함
 - 날짜 탭 버튼들 (`data-panel`, `tab-date` 같은 `M/D`, `tab-dow` 한글자)
 - 각 날짜 패널의 `data-panel`, `<h2>Day N · 설명</h2>`, `<div class="day-map" id="day-map-YYYY-MM-DD">`, `.plan-item` 목록
 - 항공권·체크리스트 패널의 컨테이너 div 는 그대로
