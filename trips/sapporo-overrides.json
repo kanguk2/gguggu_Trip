@@ -485,6 +485,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-06",
       "id": "exp-mq1u5egz-1ke5"
+    },
+    {
+      "label": "팜토미타",
+      "amount": 495,
+      "currency": "JPY",
+      "category": "선물",
+      "payer": "꾸꾸",
+      "date": "2026-06-06",
+      "id": "exp-mq2bxy9k-ba0y"
     }
   ]
 }
