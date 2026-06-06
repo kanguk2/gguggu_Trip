@@ -458,6 +458,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-06",
       "id": "exp-mq1u3f0l-1jl0"
+    },
+    {
+      "label": "타쿠미야",
+      "amount": 3960,
+      "currency": "JPY",
+      "category": "이자카야",
+      "payer": "꾸꾸",
+      "date": "2026-06-06",
+      "id": "exp-mq1u423c-mp0j"
     }
   ]
 }
