@@ -502,6 +502,14 @@
       "category": "식비",
       "payer": "꾸꾸",
       "id": "exp-mq2byvhc-nufw"
+    },
+    {
+      "label": "돈키호테",
+      "amount": 654,
+      "currency": "JPY",
+      "category": "쇼핑",
+      "payer": "꾸꾸",
+      "id": "exp-mq2bzq1t-qxg1"
     }
   ]
 }
