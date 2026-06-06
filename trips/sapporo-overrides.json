@@ -476,6 +476,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-06",
       "id": "exp-mq1u4msc-jzs2"
+    },
+    {
+      "label": "가챠",
+      "amount": 200,
+      "currency": "JPY",
+      "category": "유흥",
+      "payer": "꾸꾸",
+      "date": "2026-06-06",
+      "id": "exp-mq1u5egz-1ke5"
     }
   ]
 }
