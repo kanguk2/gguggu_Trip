@@ -449,6 +449,15 @@
       "category": "식비",
       "date": "2026-06-05",
       "id": "exp-mq0xvkkl-xf5r"
+    },
+    {
+      "label": "쥬스",
+      "amount": 208,
+      "currency": "JPY",
+      "category": "편의점",
+      "payer": "꾸꾸",
+      "date": "2026-06-06",
+      "id": "exp-mq1u3f0l-1jl0"
     }
   ]
 }
