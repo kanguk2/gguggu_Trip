@@ -467,6 +467,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-06",
       "id": "exp-mq1u423c-mp0j"
+    },
+    {
+      "label": "아스파라거스",
+      "amount": 300,
+      "currency": "JPY",
+      "category": "간식",
+      "payer": "꾸꾸",
+      "date": "2026-06-06",
+      "id": "exp-mq1u4msc-jzs2"
     }
   ]
 }
