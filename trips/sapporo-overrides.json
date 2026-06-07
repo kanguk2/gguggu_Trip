@@ -420,10 +420,11 @@
       "label": "카페",
       "amount": 710,
       "currency": "JPY",
-      "category": "카페",
+      "category": "식비",
       "payer": "꾸꾸",
       "date": "2026-06-05",
-      "id": "exp-mq0s5ec6-qj39"
+      "id": "exp-mq0s5ec6-qj39",
+      "subcategory": "카페"
     },
     {
       "label": "카이센동",
@@ -455,46 +456,51 @@
       "label": "쥬스",
       "amount": 208,
       "currency": "JPY",
-      "category": "편의점",
+      "category": "식비",
       "payer": "꾸꾸",
       "date": "2026-06-06",
-      "id": "exp-mq1u3f0l-1jl0"
+      "id": "exp-mq1u3f0l-1jl0",
+      "subcategory": "편의점"
     },
     {
       "label": "타쿠미야",
       "amount": 3960,
       "currency": "JPY",
-      "category": "이자카야",
+      "category": "식비",
       "payer": "꾸꾸",
       "date": "2026-06-06",
-      "id": "exp-mq1u423c-mp0j"
+      "id": "exp-mq1u423c-mp0j",
+      "subcategory": "이자카야"
     },
     {
       "label": "아스파라거스",
       "amount": 300,
       "currency": "JPY",
-      "category": "간식",
+      "category": "식비",
       "payer": "꾸꾸",
       "date": "2026-06-06",
-      "id": "exp-mq1u4msc-jzs2"
+      "id": "exp-mq1u4msc-jzs2",
+      "subcategory": "간식"
     },
     {
       "label": "가챠",
       "amount": 200,
       "currency": "JPY",
-      "category": "유흥",
+      "category": "기타",
       "payer": "꾸꾸",
       "date": "2026-06-06",
-      "id": "exp-mq1u5egz-1ke5"
+      "id": "exp-mq1u5egz-1ke5",
+      "subcategory": "유흥"
     },
     {
       "label": "팜토미타",
       "amount": 495,
       "currency": "JPY",
-      "category": "선물",
+      "category": "쇼핑",
       "payer": "꾸꾸",
       "date": "2026-06-06",
-      "id": "exp-mq2bxy9k-ba0y"
+      "id": "exp-mq2bxy9k-ba0y",
+      "subcategory": "선물"
     },
     {
       "label": "징기스칸",
@@ -536,10 +542,11 @@
       "label": "르타오",
       "amount": 3300,
       "currency": "JPY",
-      "category": "카페",
+      "category": "식비",
       "payer": "꾸꾸",
       "date": "2026-06-07",
-      "id": "exp-mq3aqa1m-b4wm"
+      "id": "exp-mq3aqa1m-b4wm",
+      "subcategory": "카페"
     }
   ]
 }

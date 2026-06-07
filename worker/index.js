@@ -390,6 +390,7 @@ function cleanExpense(e) {
   out.amount = Number.isFinite(amt) ? amt : 0;
   out.currency = (str(e.currency, 8) || "JPY").toUpperCase();
   const cat = str(e.category, 40); if (cat) out.category = cat;
+  const sub = str(e.subcategory, 40); if (sub) out.subcategory = sub;
   const payer = str(e.payer, 40); if (payer) out.payer = payer;
   const img = str(e.image, 300); if (img) out.image = img;
   const note = str(e.note, 300); if (note) out.note = note;

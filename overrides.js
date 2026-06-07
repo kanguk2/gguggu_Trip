@@ -1705,8 +1705,21 @@
   // ── 가계부 (expenses) ─────────────────────────────────────────────
   const CURRENCIES = ["JPY", "KRW", "USD", "EUR"];
   const CURRENCY_SYMBOL = { JPY: "¥", KRW: "₩", USD: "$", EUR: "€" };
-  const STD_CATEGORIES = ["식비", "카페/간식", "쇼핑", "교통", "관광", "숙박", "기타"];
-  const expenseFilter = { category: "", date: "", sort: "added" }; // 뷰 상태(비영속)
+  // 대분류(major) — 카페·이자카야 등 식당류는 모두 "식비" 아래 소분류로 들어감
+  const EXPENSE_MAJORS = ["식비", "쇼핑", "교통", "관광", "숙박", "기타"];
+  const SUB_SUGGESTIONS = {
+    식비: ["카페", "이자카야", "간식", "편의점", "식당", "디저트"],
+    쇼핑: ["선물", "기념품", "드러그스토어", "마트", "옷"],
+    교통: ["JR", "지하철", "버스", "택시", "패스"],
+    관광: ["입장료", "투어", "온천"],
+    숙박: [],
+    기타: ["유흥", "기타"],
+  };
+  const FOOD_SUBS = ["카페", "카페/간식", "간식", "디저트", "이자카야", "식당", "편의점", "술", "맥주", "베이커리", "빵", "분식", "라멘", "스시"];
+  const SHOP_SUBS = ["선물", "기념품", "드러그스토어", "약국", "마트", "옷", "백화점"];
+  const TOUR_SUBS = ["입장", "입장료", "투어", "전망대", "박물관", "미술관", "공원", "온천"];
+  const STAY_SUBS = ["호텔", "료칸", "숙소"];
+  const expenseFilter = { category: "", sub: "", date: "", sort: "added" }; // 뷰 상태(비영속)
 
   function formatMoney(amount, currency) {
     const n = Number(amount) || 0;
@@ -1722,21 +1735,39 @@
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   }
 
-  // 미분류 지출의 종목을 라벨 키워드로 추론(폴백). 명시 category 있으면 그걸 사용.
-  function inferCategory(label) {
+  // 라벨 키워드로 대분류 추론(폴백, category 없을 때)
+  function inferMajor(label) {
     const s = String(label || "").toLowerCase();
     const has = (...ks) => ks.some((k) => s.includes(k));
-    if (has("카페", "커피", "스타벅스", "디저트", "아이스", "빵", "베이커리", "간식", "cafe", "coffee")) return "카페/간식";
-    if (has("라멘", "스시", "초밥", "회", "징기스칸", "돈카츠", "우동", "소바", "규동", "카레", "이자카야", "맥주", "정식", "식당", "점심", "저녁", "아침", "식사", "게", "야키", "ramen", "sushi")) return "식비";
-    if (has("쇼핑", "돈키", "드러그", "약국", "마트", "기념품", "옷", "편의점", "몰", "백화점", "shopping", "donki")) return "쇼핑";
-    if (has("jr", "지하철", "전철", "버스", "택시", "기차", "교통", "패스", "suica", "icoca", "이코카", "신칸센", "지tetsu")) return "교통";
-    if (has("입장", "투어", "전망대", "박물관", "미술관", "공원", "관광", "티켓", "온천", "료칸 입장")) return "관광";
+    if (has("카페", "커피", "스타벅스", "디저트", "아이스", "빵", "베이커리", "간식", "라멘", "스시", "초밥", "회", "징기스칸", "돈카츠", "우동", "소바", "규동", "카레", "이자카야", "맥주", "정식", "식당", "점심", "저녁", "아침", "식사", "편의점", "cafe", "coffee", "ramen", "sushi")) return "식비";
+    if (has("쇼핑", "돈키", "드러그", "약국", "마트", "기념품", "옷", "선물", "몰", "백화점", "shopping", "donki")) return "쇼핑";
+    if (has("jr", "지하철", "전철", "버스", "택시", "기차", "교통", "패스", "suica", "icoca", "이코카", "신칸센")) return "교통";
+    if (has("입장", "투어", "전망대", "박물관", "미술관", "공원", "관광", "온천")) return "관광";
     if (has("호텔", "료칸", "숙소", "체크인", "hotel")) return "숙박";
     return "기타";
   }
 
-  function expenseCategory(e) {
-    return (e.category && e.category.trim()) || inferCategory(e.label);
+  // 한 종목 문자열 → {major, sub}. 식당류(카페/이자카야 등)는 식비로 접힘.
+  function splitCategory(cat) {
+    const c = (cat || "").trim();
+    if (!c) return { major: "", sub: "" };
+    if (EXPENSE_MAJORS.includes(c)) return { major: c, sub: "" };
+    if (FOOD_SUBS.includes(c)) return { major: "식비", sub: c };
+    if (SHOP_SUBS.includes(c)) return { major: "쇼핑", sub: c };
+    if (TOUR_SUBS.includes(c)) return { major: "관광", sub: c };
+    if (STAY_SUBS.includes(c)) return { major: "숙박", sub: c };
+    const lc = c.toLowerCase();
+    if (["jr", "지하철", "전철", "버스", "택시", "기차", "교통", "패스", "신칸센", "이코카", "suica", "icoca"].some((k) => lc.includes(k))) return { major: "교통", sub: c };
+    return { major: "기타", sub: c };
+  }
+
+  // 지출 항목의 대분류·소분류 해석 (신/구 데이터 모두 대응)
+  function resolveCats(e) {
+    const cat = (e.category || "").trim();
+    const sub = (e.subcategory || "").trim();
+    if (EXPENSE_MAJORS.includes(cat)) return { major: cat, sub };
+    if (cat) { const s = splitCategory(cat); return { major: s.major, sub: sub || s.sub }; }
+    return { major: inferMajor(e.label), sub };
   }
 
   function renderExpenses() {
@@ -1745,19 +1776,25 @@
     root.innerHTML = "";
     const all = overrides.expenses || [];
 
-    // 필터에 쓸 카테고리·날짜 집합 (실제 데이터 기준)
-    const catSet = [], dateSet = [];
+    // 필터에 쓸 대분류·소분류·날짜 집합 (실제 데이터 기준)
+    const majorSet = [], subSet = [], dateSet = [];
     all.forEach((e) => {
-      const c = expenseCategory(e);
-      if (c && !catSet.includes(c)) catSet.push(c);
+      const { major, sub } = resolveCats(e);
+      if (major && !majorSet.includes(major)) majorSet.push(major);
+      // 소분류 옵션은 선택된 대분류 안에서만 (대분류 미선택 시 전체)
+      if (sub && (!expenseFilter.category || expenseFilter.category === major) && !subSet.includes(sub)) subSet.push(sub);
       const d = e.date || "";
       if (d && !dateSet.includes(d)) dateSet.push(d);
     });
-    catSet.sort(); dateSet.sort();
+    majorSet.sort((a, b) => EXPENSE_MAJORS.indexOf(a) - EXPENSE_MAJORS.indexOf(b));
+    subSet.sort(); dateSet.sort();
+    if (expenseFilter.sub && !subSet.includes(expenseFilter.sub)) expenseFilter.sub = "";
 
     // 필터 적용
     let list = all.filter((e) => {
-      if (expenseFilter.category && expenseCategory(e) !== expenseFilter.category) return false;
+      const { major, sub } = resolveCats(e);
+      if (expenseFilter.category && major !== expenseFilter.category) return false;
+      if (expenseFilter.sub && sub !== expenseFilter.sub) return false;
       if (expenseFilter.date && (e.date || "") !== expenseFilter.date) return false;
       return true;
     });
@@ -1777,7 +1814,7 @@
     const totalText = Object.keys(totals).length
       ? Object.entries(totals).map(([c, v]) => formatMoney(v, c)).join("  ·  ")
       : "지출 없음";
-    const filtered = expenseFilter.category || expenseFilter.date;
+    const filtered = expenseFilter.category || expenseFilter.sub || expenseFilter.date;
     summary.innerHTML = `<span class="expense-total-label">${filtered ? "필터 합계" : "합계"}</span><span class="expense-total-val">${escapeHtml(totalText)}</span><span class="expense-count">${list.length}건</span>`;
     root.appendChild(summary);
 
@@ -1788,19 +1825,22 @@
     addBtn.addEventListener("click", () => openExpenseModal(null));
     root.appendChild(addBtn);
 
-    // 필터·정렬 바
+    // 필터·정렬 바 (대분류 / 소분류 / 날짜 / 정렬)
     const bar = document.createElement("div");
     bar.className = "expense-filter-bar";
-    const catOpts = `<option value="">전체 종목</option>` + catSet.map((c) => `<option value="${escapeHtml(c)}"${expenseFilter.category === c ? " selected" : ""}>${escapeHtml(c)}</option>`).join("");
+    const majorOpts = `<option value="">전체 대분류</option>` + majorSet.map((c) => `<option value="${escapeHtml(c)}"${expenseFilter.category === c ? " selected" : ""}>${escapeHtml(c)}</option>`).join("");
+    const subOpts = `<option value="">전체 소분류</option>` + subSet.map((c) => `<option value="${escapeHtml(c)}"${expenseFilter.sub === c ? " selected" : ""}>${escapeHtml(c)}</option>`).join("");
     const dateOpts = `<option value="">전체 날짜</option>` + dateSet.map((d) => `<option value="${escapeHtml(d)}"${expenseFilter.date === d ? " selected" : ""}>${escapeHtml(d)}</option>`).join("");
     const sortOpts = [["added", "추가순"], ["date", "날짜순"], ["amount", "금액순"]]
       .map(([v, t]) => `<option value="${v}"${expenseFilter.sort === v ? " selected" : ""}>${t}</option>`).join("");
     bar.innerHTML = `
-      <select class="expense-filter-cat" aria-label="종목 필터">${catOpts}</select>
+      <select class="expense-filter-cat" aria-label="대분류 필터">${majorOpts}</select>
+      <select class="expense-filter-sub" aria-label="소분류 필터"${subSet.length ? "" : " disabled"}>${subOpts}</select>
       <select class="expense-filter-date" aria-label="날짜 필터">${dateOpts}</select>
       <select class="expense-filter-sort" aria-label="정렬">${sortOpts}</select>
     `;
-    bar.querySelector(".expense-filter-cat").addEventListener("change", (e) => { expenseFilter.category = e.target.value; renderExpenses(); });
+    bar.querySelector(".expense-filter-cat").addEventListener("change", (e) => { expenseFilter.category = e.target.value; expenseFilter.sub = ""; renderExpenses(); });
+    bar.querySelector(".expense-filter-sub").addEventListener("change", (e) => { expenseFilter.sub = e.target.value; renderExpenses(); });
     bar.querySelector(".expense-filter-date").addEventListener("change", (e) => { expenseFilter.date = e.target.value; renderExpenses(); });
     bar.querySelector(".expense-filter-sort").addEventListener("change", (e) => { expenseFilter.sort = e.target.value; renderExpenses(); });
     root.appendChild(bar);
@@ -1822,9 +1862,10 @@
     const li = document.createElement("li");
     li.className = "expense-item";
     li.dataset.expId = e.id;
-    const catLabel = expenseCategory(e);
+    const { major, sub } = resolveCats(e);
     const catCls = e.category && e.category.trim() ? "expense-badge" : "expense-badge expense-badge-inferred";
-    const meta = `<span class="${catCls}"${e.category ? "" : ' title="라벨로 추정된 종목"'}>${escapeHtml(catLabel)}</span>` +
+    const catText = major + (sub ? ` · ${sub}` : "");
+    const meta = `<span class="${catCls}"${e.category ? "" : ' title="라벨로 추정된 종목"'}>${escapeHtml(catText)}</span>` +
       (e.payer ? `<span class="expense-badge">${escapeHtml(e.payer)}</span>` : "");
     li.innerHTML = `
       <div class="expense-main">
@@ -1856,7 +1897,9 @@
     const cur = e || { currency: "JPY", date: todayStr() }; // 추가 시 날짜 기본값 = 오늘
     const currentImage = cur.image || "";
     const opts = CURRENCIES.map((c) => `<option value="${c}"${(cur.currency || "JPY") === c ? " selected" : ""}>${c}</option>`).join("");
-    const catChips = STD_CATEGORIES.map((c) => `<button type="button" class="expense-cat-chip" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
+    const rc = resolveCats(cur);
+    const curMajor = rc.major || (isEdit ? "기타" : "식비");
+    const majorOptsM = EXPENSE_MAJORS.map((c) => `<option value="${c}"${curMajor === c ? " selected" : ""}>${c}</option>`).join("");
     const modal = document.createElement("div");
     modal.className = "edit-overlay";
     modal.innerHTML = `
@@ -1878,15 +1921,19 @@
         </div>
         <div class="expense-amount-row">
           <label class="edit-field">
-            <span>분류 (선택)</span>
-            <input type="text" name="category" placeholder="예: 식비" value="${escapeHtml(cur.category || "")}">
+            <span>대분류</span>
+            <select name="category">${majorOptsM}</select>
           </label>
           <label class="edit-field">
             <span>결제자 (선택)</span>
             <input type="text" name="payer" placeholder="예: 강욱" value="${escapeHtml(cur.payer || "")}">
           </label>
         </div>
-        <div class="expense-cat-chips">${catChips}</div>
+        <label class="edit-field">
+          <span>소분류 (선택)</span>
+          <input type="text" name="subcategory" placeholder="예: 카페" value="${escapeHtml(rc.sub || "")}">
+        </label>
+        <div class="expense-cat-chips"></div>
         <label class="edit-field">
           <span>날짜 (선택)</span>
           <input type="date" name="date" value="${escapeHtml(cur.date || "")}">
@@ -1914,10 +1961,18 @@
     modal.querySelector(".edit-cancel").addEventListener("click", close);
     modal.addEventListener("click", (ev) => { if (ev.target === modal) close(); });
 
-    const catInput = modal.querySelector("input[name=category]");
-    modal.querySelectorAll(".expense-cat-chip").forEach((chip) => {
-      chip.addEventListener("click", () => { catInput.value = chip.dataset.cat; });
-    });
+    const majorSel = modal.querySelector("select[name=category]");
+    const subInput = modal.querySelector("input[name=subcategory]");
+    const chipsBox = modal.querySelector(".expense-cat-chips");
+    const renderSubChips = (major) => {
+      const subs = SUB_SUGGESTIONS[major] || [];
+      chipsBox.innerHTML = subs.map((c) => `<button type="button" class="expense-cat-chip" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
+      chipsBox.querySelectorAll(".expense-cat-chip").forEach((chip) => {
+        chip.addEventListener("click", () => { subInput.value = chip.dataset.cat; });
+      });
+    };
+    renderSubChips(majorSel.value);
+    majorSel.addEventListener("change", () => renderSubChips(majorSel.value));
 
     let removeImage = false;
     const imgCurrent = modal.querySelector(".edit-img-current");
@@ -1949,6 +2004,7 @@
         amount: form.amount.value,
         currency: form.currency.value,
         category: form.category.value.trim(),
+        subcategory: form.subcategory.value.trim(),
         payer: form.payer.value.trim(),
         date: form.date.value,
         note: form.note.value.trim(),
