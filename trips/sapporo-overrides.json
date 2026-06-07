@@ -510,6 +510,15 @@
       "category": "쇼핑",
       "payer": "꾸꾸",
       "id": "exp-mq2bzq1t-qxg1"
+    },
+    {
+      "label": "교통카드 충전",
+      "amount": 5000,
+      "currency": "JPY",
+      "category": "교통",
+      "payer": "꾸꾸",
+      "date": "2026-06-07",
+      "id": "exp-mq32y2pq-o1id"
     }
   ]
 }
