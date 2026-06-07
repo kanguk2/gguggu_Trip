@@ -529,6 +529,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-07",
       "id": "exp-mq3apmco-5zle"
+    },
+    {
+      "label": "르타오",
+      "amount": 3300,
+      "currency": "JPY",
+      "category": "카페",
+      "payer": "꾸꾸",
+      "date": "2026-06-07",
+      "id": "exp-mq3aqa1m-b4wm"
     }
   ]
 }
