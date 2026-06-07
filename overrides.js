@@ -1705,6 +1705,8 @@
   // ── 가계부 (expenses) ─────────────────────────────────────────────
   const CURRENCIES = ["JPY", "KRW", "USD", "EUR"];
   const CURRENCY_SYMBOL = { JPY: "¥", KRW: "₩", USD: "$", EUR: "€" };
+  const STD_CATEGORIES = ["식비", "카페/간식", "쇼핑", "교통", "관광", "숙박", "기타"];
+  const expenseFilter = { category: "", date: "", sort: "added" }; // 뷰 상태(비영속)
 
   function formatMoney(amount, currency) {
     const n = Number(amount) || 0;
@@ -1714,20 +1716,69 @@
     return sym ? `${sym}${num}` : `${num} ${currency || ""}`.trim();
   }
 
+  function todayStr() {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+
+  // 미분류 지출의 종목을 라벨 키워드로 추론(폴백). 명시 category 있으면 그걸 사용.
+  function inferCategory(label) {
+    const s = String(label || "").toLowerCase();
+    const has = (...ks) => ks.some((k) => s.includes(k));
+    if (has("카페", "커피", "스타벅스", "디저트", "아이스", "빵", "베이커리", "간식", "cafe", "coffee")) return "카페/간식";
+    if (has("라멘", "스시", "초밥", "회", "징기스칸", "돈카츠", "우동", "소바", "규동", "카레", "이자카야", "맥주", "정식", "식당", "점심", "저녁", "아침", "식사", "게", "야키", "ramen", "sushi")) return "식비";
+    if (has("쇼핑", "돈키", "드러그", "약국", "마트", "기념품", "옷", "편의점", "몰", "백화점", "shopping", "donki")) return "쇼핑";
+    if (has("jr", "지하철", "전철", "버스", "택시", "기차", "교통", "패스", "suica", "icoca", "이코카", "신칸센", "지tetsu")) return "교통";
+    if (has("입장", "투어", "전망대", "박물관", "미술관", "공원", "관광", "티켓", "온천", "료칸 입장")) return "관광";
+    if (has("호텔", "료칸", "숙소", "체크인", "hotel")) return "숙박";
+    return "기타";
+  }
+
+  function expenseCategory(e) {
+    return (e.category && e.category.trim()) || inferCategory(e.label);
+  }
+
   function renderExpenses() {
     const root = document.getElementById("expense-root");
     if (!root) return;
     root.innerHTML = "";
-    const expenses = overrides.expenses || [];
+    const all = overrides.expenses || [];
 
+    // 필터에 쓸 카테고리·날짜 집합 (실제 데이터 기준)
+    const catSet = [], dateSet = [];
+    all.forEach((e) => {
+      const c = expenseCategory(e);
+      if (c && !catSet.includes(c)) catSet.push(c);
+      const d = e.date || "";
+      if (d && !dateSet.includes(d)) dateSet.push(d);
+    });
+    catSet.sort(); dateSet.sort();
+
+    // 필터 적용
+    let list = all.filter((e) => {
+      if (expenseFilter.category && expenseCategory(e) !== expenseFilter.category) return false;
+      if (expenseFilter.date && (e.date || "") !== expenseFilter.date) return false;
+      return true;
+    });
+    // 정렬
+    const idxOf = new Map(all.map((e, i) => [e, i]));
+    if (expenseFilter.sort === "date") {
+      list = list.slice().sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")) || idxOf.get(a) - idxOf.get(b));
+    } else if (expenseFilter.sort === "amount") {
+      list = list.slice().sort((a, b) => (Number(b.amount) || 0) - (Number(a.amount) || 0));
+    }
+
+    // 합계 (필터된 결과 기준)
     const totals = {};
-    expenses.forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + (Number(e.amount) || 0); });
+    list.forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + (Number(e.amount) || 0); });
     const summary = document.createElement("div");
     summary.className = "expense-summary";
     const totalText = Object.keys(totals).length
       ? Object.entries(totals).map(([c, v]) => formatMoney(v, c)).join("  ·  ")
       : "지출 없음";
-    summary.innerHTML = `<span class="expense-total-label">합계</span><span class="expense-total-val">${escapeHtml(totalText)}</span><span class="expense-count">${expenses.length}건</span>`;
+    const filtered = expenseFilter.category || expenseFilter.date;
+    summary.innerHTML = `<span class="expense-total-label">${filtered ? "필터 합계" : "합계"}</span><span class="expense-total-val">${escapeHtml(totalText)}</span><span class="expense-count">${list.length}건</span>`;
     root.appendChild(summary);
 
     const addBtn = document.createElement("button");
@@ -1737,18 +1788,44 @@
     addBtn.addEventListener("click", () => openExpenseModal(null));
     root.appendChild(addBtn);
 
-    const list = document.createElement("ul");
-    list.className = "expense-list";
-    expenses.forEach((e) => list.appendChild(renderExpenseItem(e)));
-    root.appendChild(list);
+    // 필터·정렬 바
+    const bar = document.createElement("div");
+    bar.className = "expense-filter-bar";
+    const catOpts = `<option value="">전체 종목</option>` + catSet.map((c) => `<option value="${escapeHtml(c)}"${expenseFilter.category === c ? " selected" : ""}>${escapeHtml(c)}</option>`).join("");
+    const dateOpts = `<option value="">전체 날짜</option>` + dateSet.map((d) => `<option value="${escapeHtml(d)}"${expenseFilter.date === d ? " selected" : ""}>${escapeHtml(d)}</option>`).join("");
+    const sortOpts = [["added", "추가순"], ["date", "날짜순"], ["amount", "금액순"]]
+      .map(([v, t]) => `<option value="${v}"${expenseFilter.sort === v ? " selected" : ""}>${t}</option>`).join("");
+    bar.innerHTML = `
+      <select class="expense-filter-cat" aria-label="종목 필터">${catOpts}</select>
+      <select class="expense-filter-date" aria-label="날짜 필터">${dateOpts}</select>
+      <select class="expense-filter-sort" aria-label="정렬">${sortOpts}</select>
+    `;
+    bar.querySelector(".expense-filter-cat").addEventListener("change", (e) => { expenseFilter.category = e.target.value; renderExpenses(); });
+    bar.querySelector(".expense-filter-date").addEventListener("change", (e) => { expenseFilter.date = e.target.value; renderExpenses(); });
+    bar.querySelector(".expense-filter-sort").addEventListener("change", (e) => { expenseFilter.sort = e.target.value; renderExpenses(); });
+    root.appendChild(bar);
+
+    const ul = document.createElement("ul");
+    ul.className = "expense-list";
+    if (!list.length) {
+      const empty = document.createElement("li");
+      empty.className = "expense-empty";
+      empty.textContent = all.length ? "조건에 맞는 지출이 없습니다." : "아직 지출이 없습니다.";
+      ul.appendChild(empty);
+    } else {
+      list.forEach((e) => ul.appendChild(renderExpenseItem(e)));
+    }
+    root.appendChild(ul);
   }
 
   function renderExpenseItem(e) {
     const li = document.createElement("li");
     li.className = "expense-item";
     li.dataset.expId = e.id;
-    const meta = [e.category, e.payer].filter(Boolean)
-      .map((x) => `<span class="expense-badge">${escapeHtml(x)}</span>`).join("");
+    const catLabel = expenseCategory(e);
+    const catCls = e.category && e.category.trim() ? "expense-badge" : "expense-badge expense-badge-inferred";
+    const meta = `<span class="${catCls}"${e.category ? "" : ' title="라벨로 추정된 종목"'}>${escapeHtml(catLabel)}</span>` +
+      (e.payer ? `<span class="expense-badge">${escapeHtml(e.payer)}</span>` : "");
     li.innerHTML = `
       <div class="expense-main">
         <div class="expense-label">${escapeHtml(e.label)}${e.note ? `<small class="expense-note">${escapeHtml(e.note)}</small>` : ""}</div>
@@ -1776,9 +1853,10 @@
 
   function openExpenseModal(e) {
     const isEdit = !!e;
-    const cur = e || { currency: "JPY" };
+    const cur = e || { currency: "JPY", date: todayStr() }; // 추가 시 날짜 기본값 = 오늘
     const currentImage = cur.image || "";
     const opts = CURRENCIES.map((c) => `<option value="${c}"${(cur.currency || "JPY") === c ? " selected" : ""}>${c}</option>`).join("");
+    const catChips = STD_CATEGORIES.map((c) => `<button type="button" class="expense-cat-chip" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
     const modal = document.createElement("div");
     modal.className = "edit-overlay";
     modal.innerHTML = `
@@ -1808,6 +1886,7 @@
             <input type="text" name="payer" placeholder="예: 강욱" value="${escapeHtml(cur.payer || "")}">
           </label>
         </div>
+        <div class="expense-cat-chips">${catChips}</div>
         <label class="edit-field">
           <span>날짜 (선택)</span>
           <input type="date" name="date" value="${escapeHtml(cur.date || "")}">
@@ -1834,6 +1913,11 @@
     const close = () => modal.remove();
     modal.querySelector(".edit-cancel").addEventListener("click", close);
     modal.addEventListener("click", (ev) => { if (ev.target === modal) close(); });
+
+    const catInput = modal.querySelector("input[name=category]");
+    modal.querySelectorAll(".expense-cat-chip").forEach((chip) => {
+      chip.addEventListener("click", () => { catInput.value = chip.dataset.cat; });
+    });
 
     let removeImage = false;
     const imgCurrent = modal.querySelector(".edit-img-current");
