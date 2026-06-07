@@ -520,6 +520,15 @@
       "payer": "꾸꾸",
       "date": "2026-06-07",
       "id": "exp-mq32y2pq-o1id"
+    },
+    {
+      "label": "점심 라멘",
+      "amount": 2500,
+      "currency": "JPY",
+      "category": "식비",
+      "payer": "꾸꾸",
+      "date": "2026-06-07",
+      "id": "exp-mq3apmco-5zle"
     }
   ]
 }
