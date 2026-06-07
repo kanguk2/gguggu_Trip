@@ -1342,7 +1342,7 @@ main {
 }
 
 .expense-add-btn {
-  margin-top: 0.8rem;
+  margin: 0 0 0.8rem;
 }
 
 .expense-amount-row {

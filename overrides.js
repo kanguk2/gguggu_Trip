@@ -1730,17 +1730,17 @@
     summary.innerHTML = `<span class="expense-total-label">합계</span><span class="expense-total-val">${escapeHtml(totalText)}</span><span class="expense-count">${expenses.length}건</span>`;
     root.appendChild(summary);
 
-    const list = document.createElement("ul");
-    list.className = "expense-list";
-    expenses.forEach((e) => list.appendChild(renderExpenseItem(e)));
-    root.appendChild(list);
-
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "plan-add-btn expense-add-btn";
     addBtn.textContent = "+ 지출 추가";
     addBtn.addEventListener("click", () => openExpenseModal(null));
     root.appendChild(addBtn);
+
+    const list = document.createElement("ul");
+    list.className = "expense-list";
+    expenses.forEach((e) => list.appendChild(renderExpenseItem(e)));
+    root.appendChild(list);
   }
 
   function renderExpenseItem(e) {

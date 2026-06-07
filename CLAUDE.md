@@ -161,7 +161,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - 링크(`links`)는 `[{url, label?}]` 배열 (최대 10개). Worker `cleanLinks` 가 `http(s)` URL 만 허용(`javascript:` 등 차단). label 없으면 호스트명 표시. 추가·편집 모달의 "참고 링크" 에디터로 여러 개 입력.
 - 이동(`transit`)은 `{ options: [{name, duration?, price?, note?, times?[]}], note? }`. 추가·편집 모달의 "이동(교통) 옵션 추가" 체크 시 입력. 항목 아래 `.plan-transit` 펼침 블록으로 렌더(옵션 카드 + 시간표). **"🔄 시간에 맞춰 동기화"** 버튼이 항목 시각 이후 가장 가까운 출발편을 강조(`.is-next`)·지난 편 흐림(`.is-past`). Worker `cleanTransit` 가 정리. 정적(하드코딩) 이동 항목에도 `enhanceStaticTransit` 가 같은 동기화 버튼 주입.
 - 주소(`addr`)는 장소의 주소 문자열. 추가·편집 모달의 **"🔍 찾기"**(구글맵 장소 검색 팝업, Places `textSearch`)로 결과 선택 시 장소명→이름·`coords`·`addr` 자동 기입. 항목 이름 아래 `.plan-sub-addr`(📍) 서브라인으로 표시. `addr: ""`/`null` 로 제거.
-- `expenses` — **가계부**(날짜에 종속 안 됨, 전역 배열). 각 항목 `{id, label, amount(숫자), currency(JPY/KRW/USD/EUR), category?, payer?, image?, note?, date?}`. `expenses` 탭(`#expense-root`)에서 `renderExpenses` 가 통화별 합계 + 목록 + "+ 지출 추가" 렌더. 영수증 사진(`image`) 첨부 가능(uploadImage 재사용, 클릭 시 라이트박스). Worker `addExpense`/`updateExpense`/`deleteExpense` + `cleanExpense` 로 정리. 일행 간 공유.
+- `expenses` — **가계부**(날짜에 종속 안 됨, 전역 배열). 각 항목 `{id, label, amount(숫자), currency(JPY/KRW/USD/EUR), category?, payer?, image?, note?, date?}`. `expenses` 탭(`#expense-root`)에서 `renderExpenses` 가 통화별 합계 + "+ 지출 추가"(상단) + 목록 렌더. 영수증 사진(`image`) 첨부 가능(uploadImage 재사용, 클릭 시 라이트박스). Worker `addExpense`/`updateExpense`/`deleteExpense` + `cleanExpense` 로 정리. 일행 간 공유.
 
 ### overrides.js 동작
 
@@ -222,7 +222,7 @@ GitHub repo (trips/sapporo-overrides.json)
 - `setupClamp(el)` / `setupClamps()` — 긴 메모/메모항목 텍스트를 3줄로 접고 넘칠 때만 '더보기/접기' 토글 추가. 숨은 날짜 탭은 측정 불가라 미완료로 두고 **탭 클릭 시 재측정**. `.clamp-text` 가 대상, 토글은 `.clamp-toggle`
 - `addAddNewButtons()` — 각 날짜 패널 맨 아래에 "+ 새 일정 추가"·"+ 메모 추가" 버튼 (`openAddModal`/`openMemoAddModal`). 메모 항목 클릭 시 `addEditButtons` 의 ✎ 가 `openMemoModal`(텍스트 편집·삭제)로 분기
 - `setupDragDrop()` — SortableJS 적용. `delay: 250` (0.25초 롱프레스 후 드래그), 저장 중엔 `disabled`, onEnd 에서 setOrder 호출·실패 시 applyOrder 원복. `.plan-item` 에 `user-select:none` 줘서 롱프레스가 텍스트선택에 가로채이지 않게 함(특히 텍스트뿐인 메모 항목 드래그)
-- `renderExpenses()` / `renderExpenseItem(e)` / `openExpenseModal(e)` — 가계부 탭(`#expense-root`) 렌더: 통화별 합계 + 지출 목록(영수증 썸네일·✎ 편집) + "+ 지출 추가". 모달에서 내용·금액·통화·분류·결제자·날짜·메모·영수증 사진 입력. add/update/deleteExpense 호출. init·syncAll 에서 호출.
+- `renderExpenses()` / `renderExpenseItem(e)` / `openExpenseModal(e)` — 가계부 탭(`#expense-root`) 렌더: 통화별 합계 + "+ 지출 추가"(상단) + 지출 목록(영수증 썸네일·✎ 편집). 모달에서 내용·금액·통화·분류·결제자·날짜·메모·영수증 사진 입력. add/update/deleteExpense 호출. init·syncAll 에서 호출.
 - `syncAll()` — Worker 에서 overrides 다시 받아 위 함수들 다시 적용 + 지도 재구성. `window.TRIP_OVERRIDES.sync()` 로 노출. 지도의 "🔄 일정 동기화" 버튼이 호출.
 - `geocodePlace(query)` — Places API 로 장소명·주소 → 좌표 변환. 추가/편집 모달의 "지도 마커" 입력 처리.
 - `compressImage(file)` / `uploadImageFile(file)` — 파일을 canvas 로 최대 1280px JPEG 축소 → Worker `uploadImage` 로 리포 커밋 → 상대경로 반환. 방금 올린 dataURI 는 `recentImageData` 에 캐시해 Pages 빌드(~30초) 전까지 즉시 표시.
