@@ -623,6 +623,16 @@
       "payer": "꾸이",
       "date": "2026-06-08",
       "id": "exp-mq4pxm2d-g8vi"
+    },
+    {
+      "label": "아이스크림",
+      "amount": 1000,
+      "currency": "JPY",
+      "category": "식비",
+      "subcategory": "간식",
+      "payer": "꾸꾸",
+      "date": "2026-06-08",
+      "id": "exp-mq4pygcy-h93v"
     }
   ]
 }
