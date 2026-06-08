@@ -633,6 +633,16 @@
       "payer": "꾸꾸",
       "date": "2026-06-08",
       "id": "exp-mq4pygcy-h93v"
+    },
+    {
+      "label": "꾸꾸 가챠",
+      "amount": 400,
+      "currency": "JPY",
+      "category": "쇼핑",
+      "subcategory": "기념품",
+      "payer": "꾸꾸",
+      "date": "2026-06-08",
+      "id": "exp-mq4pyvj4-pbgt"
     }
   ]
 }
