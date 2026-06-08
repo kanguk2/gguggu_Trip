@@ -604,6 +604,15 @@
       "payer": "꾸이",
       "date": "2026-06-07",
       "id": "exp-mq4ptxqq-kf26"
+    },
+    {
+      "label": "기념과자",
+      "amount": 1540,
+      "currency": "JPY",
+      "category": "쇼핑",
+      "subcategory": "기념품",
+      "date": "2026-06-08",
+      "id": "exp-mq4pweym-8hqm"
     }
   ]
 }
