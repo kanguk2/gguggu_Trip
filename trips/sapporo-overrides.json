@@ -594,6 +594,16 @@
       "payer": "꾸꾸",
       "date": "2026-06-08",
       "id": "exp-mq4ks0df-jtzw"
+    },
+    {
+      "label": "미피",
+      "amount": 2370,
+      "currency": "JPY",
+      "category": "쇼핑",
+      "subcategory": "선물",
+      "payer": "꾸이",
+      "date": "2026-06-07",
+      "id": "exp-mq4ptxqq-kf26"
     }
   ]
 }
