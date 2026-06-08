@@ -564,6 +564,16 @@
       "date": "2026-06-07",
       "id": "exp-mq3aqa1m-b4wm",
       "subcategory": "카페"
+    },
+    {
+      "label": "스시",
+      "amount": 5786,
+      "currency": "JPY",
+      "category": "식비",
+      "subcategory": "스시",
+      "payer": "꾸꾸",
+      "date": "2026-06-07",
+      "id": "exp-mq4ifj35-dgj5"
     }
   ]
 }
