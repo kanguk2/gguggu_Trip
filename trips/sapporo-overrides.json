@@ -613,6 +613,16 @@
       "subcategory": "기념품",
       "date": "2026-06-08",
       "id": "exp-mq4pweym-8hqm"
+    },
+    {
+      "label": "꾸꾸선물",
+      "amount": 1890,
+      "currency": "JPY",
+      "category": "쇼핑",
+      "subcategory": "선물",
+      "payer": "꾸이",
+      "date": "2026-06-08",
+      "id": "exp-mq4pxm2d-g8vi"
     }
   ]
 }
