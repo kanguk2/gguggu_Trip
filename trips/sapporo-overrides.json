@@ -584,6 +584,16 @@
       "payer": "꾸이",
       "date": "2026-06-07",
       "id": "exp-mq4j4nsj-ptke"
+    },
+    {
+      "label": "라비스프카레",
+      "amount": 4420,
+      "currency": "JPY",
+      "category": "식비",
+      "subcategory": "식당",
+      "payer": "꾸꾸",
+      "date": "2026-06-08",
+      "id": "exp-mq4ks0df-jtzw"
     }
   ]
 }
